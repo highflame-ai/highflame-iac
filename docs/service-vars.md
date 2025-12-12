@@ -184,13 +184,13 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`JAVELIN_URL` | Javelin API URL | nil | `http://javelin-core:8000`
+`JAVELIN_URL` | Javelin API URL | `http://javelin-core:8000` | -
 `JAVELIN_API_KEY` | Javelin API Key | nil | -
-`LANGFUSE_API_URL` | Langfuse endpoint | nil | `http://langfuse-web:3000`
+`LANGFUSE_API_URL` | Langfuse endpoint | `http://langfuse-web:3000` | -
 
 ### javelin-collector
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | nil | `http://javelin-cerberus:8080`
-`LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | nil | `http://langfuse-web:3000`
+`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | `http://javelin-cerberus:8080` | -
+`LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | `http://langfuse-web:3000` | -
