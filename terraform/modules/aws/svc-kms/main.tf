@@ -3,6 +3,10 @@ locals {
   kms_prefix              = join("-", ([ var.project_name, var.project_env ]))
 }
 
+resource "random_id" "random" {
+  byte_length             = 2
+}
+
 ########## KMS ##########
 data "aws_iam_policy_document" "svc_kms" {
   statement {
@@ -37,11 +41,11 @@ data "aws_iam_policy_document" "svc_kms" {
 resource "aws_kms_key" "svc_kms" {
   description             = "KMS key for encrypt/decrypt operations"
   deletion_window_in_days = 10
-  enable_key_rotation     = true
+  enable_key_rotation     = false
   policy                  = data.aws_iam_policy_document.svc_kms.json
 }
 
 resource "aws_kms_alias" "svc_kms" {
-  name                    = "alias/${local.kms_prefix}"
+  name                    = "alias/${local.kms_prefix}-${random_id.random.hex}"
   target_key_id           = aws_kms_key.svc_kms.key_id
 }

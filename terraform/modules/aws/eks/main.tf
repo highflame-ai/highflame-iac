@@ -7,6 +7,10 @@ locals {
                                       })
 }
 
+resource "random_id" "random" {
+  byte_length                   = 2
+}
+
 ########## EKS_Cluster ##########
 module "eks_cluster" {
   source                                   = "terraform-aws-modules/eks/aws"
@@ -44,11 +48,11 @@ module "eks_cluster" {
 resource "aws_kms_key" "eks_kms" {
   description                   = "KMS key for encrypt/decrypt operations"
   deletion_window_in_days       = 10
-  enable_key_rotation           = true
+  enable_key_rotation           = false
 }
 
 resource "aws_kms_alias" "eks_kms" {
-  name                          = "alias/${local.cluster_name}"
+  name                          = "alias/${local.cluster_name}-${random_id.random.hex}"
   target_key_id                 = aws_kms_key.eks_kms.key_id
 }
 

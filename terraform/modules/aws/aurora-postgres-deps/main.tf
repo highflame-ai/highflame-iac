@@ -3,6 +3,10 @@ locals {
     aurora_prefix                      = join("-", ([ var.project_name, var.project_env ]))
 }
 
+resource "random_id" "random" {
+  byte_length                          = 2
+}
+
 ########## Cluster_Parameter_Group ##########
 resource "aws_rds_cluster_parameter_group" "aurora_postgres" {
   name                                 = "${local.aurora_prefix}-${var.family}-cluster-pg-grp"
@@ -107,11 +111,11 @@ resource "aws_vpc_security_group_ingress_rule" "aurora_rule" {
 resource "aws_kms_key" "aurora_kms" {
   description                           = "KMS key for encrypt/decrypt operations"
   deletion_window_in_days               = 10
-  enable_key_rotation                   = true
+  enable_key_rotation                   = false
 }
 
 resource "aws_kms_alias" "aurora_kms" {
-  name                                  = "alias/${local.aurora_prefix}-aurora"
+  name                                  = "alias/${local.aurora_prefix}-aurora-${random_id.random.hex}"
   target_key_id                         = aws_kms_key.aurora_kms.key_id
 }
 
@@ -159,7 +163,7 @@ resource "aws_kms_key_policy" "eks_kms" {
 
 ########## Secret_Manager ##########
 resource "aws_secretsmanager_secret" "aurora_password" {
-  name                                  = "${local.aurora_prefix}-aurora-postgres"
+  name                                  = "${local.aurora_prefix}-aurora-postgres-${random_id.random.hex}"
   description                           = "ManagedBy Terraform"
   recovery_window_in_days               = 30
 }

@@ -32,7 +32,7 @@ variable "db_user" {
 variable "db_version" {
   description = "Database server version"
   type        = string
-  default     = "16"
+  default     = "17"
 }
 
 variable "postgres_sku_name" {

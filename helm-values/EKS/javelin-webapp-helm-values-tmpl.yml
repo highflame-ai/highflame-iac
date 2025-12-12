@@ -35,8 +35,6 @@ podDisruptionBudget:
   minAvailable: 1
 
 service:
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /sign-in
   type: NodePort
   protocol: TCP
   port: 3000
@@ -69,6 +67,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /sign-in
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'

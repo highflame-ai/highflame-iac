@@ -9,7 +9,6 @@ enable_redis                                = false
 enable_postgres_deps                        = false
 enable_postgres_primary                     = false
 enable_postgres_secondary                   = false
-enable_psql_seeding                         = false
 enable_ssl_keyvault                         = false
 enable_application_gw                       = false
 enable_aks                                  = false
@@ -38,13 +37,6 @@ postgres_storage_mb                         = 65536
 postgres_storage_tier                       = "P30"
 postgres_sku_name                           = "GP_Standard_D4ads_v5"
 postgres_source_server_id                   = ""
-pg_db_list                                  = [ "javelin_redteam" ]
-pg_extensions                               = [
-                                                {
-                                                  name     = "vector"
-                                                  database = "javelin_redteam"
-                                                }
-                                              ]
 workload_identity                           = [
                                                 {
                                                   id             = 1

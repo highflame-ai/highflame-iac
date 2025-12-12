@@ -29,10 +29,6 @@ terraform {
       source  = "hashicorp/http"
       version = "3.5.0"
     }
-    postgresql = {
-      source  = "cyrilgdn/postgresql"
-      version = "1.25.0"
-    }
   }
 
   backend "azurerm" {
@@ -44,13 +40,4 @@ terraform {
 provider "azurerm" {
   features {}
   subscription_id         = var.az_subscription_id
-}
-
-provider "postgresql" {
-  host                    = module.postgres_primary[0].postgres_private_ip
-  port                    = module.postgres_primary[0].postgres_port
-  database                = module.postgres_primary[0].postgres_db_name
-  username                = module.postgres_primary[0].postgres_db_user
-  password                = module.postgres_primary[0].postgres_db_pass
-  sslmode                 = "require"
 }

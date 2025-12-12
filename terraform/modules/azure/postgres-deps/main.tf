@@ -1,6 +1,11 @@
 ########## Locals ##########
 locals {
   postgres_prefix                               = join("-", [ var.project_name, var.project_env ])
+  kv_prefix                                     = join("-", ([ "jn", var.project_env ]))
+}
+
+resource "random_id" "random" {
+  byte_length                                   = 2
 }
 
 ########## Identity ##########
@@ -55,7 +60,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "postgres" {
 
 ########## KeyVault ##########
 resource "azurerm_key_vault" "postgres" {
-  name                                          = "${local.postgres_prefix}-postgres"
+  name                                          = "${local.kv_prefix}-sql-${random_id.random.hex}"
   resource_group_name                           = var.resource_group_name
   location                                      = var.location
   tenant_id                                     = var.tenant_id

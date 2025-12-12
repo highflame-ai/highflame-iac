@@ -68,11 +68,6 @@ variable "enable_postgres_secondary" {
   type        = bool
 }
 
-variable "enable_psql_seeding" {
-  description = "enable psql seeding"
-  type        = bool
-}
-
 variable "enable_ssl_keyvault" {
   description = "enable ssl keyvault"
   type        = bool
@@ -184,21 +179,6 @@ variable "postgres_server_params" {
       value   = "vector"
     }
   ]
-}
-
-variable "pg_db_list" {
-  description = "List of Database names"
-  type        = list(string)
-  default     = []
-}
-
-variable "pg_extensions" {
-  description = "List of extensions and its databases"
-  type        = list(object({
-    name         = string
-    database     = string
-  }))
-  default     = []
 }
 
 variable "workload_identity" {

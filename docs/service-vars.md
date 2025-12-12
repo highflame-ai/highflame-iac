@@ -85,14 +85,14 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_BUID_CLUSTER_MAP` | json formatted buid cluser map | nil | -
 `NEXT_PUBLIC_HA_PAIRS` | json formatted HA pair | nil | -
 `SUPPORT_SMTP_PASSKEY` | SMTP Credential | `` | -
-`SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@getjavelin.io` | -
+`SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@highflame.com` | -
 `SUPPORT_SMTP_SERVICE` | SMTP Service type | `Gmail` | -
 `NEXT_PUBLIC_SECRET_STORE` | Secret Store | `kubernetes` | `kubernetes` or `aws` or combination (`kubernetes,aws`)
 `NEXT_PUBLIC_CORE_INT_URL` | Javelin core internal url | `http://javelin-core:8000/` | -
 `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
 `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/signup` | -
-`NEXT_PUBLIC_POSTHOG_HOST` | Posthog url | `https://app.posthog.com` | -
-`NEXT_PUBLIC_SUPPORT_SMTP_TO_EMAIL` | SMTP to mail | `support@getjavelin.io` | -
+`NEXT_PUBLIC_POSTHOG_HOST` | Posthog url | `https://us.i.posthog.com` | -
+`NEXT_PUBLIC_SUPPORT_SMTP_TO_EMAIL` | SMTP to mail | `support@highflame.com` | -
 `NEXT_PUBLIC_SAAS_SERVICE` | Showcase the SaaS services in the UI | `FALSE` | `TRUE` or `FALSE`
 `NEXT_PUBLIC_CLERK_SIGNUP` | Enable clerk sign up | `visible` | `visible` or `hidden`
 `NEXT_PUBLIC_BUID_MAX_GATEWAYS` | Max number of gateway | `2` | -
@@ -179,3 +179,18 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `JAVELIN_URL` | Javelin API URL | nil | -
 `JAVELIN_API_KEY` | Javelin API Key | nil | -
+
+### javelin-cerberus
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`JAVELIN_URL` | Javelin API URL | nil | `http://javelin-core:8000`
+`JAVELIN_API_KEY` | Javelin API Key | nil | -
+`LANGFUSE_API_URL` | Langfuse endpoint | nil | `http://langfuse-web:3000`
+
+### javelin-collector
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | nil | `http://javelin-cerberus:8080`
+`LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | nil | `http://langfuse-web:3000`

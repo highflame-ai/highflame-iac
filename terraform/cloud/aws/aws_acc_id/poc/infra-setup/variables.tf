@@ -1,8 +1,3 @@
-variable "bucket" {
-  description = "StateFile Backend S3 Name"
-  type        = string
-}
-
 variable "region" {
   description = "AWS Region"
   type = string
@@ -35,11 +30,6 @@ variable "enable_aurora_postgres_primary" {
 
 variable "enable_aurora_postgres_secondary" {
   description = "enable aurora postgres secondary"
-  type        = bool
-}
-
-variable "enable_psql_seeding" {
-  description = "enable psql seeding"
   type        = bool
 }
 
@@ -205,21 +195,6 @@ variable "common_tags" {
 variable "custom_egress_port_list" {
   description = "Custom Egress port list for enabling outbound connectivity"
   type        = list(string)
-  default     = []
-}
-
-variable "pg_db_list" {
-  description = "List of Database names"
-  type        = list(string)
-  default     = []
-}
-
-variable "pg_extensions" {
-  description = "List of extensions and its databases"
-  type        = list(object({
-    name         = string
-    database     = string
-  }))
   default     = []
 }
 
