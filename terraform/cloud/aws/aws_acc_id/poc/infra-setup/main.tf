@@ -71,13 +71,6 @@ module "aurora_postgres_secondary" {
   subnet_grp                              = module.aurora_postgres_deps[0].aurora_subnet_grp
 }
 
-module "psql_seeding" {
-  count                                   = var.enable_psql_seeding == true ? 1 : 0
-  source                                  = "../../../../../modules/javelin/psql-seeding"
-  pg_db_list                              = var.pg_db_list
-  pg_extensions                           = var.pg_extensions
-}
-
 module "redis_cluster" {
   count                                   = var.enable_redis == true ? 1 : 0
   depends_on                              = [ module.vpc ]

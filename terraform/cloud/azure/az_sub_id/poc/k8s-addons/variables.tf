@@ -42,11 +42,13 @@ variable "enable_storageclass" {
 variable "enable_prometheus" {
   description = "enable prometheus"
   type        = bool
+  default     = false
 }
 
 variable "enable_grafana" {
   description = "enable grafana"
   type        = bool
+  default     = false
 }
 
 variable "enable_namespace" {
@@ -95,6 +97,7 @@ variable "grafana_disk_size" {
 variable "grafana_domain" {
   description = "Grafana Domain Name"
   type        = string
+  default     = ""
 }
 
 variable "registry_server" {

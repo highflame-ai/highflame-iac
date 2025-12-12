@@ -1,8 +1,5 @@
-## Terraform Backend Variables
-bucket                                   = "javelin-tf-poc"
 ## Enable required services
 enable_vpc                               = false
-enable_psql_seeding                      = false
 enable_redis                             = false
 enable_eks                               = false
 enable_eks_managed_nodes                 = false
@@ -46,13 +43,6 @@ redis_node_type                          = "cache.m5.large"
 aurora_instance_db_class                 = "db.r6g.large"
 aurora_master_cluster_region             = "us-east-1"
 aurora_global_cluster_identifier         = ""
-pg_db_list                               = [ "javelin_redteam" ]
-pg_extensions                            = [
-                                                {
-                                                    name     = "vector"
-                                                    database = "javelin_redteam"
-                                                }
-                                            ]
 eks_cloudwatch_retention                 = 30
 redis_cloudwatch_retention               = 30
 eks_cluster_version                      = "1.33"

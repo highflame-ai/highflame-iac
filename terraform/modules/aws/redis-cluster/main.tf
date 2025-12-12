@@ -3,6 +3,10 @@ locals {
   redis_prefix               = join("-", ([ var.project_name, var.project_env ]))
 }
 
+resource "random_id" "random" {
+  byte_length                = 2
+}
+
 ########## Security_Group ##########
 resource "aws_security_group" "redis_sg" {
   vpc_id                     = var.vpc_id
@@ -82,11 +86,11 @@ resource "aws_vpc_security_group_ingress_rule" "additional_redis_ingress_rule" {
 resource "aws_kms_key" "redis_kms" {
   description                 = "KMS key for encrypt/decrypt operations"
   deletion_window_in_days     = 10
-  enable_key_rotation         = true
+  enable_key_rotation         = false
 }
 
 resource "aws_kms_alias" "redis_kms" {
-  name                        = "alias/${local.redis_prefix}-redis-cluster"
+  name                        = "alias/${local.redis_prefix}-redis-cluster-${random_id.random.hex}"
   target_key_id               = aws_kms_key.redis_kms.key_id
 }
 

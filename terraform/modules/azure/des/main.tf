@@ -1,11 +1,16 @@
 ########## Locals ##########
 locals {
   des_prefix                          = join("-", [ var.project_name, var.project_env ])
+  kv_prefix                           = join("-", ([ "jn", var.project_env ]))
+}
+
+resource "random_id" "random" {
+  byte_length                         = 2
 }
 
 ########## KeyVault ##########
 resource "azurerm_key_vault" "des" {
-  name                                = "${local.des_prefix}-des"
+  name                                = "${local.kv_prefix}-des-${random_id.random.hex}"
   location                            = var.location
   resource_group_name                 = var.resource_group_name
   tenant_id                           = var.tenant_id
