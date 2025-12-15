@@ -10,7 +10,7 @@ You can refer to these files and patch them with your customizations.
 * Add Javelin repo to local
 
 ```bash
-helm repo add javelin-charts "https://getjavelin.github.io/charts
+helm repo add javelin-charts "https://highflame-ai.github.io/charts
 helm repo update
 helm search repo javelin-charts
 ```
