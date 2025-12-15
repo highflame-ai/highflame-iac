@@ -7,7 +7,7 @@ JAVELIN_GH_TOKEN=${JAVELIN_GH_TOKEN}
 GH_ASSET_NAME=${1}
 RELEASE_VER=${2}
 
-OWNER="getjavelin"
+OWNER="highflame-ai"
 REPO="javelin-overwatch"
 ASSET_NAME="javelin-overwatch"
 

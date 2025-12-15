@@ -77,7 +77,7 @@ resource "helm_release" "ingress_alb" {
 resource "helm_release" "dummy_ingress" {
   depends_on        = [ helm_release.ingress_alb ]
   name             = "dummy-ingress"
-  repository       = "https://getjavelin.github.io/charts"
+  repository       = "https://highflame-ai.github.io/charts"
   chart            = "javelin-ingress"
   version          = var.javelin_ingress_helm_version
   force_update     = false

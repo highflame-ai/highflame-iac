@@ -58,7 +58,7 @@ resources:
 secrets:
   enabled: true
   secretData:
-    # Please refer https://github.com/getjavelin/javelin-iac/blob/main/docs/service-vars.md
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
 volumes:
   - name: secret-volume

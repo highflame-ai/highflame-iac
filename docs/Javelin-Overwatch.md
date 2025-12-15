@@ -13,7 +13,7 @@ The Model Context Protocol supports three transport protocols for communication:
 * Download and update the `javelin-charts` into local
 
 ```bash
-helm repo add javelin-charts "https://getjavelin.github.io/charts"
+helm repo add javelin-charts "https://highflame-ai.github.io/charts"
 helm repo update javelin-charts && helm search repo javelin-charts
 ```
 
@@ -21,7 +21,7 @@ helm repo update javelin-charts && helm search repo javelin-charts
 
 ```code
 image:
-  repository: "ghcr.io/getjavelin/release-javelin-overwatch"
+  repository: "ghcr.io/highflame-ai/release-javelin-overwatch"
   pullPolicy: Always
   # Overrides the image tag with a specific version.
   tag: "latest"
@@ -56,7 +56,7 @@ It is designed for first-time users of Javelin, just follow the steps in order.
 
 The **javelin-overwatch** service is distributed as a prebuilt binary. You need to download the correct binary for your system architecture.  
 
-- Visit the [javelin-overwatch releases page](https://github.com/getjavelin/javelin-overwatch/releases).  
+- Visit the [javelin-overwatch releases page](https://github.com/highflame-ai/javelin-overwatch/releases).  
 - Select the **latest release**.  
 - Under **Assets**, you’ll find binaries for multiple architectures. Currently, we support:
   - `amd64` → For most Linux servers and VMs (AWS EC2, GCP, Azure, bare metal servers).  
@@ -65,7 +65,7 @@ The **javelin-overwatch** service is distributed as a prebuilt binary. You need 
 #### Example: Download for `amd64`
 ```bash
 # Replace VERSION with the release tag (e.g., v0.0.2)
-wget https://github.com/getjavelin/javelin-overwatch/releases/download/VERSION/javelin-overwatch-linux-amd64
+wget https://github.com/highflame-ai/javelin-overwatch/releases/download/VERSION/javelin-overwatch-linux-amd64
 ```
 
 1. If the above command fails (for example, if the repo is private), you can manually download the binary by clicking on the artifact in the GitHub release page from your local machine.
@@ -136,7 +136,7 @@ sudo supervisorctl start javelin-overwatch
 
 1. Below is a minimal Python client that calls the `read_wiki_structure` tool on the DeepWiki MCP. Save as deepwiki_call_read_structure.py (or a name you prefer).
 
-2. `python deepwiki_call_read_structure.py --repo "getjavelin/ramparts"` Use this command to run the deepwiki client/ 
+2. `python deepwiki_call_read_structure.py --repo "highflame-ai/ramparts"` Use this command to run the deepwiki client/ 
 
 ```python
 #!/usr/bin/env python3
@@ -148,7 +148,7 @@ sudo supervisorctl start javelin-overwatch
 Call read_wiki_structure on DeepWiki MCP (minimal, fixed factory)
 
 Usage:
-  python3 deepwiki_call_read_structure.py --repo "github.com/getjavelin/ramparts" \
+  python3 deepwiki_call_read_structure.py --repo "github.com/highflame-ai/ramparts" \
       [--bearer ABC123] [--transport http|sse]
 
 Defaults:

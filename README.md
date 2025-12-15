@@ -1,6 +1,6 @@
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/getjavelin/javelin-iac)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/getjavelin/highflame-iac)
 
-# javelin-iac
+# highflame-iac
 
 [Javelin Architecture Details](./docs/Architecture.md)
 
