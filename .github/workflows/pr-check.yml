@@ -1,4 +1,4 @@
-name: PR Merge Check - Javelin Iac
+name: PR Merge Check - Highflame Iac
 
 on:
   pull_request:
