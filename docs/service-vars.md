@@ -130,9 +130,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_HOST` | Postgres host | nil | -
 `XAI_API_KEY` | Xai api key | nil | optional
 `REDIS_CONN_STR` | Redis connection string | nil | -
-`AZURE_API_KEY` | Azure OpenAI api key | nil | conflict with variable `OPENAI_API_KEY`
-`AZURE_API_BASE` | Azure OpenAI API base | nil | conflict with variable `OPENAI_API_KEY`
-`AZURE_API_VERSION` | Azure OpenAI version | nil | conflict with variable `OPENAI_API_KEY`
+`AZURE_API_KEY` | Azure OpenAI api key | nil | -
+`AZURE_API_BASE` | Azure OpenAI API base | nil | -
+`AZURE_API_VERSION` | Azure OpenAI version | nil | -
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
@@ -141,7 +141,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `MODEL_HIGH_END` | Provider high model name | nil | -
 `MODEL_LOW_END` | Provider low model name | nil | -
 `EMBEDDING_MODEL` | Embedding model name | nil | -
-`GROK_MODEL` | Grok3 model name | nil | -
+`GROK_MODEL` | Grok model name | nil | -
+`DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure` or `local` 
 
 ### javelin-redteam-lab1
 
