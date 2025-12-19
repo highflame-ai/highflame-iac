@@ -54,12 +54,5 @@ worker:
 seederJob:
   enabled: false
 
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kube/nodegroup
-          operator: In
-          values:
-          - general
+nodeSelector:
+  kube/nodegroup: "general"
