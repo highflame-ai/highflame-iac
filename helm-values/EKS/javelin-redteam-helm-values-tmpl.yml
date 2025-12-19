@@ -47,15 +47,8 @@ secrets:
 #     readOnly: true
 #     subPath: redis-ca.pem
 
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kube/nodegroup
-          operator: In
-          values:
-          - general
+nodeSelector:
+  kube/nodegroup: "general"
 
 worker:
   autoscaling:
@@ -77,15 +70,8 @@ worker:
       memory: 1024Mi
       cpu: 1000m
 
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: kube/nodegroup
-            operator: In
-            values:
-            - general
+  nodeSelector:
+    kube/nodegroup: "general"
 
 seederJob:
   enabled: true
