@@ -1,10 +1,11 @@
-fullnameOverride: "javelin-admin"
+fullnameOverride: "highflame-eval"
+progressDeadlineSeconds: 1200
 
 livenessProbe:
   httpGet:
-    path: /v1/admin/healthz
-    port: 8040
-  initialDelaySeconds: 15
+    path: /
+    port: 8009
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -12,9 +13,9 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/admin/healthz
-    port: 8040
-  initialDelaySeconds: 15
+    path: /
+    port: 8009
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -37,7 +38,7 @@ podDisruptionBudget:
 service:
   type: ClusterIP
   protocol: TCP
-  port: 8040
+  port: 8009
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -49,45 +50,11 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 256Mi
-    cpu: 200m
-  limits:
-    memory: 1024Mi
+    memory: 4096Mi
     cpu: 500m
-
-secrets:
-  enabled: true
-  secretData:
-    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
-
-volumes:
-  - name: license-volume
-    secret:
-      secretName: javelin-admin-license
-      optional: false
-  # - name: redis-cert-volume
-  #   secret:
-  #     secretName: javelin-admin-redis-cert
-  #     optional: false
-
-volumeMounts:
-  - name: license-volume
-    mountPath: "/app/license"
-    readOnly: true
-  # - name: redis-cert-volume
-  #   mountPath: "/app/certs/redis-ca.pem"
-  #   readOnly: true
-  #   subPath: redis-ca.pem
-
-serviceAccount:
-  create: true
-  automount: true
-  # annotations:
-  #   azure.workload.identity/client-id: "${SVC_IAM_CLIENT_ID}"
-  rules:
-    - apiGroups: [ "" ]
-      resources: [ "secrets" ]
-      verbs: [ "get", "list", "create", "update", "patch", "delete" ]
+  limits:
+    memory: 8192Mi
+    cpu: 2000m
 
 ingress:
   enabled: true
@@ -99,17 +66,17 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/v1/admin/healthz"
+    appgw.ingress.kubernetes.io/health-probe-path: "/"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - api-staging.example.com
-      secretName: javelin-admin-tls
+        - eval.api-staging.example.com
+      secretName: highflame-eval-tls
   hosts:
-    - host: api-staging.example.com
+    - host: eval.api-staging.example.com
       paths:
-        - path: /v1/admin/
+        - path: /
           pathType: Prefix

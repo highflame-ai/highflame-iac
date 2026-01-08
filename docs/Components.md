@@ -28,7 +28,7 @@ These are the resources that we are provisioning in the cloud for setting up the
 
     * Minimum 4 nodes with 4 vCPU and 16 GB RAM - Javelin core services
 
-    * Minimum 8 vCPU and 32 GB RAM with GPU enabled - Javelin guard models
+    * Minimum 8 vCPU and 32 GB RAM with GPU enabled - Highflame guard models
 
 * CloudWatch LogGroup
 
@@ -93,7 +93,7 @@ These are the resources that we are provisioning in the cloud for setting up the
 
     * Minimum 4 nodes with 4 vCPU and 16 GB RAM - Javelin core services
 
-    * Minimum 8 vCPU and 32 GB RAM with GPU enabled - Javelin guard models
+    * Minimum 8 vCPU and 32 GB RAM with GPU enabled - Highflame guard models
 
 * Application Gateway for AKS ingress controller
 

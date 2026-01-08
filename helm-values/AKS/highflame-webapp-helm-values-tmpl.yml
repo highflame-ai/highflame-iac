@@ -1,25 +1,24 @@
-fullnameOverride: "javelin-eval"
-progressDeadlineSeconds: 1200
+fullnameOverride: "highflame-webapp"
 
 livenessProbe:
   httpGet:
-    path: /
-    port: 8009
+    path: /sign-in
+    port: 3000
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 2
+  failureThreshold: 4
 
 readinessProbe:
   httpGet:
-    path: /
-    port: 8009
+    path: /sign-in
+    port: 3000
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 2
+  failureThreshold: 4
 
 nodeSelector:
   kube/nodegroup: "general"
@@ -38,7 +37,7 @@ podDisruptionBudget:
 service:
   type: ClusterIP
   protocol: TCP
-  port: 8009
+  port: 3000
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -50,11 +49,16 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 4096Mi
-    cpu: 500m
+    memory: 256Mi
+    cpu: 200m
   limits:
-    memory: 8192Mi
-    cpu: 2000m
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
 ingress:
   enabled: true
@@ -66,17 +70,17 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/"
+    appgw.ingress.kubernetes.io/health-probe-path: "/sign-in"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - eval.api-staging.example.com
-      secretName: javelin-eval-tls
+        - staging.example.com
+      secretName: highflame-webapp-tls
   hosts:
-    - host: eval.api-staging.example.com
+    - host: staging.example.com
       paths:
         - path: /
           pathType: Prefix

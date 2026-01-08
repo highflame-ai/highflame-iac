@@ -1,6 +1,6 @@
 ## Module Specific Environment Variables
 
-### javelin-admin
+### highflame-admin
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
@@ -22,10 +22,10 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
-`JAVELIN_FF_URL` | Javelin flag url | `http://javelin-flag:1031/` | -
-`JAVELIN_REDTEAM_URL` | Javelin redteam url | `http://javelin-redteam:8001/v1` | -
+`HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
+`HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
 
-### javelin-core
+### highflame-core
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
@@ -44,24 +44,24 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `DEPLOY_TYPE` | Deploy type | `dev` | `dev` or `prod`
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
-`JAVELIN_ADMIN_URL` | Javelin admin url | `http://javelin-admin:8040` | -
-`JAVELIN_EVAL_URL` | Javelin eval url | `http://javelin-eval:8009` | -
-`JAVELIN_DLP_URL` | Javelin dlp url | `http://javelin-dlp:8888` | -
-`JAVELIN_FF_URL` | Javelin flag url | `http://javelin-flag:1031/` | -
-`JAVELIN_GUARD_URL` | Javelin guard url | `http://javelin-guard:8013` | -
-`JAVELIN_GUARD_CM_URL` | Javelin guard cm url | `http://javelin-guard-cm:8014` | -
-`JAVELIN_GUARD_HALLUCINATION_URL` | Javelin guard hallucination url | `http://javelin-guard-hallucination:8015` | -
-`JAVELIN_GUARD_PLI_URL` | Javelin guard pli url | `http://javelin-guard-pli:8016` | -
-`JAVELIN_GUARD_LANGUAGE_URL` | Javelin guard language url | `http://javelin-guard-lang:8020` | -
-`JAVELIN_GUARD_FACTCHECK_URL` | Javelin guard factual url | `http://javelin-guard-fact:8018` | -
-`JAVELIN_GUARD_SENTIMENT_URL` | Javelin guard sentiment url | `http://javelin-guard-sentiment:8021` | -
+`HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
+`HIGHFLAME_EVAL_URL` | highflame eval url | `http://highflame-eval:8009` | -
+`HIGHFLAME_DLP_URL` | highflame dlp url | `http://highflame-dlp:8888` | -
+`HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
+`HIGHFLAME_GUARD_URL` | highflame guard url | `http://highflame-guard:8013` | -
+`HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
+`HIGHFLAME_GUARD_HALLUCINATION_URL` | highflame guard hallucination url | `http://highflame-guard-hallucination:8015` | -
+`HIGHFLAME_GUARD_PLI_URL` | highflame guard pli url | `http://highflame-guard-pli:8016` | -
+`HIGHFLAME_GUARD_LANGUAGE_URL` | highflame guard language url | `http://highflame-guard-lang:8020` | -
+`HIGHFLAME_GUARD_FACTCHECK_URL` | highflame guard factual url | `http://highflame-guard-fact:8018` | -
+`HIGHFLAME_GUARD_SENTIMENT_URL` | highflame guard sentiment url | `http://highflame-guard-sentiment:8021` | -
+`HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-saas-bloom-filter-store` | -
+`HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
 `REFRESH_SECRETS_ON_401` | Refresh secrets on 401 | `true` | `true` or `false`
-`JAVELIN_CHECKPHISH_BUCKET_NAME` | Javelin checkphish bucket name | `javelin-saas-bloom-filter-store` | -
-`JAVELIN_CHECKPHISH_OBJECT_NAME` | Javelin checkphish object name | `bloom_filter_url.gob` | -
 `BYPASS_GUARDRAILS` | Bypass guardrails for streaming | `true` | `true` or `false`
 `AUTO_PROVISION_APPLICATION` | Auto provision the application | `true` | `true` or `false`
 `GOOGLE_CLOUD_PROJECT` | GCP project id | `javelin-saas` | -
-`GOOGLE_APPLICATION_CREDENTIALS` | GCP json cred path | `/app/config/javelin-gcpjson.json` | -
+`GOOGLE_APPLICATION_CREDENTIALS` | GCP json cred path | `/app/config/gcp-credential.json` | -
 `AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | optional
 `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | optional
 `AWS_REGION` | AWS Region | `""` | optional
@@ -70,7 +70,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTEL exporter endpoint | `""` | optional
 `OTEL_EXPORTER_OTLP_HEADERS` | OTEL exporter headers | `""` | optional
 
-### javelin-webapp
+### highflame-webapp
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
@@ -88,7 +88,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@highflame.com` | -
 `SUPPORT_SMTP_SERVICE` | SMTP Service type | `Gmail` | -
 `NEXT_PUBLIC_SECRET_STORE` | Secret Store | `kubernetes` | `kubernetes` or `aws` or combination (`kubernetes,aws`)
-`NEXT_PUBLIC_CORE_INT_URL` | Javelin core internal url | `http://javelin-core:8000/` | -
+`NEXT_PUBLIC_CORE_INT_URL` | Highflame core internal url | `http://highflame-core:8000/` | -
 `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
 `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/signup` | -
 `NEXT_PUBLIC_POSTHOG_HOST` | Posthog url | `https://us.i.posthog.com` | -
@@ -96,19 +96,13 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_SAAS_SERVICE` | Showcase the SaaS services in the UI | `FALSE` | `TRUE` or `FALSE`
 `NEXT_PUBLIC_CLERK_SIGNUP` | Enable clerk sign up | `visible` | `visible` or `hidden`
 `NEXT_PUBLIC_BUID_MAX_GATEWAYS` | Max number of gateway | `2` | -
-`NEXT_PUBLIC_DEFAULT_USAGE_PLAN_ID` | Javelin usage plan id | `d1jy0v` | -
+`NEXT_PUBLIC_DEFAULT_USAGE_PLAN_ID` | Highflame usage plan id | `d1jy0v` | -
 `NEXT_PUBLIC_DEPLOYED_TARGET` | Deployed target env | `main` | `main` or `experimental`
 `NEXT_PUBLIC_ONBOARDING_ENABLED` | Enable Onboarding | `false` | -
+`OTEL_ADMIN_EMAIL` | OTEL admin username | `` | -
+`OTEL_ADMIN_PASSWORD` | OTEL admin password | `` | -
 
-### javelin-eval
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`CORS_ALLOWED_ORIGINS` | CORS allowed origins | `*` | -
-`CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
-`CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
-
-### javelin-dlp
+### highflame-eval
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
@@ -116,7 +110,15 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
 `CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
 
-### javelin-redteam
+### highflame-dlp
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CORS_ALLOWED_ORIGINS` | CORS allowed origins | `*` | -
+`CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
+`CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
+
+### highflame-redteam
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
@@ -137,14 +139,14 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
-`JAVELIN_ADMIN_URL` | Javelin admin url | `http://javelin-admin:8040` | -
+`Highflame_ADMIN_URL` | Highflame admin url | `http://highflame-admin:8040` | -
 `MODEL_HIGH_END` | Provider high model name | nil | -
 `MODEL_LOW_END` | Provider low model name | nil | -
 `EMBEDDING_MODEL` | Embedding model name | nil | -
 `GROK_MODEL` | Grok model name | nil | -
 `DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure` or `local` 
 
-### javelin-redteam-lab1
+### highflame-redteam-lab1
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
@@ -161,11 +163,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `OPENAI_API_KEY_1` | OpenAi api key | nil | for `DEFAULT_PROVIDER=openai` and need rotational key for model access
 `OPENAI_API_KEY_2` | OpenAi api key | nil | for `DEFAULT_PROVIDER=openai` and need rotational key for model access
 `OPENAI_API_KEY_3` | OpenAi api key | nil | for `DEFAULT_PROVIDER=openai` and need rotational key for model access
-`LOCAL_API_BASE` | Local API base | `http://javelin-chat-tester:8080` | for `DEFAULT_PROVIDER=local`
+`LOCAL_API_BASE` | Local API base | `http://highflame-chat-tester:8080` | for `DEFAULT_PROVIDER=local`
 `LOCAL_API_KEY` | Local api key | nil | for `DEFAULT_PROVIDER=local`
 `DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure` or `local` 
 
-### ramparts-server
+### highflame-ramparts-server
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
@@ -174,24 +176,24 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `LLM_URL` | LLM complete URL | nil | -
 `LLM_API_KEY` | LLM API Key | nil | -
 
-### javelin-scout
+### highflame-scout
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`JAVELIN_URL` | Javelin API URL | nil | -
-`JAVELIN_API_KEY` | Javelin API Key | nil | -
+`HIGHFLAME_URL` | Highflame API URL | nil | -
+`HIGHFLAME_API_KEY` | Highflame API Key | nil | -
 
-### javelin-cerberus
+### highflame-cerberus
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`JAVELIN_URL` | Javelin API URL | `http://javelin-core:8000` | -
-`JAVELIN_API_KEY` | Javelin API Key | nil | -
+`HIGHFLAME_URL` | Highflame API URL | `http://highflame-core:8000` | -
+`HIGHFLAME_API_KEY` | Highflame API Key | nil | -
 `LANGFUSE_API_URL` | Langfuse endpoint | `http://langfuse-web:3000` | -
 
-### javelin-collector
+### highflame-collector
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | `http://javelin-cerberus:8080` | -
+`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | `http://highflame-cerberus:8080` | -
 `LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | `http://langfuse-web:3000` | -

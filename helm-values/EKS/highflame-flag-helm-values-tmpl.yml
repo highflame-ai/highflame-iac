@@ -1,11 +1,10 @@
-fullnameOverride: "javelin-dlp"
-progressDeadlineSeconds: 1200
+fullnameOverride: "highflame-flag"
 
 livenessProbe:
   httpGet:
-    path: /v1/guard/local_dlp/healthz
-    port: 8888
-  initialDelaySeconds: 30
+    path: /health
+    port: 1031
+  initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -13,9 +12,9 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/guard/local_dlp/healthz
-    port: 8888
-  initialDelaySeconds: 30
+    path: /health
+    port: 1031
+  initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -23,6 +22,9 @@ readinessProbe:
 
 nodeSelector:
   kube/nodegroup: "general"
+
+podRestart:
+  enabled: true
 
 autoscaling:
   enabled: true
@@ -38,7 +40,7 @@ podDisruptionBudget:
 service:
   type: ClusterIP
   protocol: TCP
-  port: 8888
+  port: 1031
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -50,8 +52,20 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 1536Mi
-    cpu: 300m
+    memory: 64Mi
+    cpu: 50m
   limits:
-    memory: 2048Mi
-    cpu: 1000m
+    memory: 256Mi
+    cpu: 200m
+
+volumes:
+  - name: goff-volume
+    secret:
+      secretName: highflame-flag-file
+      optional: false
+
+volumeMounts:
+  - name: goff-volume
+    mountPath: /goff/config/goff.yaml
+    readOnly: true
+    subPath: goff.yaml

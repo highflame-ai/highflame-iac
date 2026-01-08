@@ -41,12 +41,12 @@ workload_identity                           = [
                                                 {
                                                   id             = 1
                                                   namespace      = "javelin-poc"
-                                                  serviceaccount = "javelin-core"
+                                                  serviceaccount = "highflame-core"
                                                 },
                                                 {
                                                   id             = 2
                                                   namespace      = "javelin-poc"
-                                                  serviceaccount = "javelin-admin"
+                                                  serviceaccount = "highflame-admin"
                                                 }
                                               ]
 enable_self_signed_cert                     = true

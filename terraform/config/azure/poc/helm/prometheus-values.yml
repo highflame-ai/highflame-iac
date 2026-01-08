@@ -1,14 +1,14 @@
 extraScrapeConfigs: |
-  - job_name: 'javelin-metrics'
+  - job_name: 'highflame-metrics'
     metrics_path: '/v1/metrics/usage'
     static_configs:
       - targets:
-          - javelin-core.${service_namespace}.svc.cluster.local:8000
-  - job_name: 'javelin-system-metrics'
+          - highflame-core.${service_namespace}.svc.cluster.local:8000
+  - job_name: 'highflame-system-metrics'
     metrics_path: 'v1/metrics/system'
     static_configs:
       - targets:
-        - javelin-core.${service_namespace}.svc.cluster.local:8000
+        - highflame-core.${service_namespace}.svc.cluster.local:8000
 
 server:
   # # prefixURL: /

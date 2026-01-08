@@ -38,7 +38,7 @@ secrets:
 # volumes:
 #   - name: redis-cert-volume
 #     secret:
-#       secretName: javelin-redteam-redis-cert
+#       secretName: highflame-redteam-redis-cert
 #       optional: false
 
 # volumeMounts:

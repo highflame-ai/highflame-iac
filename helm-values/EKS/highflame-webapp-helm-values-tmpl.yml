@@ -1,30 +1,30 @@
-fullnameOverride: "javelin-guard"
+fullnameOverride: "highflame-webapp"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
-  initialDelaySeconds: 15
+    path: /sign-in
+    port: 3000
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 2
+  failureThreshold: 4
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
-  initialDelaySeconds: 15
+    path: /sign-in
+    port: 3000
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 2
+  failureThreshold: 4
 
 nodeSelector:
-  kube/nodegroup: "gpu"
+  kube/nodegroup: "general"
 
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 4
   targetCPUUtilizationPercentage: 80
@@ -37,7 +37,7 @@ podDisruptionBudget:
 service:
   type: NodePort
   protocol: TCP
-  port: 8013
+  port: 3000
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -49,11 +49,16 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 10Gi
-    cpu: 3000m
+    memory: 256Mi
+    cpu: 200m
   limits:
-    memory: 14Gi
-    cpu: 3500m
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
 ingress:
   enabled: true
@@ -62,7 +67,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard/health
+    alb.ingress.kubernetes.io/healthcheck-path: /sign-in
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -71,7 +76,6 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
     alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
 
     alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
@@ -80,7 +84,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: model.api-dev.example.com
+    - host: dev.example.com
       paths:
-        - path: /v1/internal/guard/
+        - path: /
           pathType: Prefix

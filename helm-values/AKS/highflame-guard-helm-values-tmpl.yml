@@ -1,9 +1,9 @@
-fullnameOverride: "javelin-ramparts-server"
+fullnameOverride: "highflame-guard"
 
 livenessProbe:
   httpGet:
-    path: /v1/ramparts/health
-    port: 8080
+    path: /v1/internal/guard/health
+    port: 8013
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/ramparts/health
-    port: 8080
+    path: /v1/internal/guard/health
+    port: 8013
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -21,12 +21,10 @@ readinessProbe:
   failureThreshold: 2
 
 nodeSelector:
-  kube/nodegroup: "general"
-
-terminationGracePeriodSeconds: 60
+  kube/nodegroup: "gpu"
 
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 4
   targetCPUUtilizationPercentage: 80
@@ -37,9 +35,11 @@ podDisruptionBudget:
   minAvailable: 1
 
 service:
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard/health
   type: NodePort
   protocol: TCP
-  port: 8080
+  port: 8013
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -49,18 +49,13 @@ image:
 imagePullSecrets:
   - name: javelin-registry-secret
 
-secrets:
-  enabled: true
-  secretData:
-    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
-
 resources:
   requests:
-    memory: 256Mi
-    cpu: 200m
+    memory: 10Gi
+    cpu: 3000m
   limits:
-    memory: 1024Mi
-    cpu: 500m
+    memory: 14Gi
+    cpu: 3500m
 
 ingress:
   enabled: true
@@ -69,7 +64,6 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/ramparts/health
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -87,7 +81,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: api-dev.example.com
+    - host: model.api-dev.example.com
       paths:
-        - path: /v1/ramparts/
+        - path: /v1/internal/guard/
           pathType: Prefix

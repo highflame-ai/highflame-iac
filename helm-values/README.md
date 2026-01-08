@@ -1,202 +1,202 @@
-# Javelin Helm charts Values file
+# Highflame Helm charts Values file
 
 This folder contains the Helm charts values files for different Kubernetes services.
 You can refer to these files and patch them with your customizations.
 
-## Steps to install the Javelin Charts
+## Steps to install the highflame Charts
 
 * Update the helm values for respective microservices
 
-* Add Javelin repo to local
+* Add highflame chart repo to local
 
 ```bash
-helm repo add javelin-charts "https://highflame-ai.github.io/charts
+helm repo add highflame-charts "https://highflame-ai.github.io/charts
 helm repo update
-helm search repo javelin-charts
+helm search repo highflame-charts
 ```
 
 * Set the default variables such as charts version and namespace
 
 ```bash
-export JAVELIN_NAMESPACE="javelin-dev"
-export JAVELIN_GENERIC_VER="1.0.6"
-export JAVELIN_REDTEAM_VER="1.0.24"
-export JAVELIN_INGRESS_VER="1.0.22"
+export HIGHFLAME_NAMESPACE="javelin-dev"
+export HIGHFLAME_GENERIC_VER="1.0.1"
+export HIGHFLAME_REDTEAM_VER="1.0.1"
+export HIGHFLAME_INGRESS_VER="1.0.0"
 ```
 
 * Service level setup and deployment
 
-    * `javelin-admin`
+    * `highflame-admin`
 
         ```bash
-        kubectl --namespace ${JAVELIN_NAMESPACE} create secret generic javelin-admin-license --from-file=license.jwt --from-file=public.pem
-        kubectl --namespace ${JAVELIN_NAMESPACE} create secret generic javelin-admin-redis-cert --from-file=redis-ca.pem # optional
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-admin-license --from-file=license.jwt --from-file=public.pem
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-admin-redis-cert --from-file=redis-ca.pem # optional
 
-        helm upgrade --install javelin-admin javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-admin-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-admin highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-admin-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-admin
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-admin
         ```
 
-    * `javelin-core`
+    * `highflame-core`
 
         ```bash
-        kubectl --namespace ${JAVELIN_NAMESPACE} create secret generic javelin-core-file --from-file=javelin-gcpjson.json
-        kubectl --namespace ${JAVELIN_NAMESPACE} create secret generic javelin-core-redis-cert --from-file=redis-ca.pem # optional
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-core-file --from-file=gcp-credential.json
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-core-redis-cert --from-file=redis-ca.pem # optional
 
-        helm upgrade --install javelin-core javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-core-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-core highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-core-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-core
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-core
         ```
 
-    * `javelin-dlp`
+    * `highflame-dlp`
 
         ```bash
-        helm upgrade --install javelin-dlp javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-dlp-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-dlp highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-dlp-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-dlp
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-dlp
         ```
 
-    * `javelin-eval`
+    * `highflame-eval`
 
         ```bash
-        helm upgrade --install javelin-eval javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-eval-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-eval highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-eval-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-eval
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-eval
         ```
 
-    * `javelin-flag`
+    * `highflame-flag`
 
         ```bash
-        kubectl --namespace ${JAVELIN_NAMESPACE} create secret generic javelin-flag-file --from-file=javelin.goff.yaml
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-flag-file --from-file=goff.yaml
 
-        helm upgrade --install javelin-flag javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-flag-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-flag highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-flag-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-flag
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-flag
         ```
 
-    * `javelin-guard`
+    * `highflame-guard`
 
         ```bash
-        helm upgrade --install javelin-guard javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-guard-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-guard highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-guard-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-guard
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard
         ```
 
-    * `javelin-guard-cm`
+    * `highflame-guard-cm`
 
         ```bash
-        helm upgrade --install javelin-guard-cm javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-guard-cm-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-guard-cm highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-guard-cm-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-guard-cm
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-cm
         ```
 
-    * `javelin-guard-hallucination`
+    * `highflame-guard-hallucination`
 
         ```bash
-        helm upgrade --install javelin-guard-hallucination javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-guard-hallucination-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-guard-hallucination highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-guard-hallucination-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-guard-hallucination
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-hallucination
         ```
 
-    * `javelin-guard`
+    * `highflame-guard`
 
         ```bash
-        helm upgrade --install javelin-guard javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-guard-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-guard highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-guard-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-guard
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard
         ```
 
-    * `javelin-guard-lang`
+    * `highflame-guard-lang`
 
         ```bash
-        helm upgrade --install javelin-guard-lang javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-guard-lang-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-guard-lang highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-guard-lang-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-guard-lang
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-lang
         ```
 
-    * `javelin-ramparts-server`
+    * `highflame-ramparts-server`
 
         ```bash
-        helm upgrade --install javelin-ramparts-server javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-ramparts-server-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-ramparts-server highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-ramparts-server-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-ramparts-server
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-ramparts-server
         ```
 
-    * `javelin-redteam`
+    * `highflame-redteam`
 
         ```bash
-        kubectl --namespace ${JAVELIN_NAMESPACE} create secret generic javelin-redteam-redis-cert --from-file=redis-ca.pem # optional
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-redteam-redis-cert --from-file=redis-ca.pem # optional
 
-        helm upgrade --install javelin-redteam javelin-charts/javelin-redteam \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_REDTEAM_VER} \
-            -f javelin-redteam-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-redteam highflame-charts/highflame-redteam \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_REDTEAM_VER} \
+            -f highflame-redteam-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-redteam
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-redteam
         ```
 
-    * `javelin-redteam-lab1`
+    * `highflame-redteam-lab1`
 
         ```bash
-        helm upgrade --install javelin-redteam-lab1 javelin-charts/javelin-redteam \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_REDTEAM_VER} \
-            -f javelin-redteam-lab1-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-redteam-lab1 highflame-charts/highflame-redteam \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_REDTEAM_VER} \
+            -f highflame-redteam-lab1-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-redteam-lab1
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-redteam-lab1
         ```
 
-    * `javelin-scout`
+    * `highflame-scout`
 
         ```bash
-        helm upgrade --install javelin-scout javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-scout-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-scout highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-scout-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get daemonsets javelin-scout
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get daemonsets highflame-scout
         ```
 
-    * `javelin-webapp`
+    * `highflame-webapp`
 
         ```bash
-        helm upgrade --install javelin-webapp javelin-charts/javelin-generic \
-            --namespace ${JAVELIN_NAMESPACE} \
-            --version ${JAVELIN_GENERIC_VER} \
-            -f javelin-webapp-helm-values-tmpl.yml --timeout=15m
+        helm upgrade --install highflame-webapp highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-webapp-helm-values-tmpl.yml --timeout=15m
 
-        kubectl --namespace ${JAVELIN_NAMESPACE} get deployment javelin-webapp
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-webapp
         ```
