@@ -1,9 +1,9 @@
-fullnameOverride: "javelin-guard-lang"
+fullnameOverride: "highflame-admin"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-language-detect/health
-    port: 8020
+    path: /v1/admin/healthz
+    port: 8040
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-language-detect/health
-    port: 8020
+    path: /v1/admin/healthz
+    port: 8040
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -24,7 +24,7 @@ nodeSelector:
   kube/nodegroup: "general"
 
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 4
   targetCPUUtilizationPercentage: 80
@@ -37,7 +37,7 @@ podDisruptionBudget:
 service:
   type: NodePort
   protocol: TCP
-  port: 8020
+  port: 8040
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -49,11 +49,45 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 6Gi
-    cpu: 1500m
+    memory: 256Mi
+    cpu: 200m
   limits:
-    memory: 8Gi
-    cpu: 2000m
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
+volumes:
+  - name: license-volume
+    secret:
+      secretName: highflame-admin-license
+      optional: false
+  # - name: redis-cert-volume
+  #   secret:
+  #     secretName: highflame-admin-redis-cert
+  #     optional: false
+
+volumeMounts:
+  - name: license-volume
+    mountPath: "/app/license"
+    readOnly: true
+  # - name: redis-cert-volume
+  #   mountPath: "/app/certs/redis-ca.pem"
+  #   readOnly: true
+  #   subPath: redis-ca.pem
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations:
+    eks.amazonaws.com/role-arn: "${SVC_IAM_ROLE}"
+  rules:
+    - apiGroups: [ "" ]
+      resources: [ "secrets" ]
+      verbs: [ "get", "list", "create", "update", "patch", "delete" ]
 
 ingress:
   enabled: true
@@ -62,7 +96,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-language-detect/health
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/admin/healthz
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -80,7 +114,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: model.api-dev.example.com
+    - host: api-dev.example.com
       paths:
-        - path: /v1/internal/guard-language-detect/
+        - path: /v1/admin/
           pathType: Prefix

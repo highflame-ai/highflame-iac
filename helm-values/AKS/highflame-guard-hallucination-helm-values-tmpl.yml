@@ -1,4 +1,4 @@
-fullnameOverride: "javelin-guard-hallucination"
+fullnameOverride: "highflame-guard-hallucination"
 
 livenessProbe:
   httpGet:
@@ -35,6 +35,8 @@ podDisruptionBudget:
   minAvailable: 1
 
 service:
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-hallucination/health
   type: NodePort
   protocol: TCP
   port: 8015
@@ -62,7 +64,6 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-hallucination/health
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'

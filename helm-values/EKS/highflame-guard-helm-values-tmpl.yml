@@ -1,9 +1,9 @@
-fullnameOverride: "javelin-guard-lang"
+fullnameOverride: "highflame-guard"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-language-detect/health
-    port: 8020
+    path: /v1/internal/guard/health
+    port: 8013
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-language-detect/health
-    port: 8020
+    path: /v1/internal/guard/health
+    port: 8013
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -21,7 +21,7 @@ readinessProbe:
   failureThreshold: 2
 
 nodeSelector:
-  kube/nodegroup: "general"
+  kube/nodegroup: "gpu"
 
 autoscaling:
   enabled: false
@@ -35,11 +35,9 @@ podDisruptionBudget:
   minAvailable: 1
 
 service:
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-language-detect/health
   type: NodePort
   protocol: TCP
-  port: 8020
+  port: 8013
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -51,11 +49,11 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 6Gi
-    cpu: 1500m
+    memory: 10Gi
+    cpu: 3000m
   limits:
-    memory: 8Gi
-    cpu: 2000m
+    memory: 14Gi
+    cpu: 3500m
 
 ingress:
   enabled: true
@@ -64,6 +62,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard/health
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -83,5 +82,5 @@ ingress:
   hosts:
     - host: model.api-dev.example.com
       paths:
-        - path: /v1/internal/guard-language-detect/
+        - path: /v1/internal/guard/
           pathType: Prefix

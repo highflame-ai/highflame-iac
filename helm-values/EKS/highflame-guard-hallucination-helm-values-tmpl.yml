@@ -1,9 +1,9 @@
-fullnameOverride: "javelin-guard-cm"
+fullnameOverride: "highflame-guard-hallucination"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-cm/health
-    port: 8014
+    path: /v1/internal/guard-hallucination/health
+    port: 8015
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-cm/health
-    port: 8014
+    path: /v1/internal/guard-hallucination/health
+    port: 8015
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -35,11 +35,9 @@ podDisruptionBudget:
   minAvailable: 1
 
 service:
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-cm/health
   type: NodePort
   protocol: TCP
-  port: 8014
+  port: 8015
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -64,6 +62,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-hallucination/health
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -83,5 +82,5 @@ ingress:
   hosts:
     - host: model.api-dev.example.com
       paths:
-        - path: /v1/internal/guard-cm/
+        - path: /v1/internal/guard-hallucination/
           pathType: Prefix

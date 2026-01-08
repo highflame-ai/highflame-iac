@@ -175,6 +175,6 @@ If you are testing on a new gateway, ensure you have set up the correct processo
 
 To test different models or providers, update the provider configuration and route directly in the `smoke_test.py` script. Look for variables or configuration sections related to the provider and route, and modify them as needed for your use case.
 
-For a list of supported LLMs and their configuration details, refer to the official Javelin documentation: [Supported Language Models](https://docs.getjavelin.io/docs/javelin-core/supported-llms)
+For a list of supported LLMs and their configuration details, refer to the official Javelin documentation: [Supported Language Models](https://docs.getjavelin.io/docs/highflame-core/supported-llms)
 
 ---

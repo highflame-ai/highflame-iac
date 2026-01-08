@@ -1,4 +1,4 @@
-fullnameOverride: "javelin-ramparts-server"
+fullnameOverride: "highflame-ramparts-server"
 
 livenessProbe:
   httpGet:

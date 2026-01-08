@@ -1,28 +1,34 @@
-fullnameOverride: "javelin-redteam-lab1"
-
-service:
-  type: ClusterIP
-  protocol: TCP
-  port: 8002
+fullnameOverride: "highflame-scout"
+deployKind: "DaemonSet"
 
 livenessProbe:
-  httpGet:
-    path: /v1/redteam/lab1/health
-    port: 8002
+  exec:
+    command:
+      - sh
+      - -c
+      - |
+        pgrep scout
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 2
+
 readinessProbe:
-  httpGet:
-    path: /v1/redteam/lab1/health
-    port: 8002
+  exec:
+    command:
+      - sh
+      - -c
+      - |
+        pgrep scout
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 2
+
+securityContext:
+  privileged: true
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -38,21 +44,9 @@ resources:
     cpu: 100m
   limits:
     memory: 1024Mi
-    cpu: 500m
+    cpu: 200m
 
 secrets:
   enabled: true
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
-
-secretsApiSpecific:
-  enabled: false
-
-worker:
-  enabled: false
-
-seederJob:
-  enabled: false
-
-nodeSelector:
-  kube/nodegroup: "general"

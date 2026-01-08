@@ -1,9 +1,9 @@
-fullnameOverride: "javelin-core"
+fullnameOverride: "highflame-ramparts-server"
 
 livenessProbe:
   httpGet:
-    path: /v1/system/healthz
-    port: 8000
+    path: /v1/ramparts/health
+    port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/system/healthz
-    port: 8000
+    path: /v1/ramparts/health
+    port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -22,6 +22,8 @@ readinessProbe:
 
 nodeSelector:
   kube/nodegroup: "general"
+
+terminationGracePeriodSeconds: 60
 
 autoscaling:
   enabled: true
@@ -37,7 +39,7 @@ podDisruptionBudget:
 service:
   type: NodePort
   protocol: TCP
-  port: 8000
+  port: 8080
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -47,48 +49,18 @@ image:
 imagePullSecrets:
   - name: javelin-registry-secret
 
-resources:
-  requests:
-    memory: 512Mi
-    cpu: 200m
-  limits:
-    memory: 1024Mi
-    cpu: 500m
-
 secrets:
   enabled: true
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
-volumes:
-  - name: secret-volume
-    secret:
-      secretName: javelin-core-file
-      optional: false
-  # - name: redis-cert-volume
-  #   secret:
-  #     secretName: javelin-core-redis-cert
-  #     optional: false
-
-volumeMounts:
-  - name: secret-volume
-    mountPath: "/app/config/javelin-gcpjson.json"
-    readOnly: true
-    subPath: javelin-gcpjson.json
-  # - name: redis-cert-volume
-  #   mountPath: "/app/certs/redis-ca.pem"
-  #   readOnly: true
-  #   subPath: redis-ca.pem
-
-serviceAccount:
-  create: true
-  automount: true
-  annotations:
-    eks.amazonaws.com/role-arn: "${SVC_IAM_ROLE}"
-  rules:
-    - apiGroups: [ "" ]
-      resources: [ "secrets" ]
-      verbs: [ "get", "list" ]
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 200m
+  limits:
+    memory: 1024Mi
+    cpu: 500m
 
 ingress:
   enabled: true
@@ -97,7 +69,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/system/healthz
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/ramparts/health
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -106,7 +78,7 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
     alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '3'
+    alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
 
     alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
@@ -117,5 +89,5 @@ ingress:
   hosts:
     - host: api-dev.example.com
       paths:
-        - path: /v1/
+        - path: /v1/ramparts/
           pathType: Prefix

@@ -1,9 +1,9 @@
-fullnameOverride: "javelin-guard-hallucination"
+fullnameOverride: "highflame-core"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
-    port: 8015
+    path: /v1/system/healthz
+    port: 8000
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
-    port: 8015
+    path: /v1/system/healthz
+    port: 8000
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -21,10 +21,10 @@ readinessProbe:
   failureThreshold: 2
 
 nodeSelector:
-  kube/nodegroup: "gpu"
+  kube/nodegroup: "general"
 
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 4
   targetCPUUtilizationPercentage: 80
@@ -35,11 +35,9 @@ podDisruptionBudget:
   minAvailable: 1
 
 service:
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-hallucination/health
   type: NodePort
   protocol: TCP
-  port: 8015
+  port: 8000
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -51,11 +49,46 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 10Gi
-    cpu: 3000m
+    memory: 512Mi
+    cpu: 200m
   limits:
-    memory: 14Gi
-    cpu: 3500m
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
+volumes:
+  - name: secret-volume
+    secret:
+      secretName: highflame-core-file
+      optional: false
+  # - name: redis-cert-volume
+  #   secret:
+  #     secretName: highflame-core-redis-cert
+  #     optional: false
+
+volumeMounts:
+  - name: secret-volume
+    mountPath: "/app/config/gcp-credential.json"
+    readOnly: true
+    subPath: gcp-credential.json
+  # - name: redis-cert-volume
+  #   mountPath: "/app/certs/redis-ca.pem"
+  #   readOnly: true
+  #   subPath: redis-ca.pem
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations:
+    eks.amazonaws.com/role-arn: "${SVC_IAM_ROLE}"
+  rules:
+    - apiGroups: [ "" ]
+      resources: [ "secrets" ]
+      verbs: [ "get", "list" ]
 
 ingress:
   enabled: true
@@ -64,6 +97,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/system/healthz
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -72,7 +106,7 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
     alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '2'
+    alb.ingress.kubernetes.io/group.order: '3'
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
 
     alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
@@ -81,7 +115,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: model.api-dev.example.com
+    - host: api-dev.example.com
       paths:
-        - path: /v1/internal/guard-hallucination/
+        - path: /v1/
           pathType: Prefix

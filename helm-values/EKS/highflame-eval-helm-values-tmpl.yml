@@ -1,10 +1,11 @@
-fullnameOverride: "javelin-guard"
+fullnameOverride: "highflame-eval"
+progressDeadlineSeconds: 1200
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
-  initialDelaySeconds: 15
+    path: /
+    port: 8009
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -12,19 +13,19 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
-  initialDelaySeconds: 15
+    path: /
+    port: 8009
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 2
 
 nodeSelector:
-  kube/nodegroup: "gpu"
+  kube/nodegroup: "general"
 
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 4
   targetCPUUtilizationPercentage: 80
@@ -35,11 +36,9 @@ podDisruptionBudget:
   minAvailable: 1
 
 service:
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard/health
   type: NodePort
   protocol: TCP
-  port: 8013
+  port: 8009
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -51,11 +50,11 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 10Gi
-    cpu: 3000m
+    memory: 4096Mi
+    cpu: 500m
   limits:
-    memory: 14Gi
-    cpu: 3500m
+    memory: 8192Mi
+    cpu: 2000m
 
 ingress:
   enabled: true
@@ -64,6 +63,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -72,7 +72,6 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
     alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
 
     alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
@@ -81,7 +80,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: model.api-dev.example.com
+    - host: eval.api-dev.example.com
       paths:
-        - path: /v1/internal/guard/
+        - path: /
           pathType: Prefix

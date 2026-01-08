@@ -1,9 +1,9 @@
-fullnameOverride: "javelin-core"
+fullnameOverride: "highflame-admin"
 
 livenessProbe:
   httpGet:
-    path: /v1/system/healthz
-    port: 8000
+    path: /v1/admin/healthz
+    port: 8040
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/system/healthz
-    port: 8000
+    path: /v1/admin/healthz
+    port: 8040
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -37,7 +37,7 @@ podDisruptionBudget:
 service:
   type: ClusterIP
   protocol: TCP
-  port: 8000
+  port: 8040
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -49,7 +49,7 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 512Mi
+    memory: 256Mi
     cpu: 200m
   limits:
     memory: 1024Mi
@@ -61,20 +61,19 @@ secrets:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
 volumes:
-  - name: secret-volume
+  - name: license-volume
     secret:
-      secretName: javelin-core-file
+      secretName: highflame-admin-license
       optional: false
   # - name: redis-cert-volume
   #   secret:
-  #     secretName: javelin-core-redis-cert
+  #     secretName: highflame-admin-redis-cert
   #     optional: false
 
 volumeMounts:
-  - name: secret-volume
-    mountPath: "/app/config/javelin-gcpjson.json"
+  - name: license-volume
+    mountPath: "/app/license"
     readOnly: true
-    subPath: javelin-gcpjson.json
   # - name: redis-cert-volume
   #   mountPath: "/app/certs/redis-ca.pem"
   #   readOnly: true
@@ -88,7 +87,7 @@ serviceAccount:
   rules:
     - apiGroups: [ "" ]
       resources: [ "secrets" ]
-      verbs: [ "get", "list" ]
+      verbs: [ "get", "list", "create", "update", "patch", "delete" ]
 
 ingress:
   enabled: true
@@ -100,7 +99,7 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/v1/system/healthz"
+    appgw.ingress.kubernetes.io/health-probe-path: "/v1/admin/healthz"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"
@@ -108,9 +107,9 @@ ingress:
   tls:
     - hosts:
         - api-staging.example.com
-      secretName: javelin-core-tls
+      secretName: highflame-admin-tls
   hosts:
     - host: api-staging.example.com
       paths:
-        - path: /v1/
+        - path: /v1/admin/
           pathType: Prefix
