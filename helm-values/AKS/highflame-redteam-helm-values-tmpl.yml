@@ -24,11 +24,11 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 512Mi
-    cpu: 100m
+    memory: 1Gi
+    cpu: 200m
   limits:
-    memory: 1024Mi
-    cpu: 500m
+    memory: 2Gi
+    cpu: 1000m
 
 secrets:
   enabled: true
@@ -51,12 +51,23 @@ nodeSelector:
   kube/nodegroup: "general"
 
 worker:
+  autoscaling:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
   resources:
     requests:
-      memory: 512Mi
+      memory: 1Gi
       cpu: 500m
     limits:
-      memory: 1024Mi
+      memory: 2Gi
       cpu: 1000m
 
   nodeSelector:

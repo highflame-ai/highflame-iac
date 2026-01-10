@@ -50,10 +50,10 @@ imagePullSecrets:
 resources:
   requests:
     memory: 256Mi
-    cpu: 200m
+    cpu: 300m
   limits:
     memory: 1024Mi
-    cpu: 500m
+    cpu: 1000m
 
 secrets:
   enabled: true

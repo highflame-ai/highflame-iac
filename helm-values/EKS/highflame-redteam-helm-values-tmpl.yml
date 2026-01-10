@@ -24,11 +24,11 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 512Mi
-    cpu: 100m
+    memory: 1Gi
+    cpu: 200m
   limits:
-    memory: 1024Mi
-    cpu: 500m
+    memory: 2Gi
+    cpu: 1000m
 
 secrets:
   enabled: true
@@ -53,8 +53,8 @@ nodeSelector:
 worker:
   autoscaling:
     enabled: true
-    minReplicas: 3
-    maxReplicas: 6
+    minReplicas: 4
+    maxReplicas: 8
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
 
@@ -64,10 +64,10 @@ worker:
 
   resources:
     requests:
-      memory: 512Mi
+      memory: 1Gi
       cpu: 500m
     limits:
-      memory: 1024Mi
+      memory: 2Gi
       cpu: 1000m
 
   nodeSelector:
