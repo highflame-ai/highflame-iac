@@ -67,7 +67,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AWS_REGION` | AWS Region | `""` | optional
 `ENABLE_SENTRY` | Sentry dsn | `false` | optional
 `SENTRY_DSN` | Sentry dsn | `""` | optional
-`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTEL exporter endpoint | `https://cerberus-http.api-dev.highflame.dev/api/public/otel/v1/traces` | optional
+`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTEL exporter endpoint | `http://highflame-collector:4318/api/public/otel/v1/traces` | optional
 `OTEL_EXPORTER_OTLP_HEADERS` | OTEL exporter headers | `""` | optional
 
 ### highflame-webapp
