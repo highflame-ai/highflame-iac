@@ -147,6 +147,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `MODEL_LOW_END` | Provider low model name | `gpt35` | -
 `EMBEDDING_MODEL` | Embedding model name | `text-embedding-3-small` | -
 `GROK_MODEL` | Grok model name | `grok-2` | -
+`ATTACK_GEN_MODEL` | Xai model name | `xai/grok-3` | -
 `DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local` 
 
 ### highflame-redteam-lab1
