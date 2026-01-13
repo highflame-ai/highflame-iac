@@ -134,19 +134,20 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_HOST` | Postgres host | nil | -
 `XAI_API_KEY` | Xai api key | nil | optional
 `REDIS_CONN_STR` | Redis connection string | nil | -
+`REDIS_CACERT` | Redis CA Cert | `""` | -
+`REDIS_PROGRESS_TTL_SECONDS` | Redis progress TTL seconds | `86400` | -
 `AZURE_API_KEY` | Azure OpenAI api key | nil | -
 `AZURE_API_BASE` | Azure OpenAI API base | nil | -
-`AZURE_API_VERSION` | Azure OpenAI version | nil | -
-`REDIS_CACERT` | Redis CA Cert | `""` | -
+`AZURE_API_VERSION` | Azure OpenAI version | `2024-02-15-preview` | -
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
 `Highflame_ADMIN_URL` | Highflame admin url | `http://highflame-admin:8040` | -
-`MODEL_HIGH_END` | Provider high model name | nil | -
-`MODEL_LOW_END` | Provider low model name | nil | -
-`EMBEDDING_MODEL` | Embedding model name | nil | -
-`GROK_MODEL` | Grok model name | nil | -
-`DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure` or `local` 
+`MODEL_HIGH_END` | Provider high model name | `gpt-4o` | -
+`MODEL_LOW_END` | Provider low model name | `gpt35` | -
+`EMBEDDING_MODEL` | Embedding model name | `text-embedding-3-small` | -
+`GROK_MODEL` | Grok model name | `grok-2` | -
+`DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local` 
 
 ### highflame-redteam-lab1
 
