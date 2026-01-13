@@ -16,7 +16,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AWS_SECRET_REPLICATION_REGION` | AWS replication region | nil | optional
 `AWS_REPLICATION_KMS_KEY` | AWS KMS Key for secret manager enc in replication region | nil | optional
 `REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | -
 `DB_PORT` | Postgres port | `5432` | -
@@ -40,7 +40,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `MODEL_ARMOR_LOCATION` | Model armor location | nil | -
 `MODEL_ARMOR_TEMPLATE` | Model armor template | nil | -
 `REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `DEPLOY_TYPE` | Deploy type | `dev` | `dev` or `prod`
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
@@ -65,7 +65,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | optional
 `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | optional
 `AWS_REGION` | AWS Region | `""` | optional
-`ENABLE_SENTRY` | Sentry dsn | `false` | optional
+`ENABLE_SENTRY` | Sentry dsn | `false` | `true` or `false`
 `SENTRY_DSN` | Sentry dsn | `""` | optional
 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTEL exporter endpoint | `http://highflame-collector:4318/api/public/otel/v1/traces` | optional
 `OTEL_EXPORTER_OTLP_HEADERS` | OTEL exporter headers | `""` | optional
@@ -85,7 +85,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_BUID_CLUSTER_MAP` | json formatted buid cluser map | nil | -
 `NEXT_PUBLIC_HA_PAIRS` | json formatted HA pair | nil | -
 `SUPPORT_SMTP_PASSKEY` | SMTP Credential | `` | -
-`SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@highflame.com` | -
+`SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@support.highflame.com` | -
 `SUPPORT_SMTP_SERVICE` | SMTP Service type | `Gmail` | -
 `NEXT_PUBLIC_SECRET_STORE` | Secret Store | `kubernetes` | `kubernetes` or `aws` or combination (`kubernetes,aws`)
 `NEXT_PUBLIC_CORE_INT_URL` | Highflame core internal url | `http://highflame-core:8000/` | -
@@ -98,9 +98,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_BUID_MAX_GATEWAYS` | Max number of gateway | `2` | -
 `NEXT_PUBLIC_DEFAULT_USAGE_PLAN_ID` | Highflame usage plan id | `d1jy0v` | -
 `NEXT_PUBLIC_DEPLOYED_TARGET` | Deployed target env | `main` | `main` or `experimental`
-`NEXT_PUBLIC_ONBOARDING_ENABLED` | Enable Onboarding | `false` | -
+`NEXT_PUBLIC_ONBOARDING_ENABLED` | Enable Onboarding | `false` | `true` or `false`
 `OTEL_ADMIN_EMAIL` | OTEL admin username | `` | -
 `OTEL_ADMIN_PASSWORD` | OTEL admin password | `` | -
+`NEXT_PUBLIC_REDTEAM_STATIC_PROMPTS` | Enable Redteam static prompts | `false` | `true` or `false`
+`NEXT_PUBLIC_REDTEAM_TEMPLATE_SEED` | Enable Redteam template seed | `true` | `true` or `false`
 
 ### highflame-eval
 
