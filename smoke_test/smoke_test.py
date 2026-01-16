@@ -24,7 +24,7 @@ else:
     config_json = {}
 
 required_keys = {
-    "x-javelin-apikey": "Javelin API Key",
+    "x-javelin-apikey": "Highflame API Key",
     "llm_api_key": "OpenAI API Key",
     "secrets_provider": "Secrets Provider (must be either 'aws' or 'kubernetes')",
     "base_url": "API Backend URL"
@@ -67,7 +67,7 @@ if dummy_found:
 # Validate required configuration
 missing_configs = []
 if not JAVELIN_API_KEY:
-    missing_configs.append("x-javelin-apikey (Javelin API Key)")
+    missing_configs.append("x-javelin-apikey (Highflame API Key)")
 if not LLM_API_KEY:
     missing_configs.append("llm_api_key (OpenAI API Key)") 
 if not SECRETS_PROVIDER:
@@ -88,7 +88,7 @@ if missing_configs:
 # Generate a random suffix for all resource names
 RANDOM_SUFFIX = uuid.uuid4().hex[:8]
 
-# Create Javelin configuration
+# Create Highflame configuration
 config = JavelinConfig(
     base_url=BASE_URL,
     javelin_api_key=JAVELIN_API_KEY

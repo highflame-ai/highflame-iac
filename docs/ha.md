@@ -2,7 +2,7 @@
 
 ## 🏗️ Deployment Architecture
 
-This Javelin Gateway application deployment, including considerations and implications:
+This Highflame Gateway application deployment, including considerations and implications:
 
 1. Standalone Mode
 

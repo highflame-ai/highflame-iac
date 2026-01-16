@@ -1,6 +1,6 @@
-# Javelin Overwatch
+# Highflame Overwatch
 
-`Javelin Overwatch` is a powerful command-line tool that leverages eBPF (Extended Berkeley Packet Filter) technology to monitor Model Context Protocol (MCP) communication at the kernel level. It provides real-time visibility into JSON-RPC 2.0 messages exchanged between MCP clients and servers by hooking into low-level system calls.
+`Highflame Overwatch` is a powerful command-line tool that leverages eBPF (Extended Berkeley Packet Filter) technology to monitor Model Context Protocol (MCP) communication at the kernel level. It provides real-time visibility into JSON-RPC 2.0 messages exchanged between MCP clients and servers by hooking into low-level system calls.
 
 The Model Context Protocol supports three transport protocols for communication:
 
@@ -10,18 +10,18 @@ The Model Context Protocol supports three transport protocols for communication:
 
 ## K8s Deployment
 
-* Download and update the `javelin-charts` into local
+* Download and update the `highflame-charts` into local
 
 ```bash
-helm repo add javelin-charts "https://highflame-ai.github.io/charts"
-helm repo update javelin-charts && helm search repo javelin-charts
+helm repo add highflame-charts "https://highflame-ai.github.io/charts"
+helm repo update highflame-charts && helm search repo highflame-charts
 ```
 
 * Create a `value.yaml` file for the helm deployment
 
 ```code
 image:
-  repository: "ghcr.io/highflame-ai/release-javelin-overwatch"
+  repository: "ghcr.io/highflame-ai/release-highflame-overwatch"
   pullPolicy: Always
   # Overrides the image tag with a specific version.
   tag: "latest"
@@ -32,31 +32,31 @@ imagePullSecrets:
 secrets:
   enabled: true
   secretData:
-    JAVELIN_URL: 'https://be-domain/v1'
-    JAVELIN_API_KEY: '${JAVELIN_API_KEY}'
+    HIGHFLAME_URL: 'https://be-domain/v1'
+    HIGHFLAME_API_KEY: '${HIGHFLAME_API_KEY}'
 ```
 
-* Deploy the `javelin-overwatch` to the kubernetes cluster
+* Deploy the `highflame-overwatch` to the kubernetes cluster
 
 ```bash
-kubectl create ns javelin-overwatch
-helm upgrade --install javelin-overwatch javelin-charts/javelin-overwatch \
-    --namespace javelin-overwatch \
+kubectl create ns highflame-overwatch
+helm upgrade --install highflame-overwatch highflame-charts/highflame-overwatch \
+    --namespace highflame-overwatch \
     -f value.yaml --timeout=10m
 ```
 
-## 🚀 Bare Metal Deployment Guide : `javelin-overwatch`
+## 🚀 Bare Metal Deployment Guide : `highflame-overwatch`
 
-This guide explains how to install and run **javelin-overwatch** on a bare metal machine or VM.  
-It is designed for first-time users of Javelin, just follow the steps in order.  
+This guide explains how to install and run **highflame-overwatch** on a bare metal machine or VM.  
+It is designed for first-time users of highflame, just follow the steps in order.  
 
 ---
 
 ### 1. Download the Artifact
 
-The **javelin-overwatch** service is distributed as a prebuilt binary. You need to download the correct binary for your system architecture.  
+The **highflame-overwatch** service is distributed as a prebuilt binary. You need to download the correct binary for your system architecture.  
 
-- Visit the [javelin-overwatch releases page](https://github.com/highflame-ai/javelin-overwatch/releases).  
+- Visit the [highflame-overwatch releases page](https://github.com/highflame-ai/highflame-overwatch/releases).  
 - Select the **latest release**.  
 - Under **Assets**, you’ll find binaries for multiple architectures. Currently, we support:
   - `amd64` → For most Linux servers and VMs (AWS EC2, GCP, Azure, bare metal servers).  
@@ -65,7 +65,7 @@ The **javelin-overwatch** service is distributed as a prebuilt binary. You need 
 #### Example: Download for `amd64`
 ```bash
 # Replace VERSION with the release tag (e.g., v0.0.2)
-wget https://github.com/highflame-ai/javelin-overwatch/releases/download/VERSION/javelin-overwatch-linux-amd64
+wget https://github.com/highflame-ai/highflame-overwatch/releases/download/VERSION/highflame-overwatch-linux-amd64
 ```
 
 1. If the above command fails (for example, if the repo is private), you can manually download the binary by clicking on the artifact in the GitHub release page from your local machine.
@@ -73,14 +73,14 @@ wget https://github.com/highflame-ai/javelin-overwatch/releases/download/VERSION
 2. Once downloaded locally, transfer it to your VM using scp
 
 ```bash
-scp javelin-overwatch-linux-amd64 ubuntu@<your-vm-ip>:/home/ubuntu/
+scp highflame-overwatch-linux-amd64 ubuntu@<your-vm-ip>:/home/ubuntu/
 ```
 
 #### Set executable permission
 
 ```bash
-chmod +x javelin-overwatch-linux-amd64
-sudo mv javelin-overwatch-linux-amd64 /usr/local/bin/javelin-overwatch
+chmod +x highflame-overwatch-linux-amd64
+sudo mv highflame-overwatch-linux-amd64 /usr/local/bin/highflame-overwatch
 ```
 
 ### 2. Install and Configure Supervisor 
@@ -94,27 +94,27 @@ sudo apt install supervisor -y
 
 #### 2.2 Create supervisor config
 
-Create /etc/supervisor/conf.d/javelin-overwatch.conf:
+Create /etc/supervisor/conf.d/highflame-overwatch.conf:
 
 ```bash
-[program:javelin-overwatch]
+[program:highflame-overwatch]
 directory=/usr/local/bin                    ; path where binary will live
-command=/usr/local/bin/javelin-overwatch --enable-javelin
+command=/usr/local/bin/highflame-overwatch --enable-highflame
 autostart=true                              ; start on boot
 autorestart=true                            ; restart if it crashes
-stderr_logfile=/var/log/javelin-overwatch.err.log
-stdout_logfile=/var/log/javelin-overwatch.out.log
-environment=JAVELIN_URL="https://your-gateway-domain/v1",JAVELIN_API_KEY="your-gateway-api-key"
+stderr_logfile=/var/log/highflame-overwatch.err.log
+stdout_logfile=/var/log/highflame-overwatch.out.log
+environment=HIGHFLAME_URL="https://your-gateway-domain/v1",HIGHFLAME_API_KEY="your-gateway-api-key"
 user=root                                   ; run as root (sudo equivalent)
 ```
 
 Before running the service, configure the following environment variables:
 
-**JAVELIN_URL** → Base URL of your Javelin Core deployment (typically ends with /v1).
+**HIGHFLAME_URL** → Base URL of your Highflame Core deployment (typically ends with /v1).
 
-**JAVELIN_API_KEY** → Your API Key for authenticating with the Javelin Gateway.
+**HIGHFLAME_API_KEY** → Your API Key for authenticating with the Highflame Gateway.
 
-By default, javelin-overwatch will automatically provision an **MCP Overwatch application** (mcp_overwatch) in your Javelin Gateway when started if it doesn't already exist.
+By default, highflame-overwatch will automatically provision an **MCP Overwatch application** (mcp_overwatch) in your Highflame Gateway when started if it doesn't already exist.
 
 
 #### 2.3 Reload supervisor and start the service
@@ -122,13 +122,13 @@ By default, javelin-overwatch will automatically provision an **MCP Overwatch ap
 ```
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start javelin-overwatch
+sudo supervisorctl start highflame-overwatch
 ```
 
 ### 3. Verify the deployment
 
-1. Check service status (`sudo supervisorctl status javelin-overwatch`)
-2. Verify the logs  (e.g. `tail -f /var/log/javelin-overwatch.out.log`)
+1. Check service status (`sudo supervisorctl status highflame-overwatch`)
+2. Verify the logs  (e.g. `tail -f /var/log/highflame-overwatch.out.log`)
 3. Explore traffic live visibility on your gateway traces or in the application's chronicle tab. 
 
 

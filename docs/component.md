@@ -1,6 +1,6 @@
 # Cloud Components
 
-These are the resources that we are provisioning in the cloud for setting up the Javelin
+These are the resources that we are provisioning in the cloud for setting up the Highflame
 
 ## AWS
 
@@ -26,13 +26,13 @@ These are the resources that we are provisioning in the cloud for setting up the
 
     * 3 node Master nodes (managed by AWS)
 
-    * Minimum 4 nodes with 4 vCPU and 16 GB RAM - Javelin core services
+    * Minimum 4 nodes with 4 vCPU and 16 GB RAM - Highflame core services
 
     * Minimum 8 vCPU and 32 GB RAM with GPU enabled - Highflame guard models
 
 * CloudWatch LogGroup
 
-* Custom IAM role and policies for accessing the bedrock from Javelin (Permissions will change based on the requirements)
+* Custom IAM role and policies for accessing the bedrock from Highflame (Permissions will change based on the requirements)
 
 * EKS Dependencies
 
@@ -91,7 +91,7 @@ These are the resources that we are provisioning in the cloud for setting up the
 
     * Mininum 2 nodes with 4 vCPU and 8 GB RAM for system nodes
 
-    * Minimum 4 nodes with 4 vCPU and 16 GB RAM - Javelin core services
+    * Minimum 4 nodes with 4 vCPU and 16 GB RAM - Highflame core services
 
     * Minimum 8 vCPU and 32 GB RAM with GPU enabled - Highflame guard models
 

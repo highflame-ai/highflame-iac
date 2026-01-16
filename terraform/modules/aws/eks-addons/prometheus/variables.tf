@@ -20,12 +20,12 @@ variable "namespace" {
 }
 
 variable "service_namespace" {
-  description = "Javelin Deployment namespace"
+  description = "Highflame Deployment namespace"
   type        = string
 }
 
 variable "storage_classname" {
-  description = "Javelin StorageClass"
+  description = "Highflame StorageClass"
   type        = string
 }
 

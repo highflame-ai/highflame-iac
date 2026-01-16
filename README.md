@@ -2,10 +2,10 @@
 
 # highflame-iac
 
-[Javelin Architecture Details](./docs/Architecture.md)
+[Highflame Architecture Details](./docs/arch.md)
 
-[Javelin Cloud Component Details](./docs/Components.md)
+[Highflame Cloud Component Details](./docs/component.md)
 
-[Javelin Helm Charts Deployment](./helm-values/README.md)
+[Highflame Helm Charts Deployment](./helm-values/README.md)
 
-[Javelin Overwatch](./docs/Javelin-Overwatch.md)
+[Highflame Overwatch](./docs/overwatch.md)
