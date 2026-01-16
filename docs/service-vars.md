@@ -22,8 +22,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
+`GUARDIAN_DB_NAME` | Guardian database | `highflame_guardian` | -
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
+`HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
 
 ### highflame-core
 
@@ -201,3 +204,21 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | `http://highflame-cerberus:8080` | -
 `LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | `http://langfuse-web:3000` | -
+
+### highflame-studio
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CLERK_SECRET_KEY` | Clerk secret key | nil | -
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | -
+`CLERK_WEBHOOK_SECRET` | Clerk webhook secret | nil | -
+`NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | `` | -
+`NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
+`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/signup` | -
+`NODE_ENV` | Nodejs env | `production` | `development` or `production`
+`NEXT_TELEMETRY_DISABLED` | Telemetry option | `1` | `0` or `1`
+`HIGHFLAME_ADMIN_URL` |  Admin api url | `http://highflame-admin:8040` | -
+`NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | -
+`JWT_SECRET_KEY` | JWT Secret key | nil | -
+`HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
+`PORT` | Service port | `3000` | -

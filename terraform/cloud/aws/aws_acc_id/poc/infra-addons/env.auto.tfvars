@@ -4,15 +4,18 @@ enable_psql_seeding                      = false
 bucket                                   = "javelin-tfstate-poc"
 ## Resource Variables
 common_tags                              = {
-                                                ManagedBy   = "Terraform"
+                                              ManagedBy   = "Terraform"
                                             }
 region                                   = "us-east-1"
 project_name                             = "javelin"
 project_env                              = "poc"
-pg_db_list                               = [ "javelin_redteam" ]
+pg_db_list                               = [ 
+                                              "javelin_redteam",
+                                              "highflame_guardian"
+                                            ]
 pg_extensions                            = [
-                                                {
-                                                    name     = "vector"
-                                                    database = "javelin_redteam"
-                                                }
+                                              {
+                                                name     = "vector"
+                                                database = "javelin_redteam"
+                                              }
                                             ]

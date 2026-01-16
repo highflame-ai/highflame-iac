@@ -10,10 +10,13 @@ common_tags                                 = {
 az_subscription_id                          = "124af0fd-8168-4247-a7f1-f6c08830f479"
 project_name                                = "javelin"
 project_env                                 = "poc"
-pg_db_list                                  = [ "javelin_redteam" ]
+pg_db_list                                  = [ 
+                                                "javelin_redteam",
+                                                "highflame_guardian"
+                                              ]
 pg_extensions                               = [
                                                 {
-                                                    name     = "vector"
-                                                    database = "javelin_redteam"
+                                                  name     = "vector"
+                                                  database = "javelin_redteam"
                                                 }
                                               ]
