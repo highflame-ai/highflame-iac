@@ -16,8 +16,8 @@ This document outlines the configuration of logging and monitoring systems deplo
 Fluent Bit is deployed as a **DaemonSet** in the EKS cluster to collect logs from each node. It is configured to:
 
 - Tail logs from `/var/log/containers/*.log` for each microsevrice deployed in the EKS
-- Parse Kubernetes logs using the Kubernetes filter and create individual log group with the javelin service name
-- Forward logs to **Amazon CloudWatch Logs** under the respective log stream name, the name match with the javelin service name
+- Parse Kubernetes logs using the Kubernetes filter and create individual log group with the highflame service name
+- Forward logs to **Amazon CloudWatch Logs** under the respective log stream name, the name match with the highflame service name
 
 **IAM Permissions** for Fluent Bit (via IRSA) are configured to allow writing to CloudWatch Logs.
 
@@ -44,7 +44,7 @@ Fluent Bit a managed solution from azure is deployed as a **DaemonSet** in the A
 
 - Fetch the logs from the `/var/log/containers/*.log` for each microsevrice deployed in the AKS
 - Filter the logs from the deployed namespace only
-- Parse Kubernetes logs using the Kubernetes filter and create individual log group with the javelin service name
+- Parse Kubernetes logs using the Kubernetes filter and create individual log group with the highflame service name
 - Forward logs to **Azure log analytics workspace**
 
 ### 🔗 Analytics workspace Logs Integration

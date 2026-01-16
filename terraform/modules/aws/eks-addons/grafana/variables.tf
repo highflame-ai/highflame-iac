@@ -20,7 +20,7 @@ variable "namespace" {
 }
 
 variable "storage_classname" {
-  description = "Javelin StorageClass"
+  description = "Highflame StorageClass"
   type        = string
 }
 

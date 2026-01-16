@@ -23,7 +23,7 @@ env:
   TRIVY_REPORT_FILE: "trivy-scan-result"
 
 jobs:
-  javelin-commit-check:
+  highflame-commit-check:
     permissions:
       contents: 'read'
     runs-on: ubuntu-24.04
@@ -53,7 +53,7 @@ jobs:
             exit 1
           fi
 
-  javelin-trivy-scan:
+  highflame-trivy-scan:
     permissions:
       contents: 'read'
     runs-on: ubuntu-24.04

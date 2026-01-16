@@ -24,7 +24,7 @@ source venv/bin/activate
 
 With your virtual environment activated, run:
 ```sh
-pip install javelin-sdk rich
+pip install highflame rich
 ```
 
 ## 3. Configure API Keys and Backend Settings
@@ -39,7 +39,7 @@ Edit the `config.json` file and set your API keys and backend settings:
 }
 ```
 
-- `x-api-key`: Your Javelin API key.
+- `x-api-key`: Your Highflame API key.
 - `llm_api_key`: Your Provider API key.
 - `base_url`: The base URL of your backend (e.g., `http://your-backend-url.com`).
 - `secrets_provider`: The secrets provider in use (e.g., `kubernetes`).
@@ -175,6 +175,6 @@ If you are testing on a new gateway, ensure you have set up the correct processo
 
 To test different models or providers, update the provider configuration and route directly in the `smoke_test.py` script. Look for variables or configuration sections related to the provider and route, and modify them as needed for your use case.
 
-For a list of supported LLMs and their configuration details, refer to the official Javelin documentation: [Supported Language Models](https://docs.getjavelin.io/docs/highflame-core/supported-llms)
+For a list of supported LLMs and their configuration details, refer to the official Highflame documentation: [Supported Language Models](https://docs.getjavelin.io/docs/highflame-core/supported-llms)
 
 ---

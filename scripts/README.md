@@ -1,1 +1,1 @@
-# Javelin Scripts
+# Highflame Scripts

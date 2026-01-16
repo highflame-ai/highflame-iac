@@ -9,24 +9,24 @@ variable "project_env" {
 }
 
 variable "storage_classname" {
-  description = "Javelin StorageClass"
+  description = "Highflame StorageClass"
   type        = string
 }
 
 variable "storage_provisioner" {
-  description = "Javelin Storage provisioner"
+  description = "Highflame Storage provisioner"
   type        = string
   default     = "ebs.csi.aws.com"
 }
 
 variable "storage_type" {
-  description = "Javelin Storage Type"
+  description = "Highflame Storage Type"
   type        = string
   default     = "gp3"
 }
 
 variable "fs_type" {
-  description = "Javelin FS Type"
+  description = "Highflame FS Type"
   type        = string
   default     = "ext4"
 }

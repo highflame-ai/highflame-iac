@@ -9,18 +9,18 @@ variable "project_env" {
 }
 
 variable "storage_classname" {
-  description = "Javelin StorageClass"
+  description = "Highflame StorageClass"
   type        = string
 }
 
 variable "storage_provisioner" {
-  description = "Javelin Storage provisioner"
+  description = "Highflame Storage provisioner"
   type        = string
   default     = "disk.csi.azure.com"
 }
 
 variable "storage_sku" {
-  description = "Javelin Storage sku"
+  description = "Highflame Storage sku"
   type        = string
   default     = "Premium_LRS"
 }

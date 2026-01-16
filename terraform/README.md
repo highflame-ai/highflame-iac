@@ -20,7 +20,7 @@ If your organization enforces specific network or cloud provider policies, pleas
 
             * `infra-setup` : Cloud resource setup
 
-            * `k8s-addons` : Kubernetes Addons and javelin dependencies
+            * `k8s-addons` : Kubernetes Addons and highflame dependencies
 
 * config : Configurations for the infra and dependencies deployment into Kubernetes specific to each environment
 
@@ -38,7 +38,7 @@ If your organization enforces specific network or cloud provider policies, pleas
 
 ### AWS Environment
 
-To add a new `aws environment` for Javelin. consider the environment name is `test`, follow these steps
+To add a new `aws environment` for Highflame. consider the environment name is `test`, follow these steps
 
 #### Prerequisites
 
@@ -50,11 +50,11 @@ To add a new `aws environment` for Javelin. consider the environment name is `te
 
 * AWS ACM Certificates for the following items
 
-    * `backend domain certificate` (javelin-test-api.example.com)
+    * `backend domain certificate` (highflame-test-api.example.com)
 
-    * `eval domain certificate` (javelin-test-eval.example.com)
+    * `eval domain certificate` (highflame-test-eval.example.com)
 
-    * `frontend domain certificate` (javelin-test.example.com)
+    * `frontend domain certificate` (highflame-test.example.com)
 
 #### Steps
 
@@ -179,7 +179,7 @@ To add a new `aws environment` for Javelin. consider the environment name is `te
 
 * [choose-az-regions] for supporting availability zone (https://learn.microsoft.com/en-us/azure/reliability/regions-list)
 
-To add a new `azure environment` for Javelin. consider the environment name is `test`, follow these steps
+To add a new `azure environment` for Highflame. consider the environment name is `test`, follow these steps
 
 #### Prerequisites
 
@@ -191,11 +191,11 @@ To add a new `azure environment` for Javelin. consider the environment name is `
 
 * pk12 certificates for the following items which will added in the azure key vault certificates (optional : if we are not using certbot ssl from AKS)
 
-    * `backend domain certificate` (javelin-test-api.example.com)
+    * `backend domain certificate` (highflame-test-api.example.com)
 
-    * `eval domain certificate` (javelin-test-eval.example.com)
+    * `eval domain certificate` (highflame-test-eval.example.com)
 
-    * `frontend domain certificate` (javelin-test.example.com)
+    * `frontend domain certificate` (highflame-test.example.com)
 
 #### Steps
 

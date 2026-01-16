@@ -9,6 +9,6 @@ variable "project_env" {
 }
 
 variable "service_namespace" {
-  description = "Javelin Deployment namespace"
+  description = "Highflame Deployment namespace"
   type        = string
 }
