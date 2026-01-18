@@ -72,6 +72,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `SENTRY_DSN` | Sentry dsn | `""` | optional
 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTEL exporter endpoint | `http://highflame-collector:4318/api/public/otel/v1/traces` | optional
 `OTEL_EXPORTER_OTLP_HEADERS` | OTEL exporter headers | `""` | optional
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 
 ### highflame-webapp
 
