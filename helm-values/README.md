@@ -18,7 +18,7 @@ helm search repo highflame-charts
 * Set the default variables such as charts version and namespace
 
 ```bash
-export HIGHFLAME_NAMESPACE="javelin-dev"
+export HIGHFLAME_NAMESPACE="highflame-dev"
 export HIGHFLAME_GENERIC_VER="1.0.1"
 export HIGHFLAME_REDTEAM_VER="1.0.1"
 export HIGHFLAME_INGRESS_VER="1.0.0"

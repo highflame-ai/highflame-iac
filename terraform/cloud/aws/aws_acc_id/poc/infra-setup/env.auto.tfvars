@@ -16,7 +16,7 @@ common_tags                              = {
                                                ManagedBy   = "Terraform"
                                             }
 region                                   = "us-east-1"
-project_name                             = "javelin"
+project_name                             = "highflame"
 project_env                              = "poc"
 vpc_cidr                                 = "10.1.0.0/16" # Mask must be /16
 azs                                      = [

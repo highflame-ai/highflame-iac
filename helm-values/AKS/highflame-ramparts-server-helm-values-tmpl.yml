@@ -47,7 +47,7 @@ image:
   tag: ${IMAGE_TAG}
 
 imagePullSecrets:
-  - name: javelin-registry-secret
+  - name: highflame-registry-secret
 
 secrets:
   enabled: true
@@ -80,7 +80,7 @@ ingress:
   tls:
     - hosts:
         - ramparts.api-staging.example.com
-      secretName: javelin-ramparts-server-tls
+      secretName: highflame-ramparts-server-tls
   hosts:
     - host: ramparts.api-staging.example.com
       paths:

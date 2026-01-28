@@ -15,7 +15,7 @@ locals {
 
 module "namespace" {
   count                              = var.enable_namespace == true ? 1 : 0
-  source                             = "../../../../../modules/javelin/namespace"
+  source                             = "../../../../../modules/highflame/namespace"
   project_name                       = var.project_name
   project_env                        = var.project_env
   service_namespace                  = var.service_namespace
@@ -23,7 +23,7 @@ module "namespace" {
 
 module "docker_secret" {
   count                              = var.enable_docker_secret == true ? 1 : 0
-  source                             = "../../../../../modules/javelin/docker-secret"
+  source                             = "../../../../../modules/highflame/docker-secret"
   project_name                       = var.project_name
   registry_server                    = var.registry_server
   registry_username                  = var.registry_username
@@ -66,7 +66,7 @@ module "ingress_alb" {
   project_env                        = var.project_env
   ingress_replicas                   = var.ingress_replicas
   eks_cluster_oidc_provider_arn      = data.terraform_remote_state.infra_setup_tf.outputs.eks_cluster_oidc_provider_arn
-  javelin_ingress_helm_version       = var.javelin_ingress_helm_version
+  highflame_ingress_helm_version       = var.highflame_ingress_helm_version
   acm_certificate_arn                = var.frontend_acm_certificate_arn
   k8s_cluster_name                   = data.terraform_remote_state.infra_setup_tf.outputs.k8s_cluster_name
   public_subnet_ids                  = data.terraform_remote_state.infra_setup_tf.outputs.vpc_public_subnet_ids

@@ -27,7 +27,7 @@ image:
   tag: "latest"
 
 imagePullSecrets:
-  - name: javelin-registry-secret
+  - name: highflame-registry-secret
 
 secrets:
   enabled: true

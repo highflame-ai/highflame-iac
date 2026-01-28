@@ -80,7 +80,7 @@ variable "prometheus_disk_size" {
 variable "storage_classname" {
   description = "Highflame StorageClass"
   type        = string
-  default     = "javelin-storageclass"
+  default     = "highflame-storageclass"
 }
 
 variable "service_namespace" {

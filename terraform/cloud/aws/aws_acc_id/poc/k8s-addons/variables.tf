@@ -56,11 +56,13 @@ variable "enable_ingress_alb" {
 variable "enable_prometheus" {
   description = "enable prometheus"
   type        = bool
+  default     = false
 }
 
 variable "enable_grafana" {
   description = "enable grafana"
   type        = bool
+  default     = false
 }
 
 variable "enable_metrics_server" {
@@ -117,7 +119,7 @@ variable "prometheus_disk_size" {
 variable "storage_classname" {
   description = "Highflame StorageClass"
   type        = string
-  default     = "javelin-storageclass"
+  default     = "highflame-storageclass"
 }
 
 variable "service_namespace" {
@@ -125,8 +127,8 @@ variable "service_namespace" {
   type        = string
 }
 
-variable "javelin_ingress_helm_version" {
-  description = "Helm Chart Version for javelin-ingress"
+variable "highflame_ingress_helm_version" {
+  description = "Helm Chart Version for highflame-ingress"
   type        = string
   default     = "0.0.0-latest"
 }

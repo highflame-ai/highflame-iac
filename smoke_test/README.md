@@ -32,7 +32,7 @@ pip install highflame rich
 Edit the `config.json` file and set your API keys and backend settings:
 ```json
 {
-    "x-api-key": "<your-javelin-api-key>",
+    "x-api-key": "<your-highflame-api-key>",
     "llm_api_key": "<your-openai-api-key>",
     "base_url": "<your-backend-url>",
     "secrets_provider": "<your-secrets-provider>"

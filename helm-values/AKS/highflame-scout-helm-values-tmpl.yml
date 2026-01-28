@@ -36,7 +36,7 @@ image:
   tag: ${IMAGE_TAG}
 
 imagePullSecrets:
-  - name: javelin-registry-secret
+  - name: highflame-registry-secret
 
 resources:
   requests:

@@ -1,6 +1,6 @@
 ## Terraform Backend Variables
-resource_group_name                         = "javelin-poc"
-storage_account_name                        = "javelintfstatepoc"
+resource_group_name                         = "highflame-poc"
+storage_account_name                        = "highflametfstatepoc"
 ## Enable required services
 enable_self_keyvault_access                 = false
 enable_vnet                                 = false
@@ -22,7 +22,7 @@ common_tags                                 = {
 az_subscription_id                          = ""
 ad_object_id                                = ""
 enable_delete_lock                          = true
-project_name                                = "javelin"
+project_name                                = "highflame"
 project_env                                 = "poc"
 location                                    = "East US"
 vnet_all_egress_enable                      = true
@@ -40,12 +40,12 @@ postgres_source_server_id                   = ""
 workload_identity                           = [
                                                 {
                                                   id             = 1
-                                                  namespace      = "javelin-poc"
+                                                  namespace      = "highflame-poc"
                                                   serviceaccount = "highflame-core"
                                                 },
                                                 {
                                                   id             = 2
-                                                  namespace      = "javelin-poc"
+                                                  namespace      = "highflame-poc"
                                                   serviceaccount = "highflame-admin"
                                                 }
                                               ]
