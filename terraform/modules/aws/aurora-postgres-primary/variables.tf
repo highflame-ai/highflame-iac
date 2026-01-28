@@ -34,7 +34,7 @@ variable "db_name" {
 variable "db_user" {
   description = "Postgres username"
   type        = string
-  default     = "javelin"
+  default     = "highflame"
 }
 
 variable "auto_minor_version_upgrade" {

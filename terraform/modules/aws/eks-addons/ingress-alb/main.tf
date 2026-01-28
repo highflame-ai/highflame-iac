@@ -78,8 +78,8 @@ resource "helm_release" "dummy_ingress" {
   depends_on        = [ helm_release.ingress_alb ]
   name             = "dummy-ingress"
   repository       = "https://highflame-ai.github.io/charts"
-  chart            = "javelin-ingress"
-  version          = var.javelin_ingress_helm_version
+  chart            = "highflame-ingress"
+  version          = var.highflame_ingress_helm_version
   force_update     = false
   namespace        = var.namespace
   create_namespace = false

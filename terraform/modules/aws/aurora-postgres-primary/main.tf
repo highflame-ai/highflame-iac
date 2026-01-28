@@ -9,18 +9,6 @@ resource "random_password" "aurora_password" {
   special                              = false
 }
 
-########## Random_Pass_javelin_customers ##########
-resource "random_password" "javelin_customers_password" {
-  length                                = 16
-  special                               = false
-}
-
-########## Random_Pass_javelin_admins ##########
-resource "random_password" "javelin_admins_password" {
-  length                                = 16
-  special                               = false
-}
-
 ########## Aurora ##########
 resource "aws_rds_global_cluster" "aurora_global" {
   global_cluster_identifier             = "${local.aurora_prefix}-aurora-global"

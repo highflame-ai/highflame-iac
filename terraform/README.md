@@ -136,10 +136,10 @@ To add a new `aws environment` for Highflame. consider the environment name is `
 
         * Run this command to download the kubconfig file for communicating with EKS from local for deploying the dependencies
 
-            * Here for kube config file, I gave the name `~/.kube/javelin-test-eks.json`, it should match with the variable `local_kube_config` in the file `cloud/aws/aws_acc_id/test/k8s-addons/env.auto.tfvars`
+            * Here for kube config file, I gave the name `~/.kube/highflame-test-eks.json`, it should match with the variable `local_kube_config` in the file `cloud/aws/aws_acc_id/test/k8s-addons/env.auto.tfvars`
 
             ```bash
-            export KUBECONFIG=~/.kube/javelin-test-eks.json ; aws eks update-kubeconfig --name javelin-test-eks
+            export KUBECONFIG=~/.kube/highflame-test-eks.json ; aws eks update-kubeconfig --name highflame-test-eks
             ```
 
         * Update the kubernetes addons env file `cloud/aws/aws_acc_id/test/k8s-addons/env.auto.tfvars`
@@ -281,10 +281,10 @@ To add a new `azure environment` for Highflame. consider the environment name is
         * Run this command to download the kubconfig file for communicating with AKS from local for checking the access and status of the cluster
 
             ```bash
-            export KUBECONFIG=~/.kube/javelin-test-aks.json # optional if you want to manage multiple kubeconfig files from the same host
+            export KUBECONFIG=~/.kube/highflame-test-aks.json # optional if you want to manage multiple kubeconfig files from the same host
             az login --identity \
                     && kubelogin convert-kubeconfig -l msi \
-                    && az aks get-credentials --resource-group javelin-test --name javelin-test-aks --overwrite-existing
+                    && az aks get-credentials --resource-group highflame-test --name highflame-test-aks --overwrite-existing
             ```
 
         * Update the kubernetes addons env file `cloud/azure/az_sub_id/test/k8s-addons/env.auto.tfvars`

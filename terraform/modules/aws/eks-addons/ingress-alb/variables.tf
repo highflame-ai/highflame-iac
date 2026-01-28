@@ -46,8 +46,8 @@ variable "mod_dependency" {
   description = "Dependence variable binds all AWS resources allocated by this module, dependent modules reference this variable."
 }
 
-variable "javelin_ingress_helm_version" {
-  description = "Helm Chart Version for javelin-ingress"
+variable "highflame_ingress_helm_version" {
+  description = "Helm Chart Version for highflame-ingress"
   type        = string
 }
 

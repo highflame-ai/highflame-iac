@@ -32,7 +32,7 @@ variable "grafana_disk_size" {
 variable "prometheus_url" {
   description = "Prometheus URL"
   type        = string
-  default     = "http://javelin-prometheus-server"
+  default     = "http://highflame-prometheus-server"
 }
 
 variable "grafana_domain" {

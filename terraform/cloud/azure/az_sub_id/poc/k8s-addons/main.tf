@@ -10,7 +10,7 @@ locals {
 
 module "namespace" {
   count                              = var.enable_namespace == true ? 1 : 0
-  source                             = "../../../../../modules/javelin/namespace"
+  source                             = "../../../../../modules/highflame/namespace"
   project_name                       = var.project_name
   project_env                        = var.project_env
   service_namespace                  = var.service_namespace
@@ -19,7 +19,7 @@ module "namespace" {
 module "docker_secret" {
   depends_on                         = [ module.namespace ]
   count                              = var.enable_docker_secret == true ? 1 : 0
-  source                             = "../../../../../modules/javelin/docker-secret"
+  source                             = "../../../../../modules/highflame/docker-secret"
   project_name                       = var.project_name
   registry_server                    = var.registry_server
   registry_username                  = var.registry_username

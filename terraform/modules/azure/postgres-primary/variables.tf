@@ -26,7 +26,7 @@ variable "private_subnet_id" {
 variable "db_user" {
   description = "Postgres username"
   type        = string
-  default     = "javelin"
+  default     = "highflame"
 }
 
 variable "db_version" {

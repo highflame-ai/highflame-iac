@@ -22,7 +22,7 @@ resource "kubernetes_config_map" "grafana_dashboards" {
 
 ########## Helm_Install_Grafana ##########
 resource "helm_release" "grafana" {
-  name             = "javelin-grafana"
+  name             = "highflame-grafana"
   repository       = "https://grafana.github.io/helm-charts"
   chart            = "grafana"
   version          = var.helm_version

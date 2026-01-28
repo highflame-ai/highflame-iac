@@ -43,15 +43,3 @@ output "db_pass" {
   value       = aws_rds_cluster.aurora_global.master_password
   sensitive   = true
 }
-
-output "db_javelin_customers_pass" {
-  description = "Database User javelin_customers Password"
-  value       = random_password.javelin_customers_password.result
-  sensitive   = true
-}
-
-output "db_javelin_admins_pass" {
-  description = "Database User javelin_admins Password"
-  value       = random_password.javelin_admins_password.result
-  sensitive   = true
-}

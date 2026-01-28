@@ -44,18 +44,6 @@ output "aurora_postgres_primary_db_pass" {
   sensitive   = true
 }
 
-output "aurora_postgres_primary_db_javelin_customers_pass" {
-  description = "Database User javelin_customers Password"
-  value       = var.enable_aurora_postgres_primary ? module.aurora_postgres_primary[0].db_javelin_customers_pass : null
-  sensitive   = true
-}
-
-output "aurora_postgres_primary_db_javelin_admins_pass" {
-  description = "Database User javelin_admins Password"
-  value       = var.enable_aurora_postgres_primary ? module.aurora_postgres_primary[0].db_javelin_admins_pass : null
-  sensitive   = true
-}
-
 output "aurora_postgres_primary_zzzzzz" {
   description = "Separation in the output"
   value       = var.enable_aurora_postgres_primary ? ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> aurora_postgres_primary" : null

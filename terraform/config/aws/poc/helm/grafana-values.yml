@@ -1,4 +1,4 @@
-adminUser: javelin_admin
+adminUser: highflame_admin
 adminPassword: ${grafana_secret}
 
 dashboardProviders:

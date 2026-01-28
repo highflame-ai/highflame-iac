@@ -1,5 +1,3 @@
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/getjavelin/highflame-iac)
-
 # highflame-iac
 
 [Highflame Architecture Details](./docs/arch.md)

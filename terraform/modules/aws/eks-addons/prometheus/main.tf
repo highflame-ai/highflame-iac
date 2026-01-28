@@ -1,6 +1,6 @@
 ########## Helm_Install_Prometheus ##########
 resource "helm_release" "prometheus" {
-  name             = "javelin-prometheus"
+  name             = "highflame-prometheus"
   repository       = "https://prometheus-community.github.io/helm-charts"
   chart            = "prometheus"
   version          = var.helm_version

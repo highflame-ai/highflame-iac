@@ -60,7 +60,7 @@ resource "azurerm_key_vault_certificate" "ssl" {
     }
 
     x509_certificate_properties {
-      subject                                     = "CN=javelin.self"
+      subject                                     = "CN=highflame.self"
       key_usage                                   = [
                                                       "cRLSign",
                                                       "dataEncipherment",
