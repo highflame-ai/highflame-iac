@@ -160,8 +160,6 @@ To add a new `aws environment` for Highflame. consider the environment name is `
             enable_fluent_bit               = true
             enable_ingress_alb_crds         = true
             enable_ingress_alb              = true
-            enable_prometheus               = true
-            enable_grafana                  = true
             enable_metrics_server           = true
             ```
 
@@ -302,8 +300,6 @@ To add a new `azure environment` for Highflame. consider the environment name is
             enable_namespace                = true
             enable_cert_manager             = true  # optional : If you want to use certbot ssl certificates from the AKS cluster
             enable_docker_secret            = true
-            enable_prometheus               = true
-            enable_grafana                  = true
             enable_aks_addons_secret        = true
             ```
 
