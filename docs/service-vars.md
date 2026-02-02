@@ -8,7 +8,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_USERNAME` | Postgres username | nil | -
 `DB_PASSWORD` | Postgres password | nil | -
 `DB_HOST` | Postgres host | nil | -
-`DB_NAME` | Postgres database | nil | -
+`DB_NAME` | Postgres database | `javelin_data` | -
 `REDIS_HOST` | Redis host | nil | -
 `REDIS_USER` | Redis username | nil | -
 `REDIS_PASS` | Redis password | nil | -
@@ -30,7 +30,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
 `HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
 `HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Tenancy default enabled | `true` | `true` or `false`
-`HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `` | -
+`HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 
 ### highflame-core
 
@@ -235,7 +236,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_USERNAME` | Postgres username | nil | -
 `DB_PASSWORD` | Postgres password | nil | -
 `DB_HOST` | Postgres host | nil | -
-`DB_NAME` | Postgres database | nil | -
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`AUTHZ_DB_NAME` | Postgres database | `highflame_authz` | -
+`AUTHZ_DB_NAME` | Postgres database | `javelin_data` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
