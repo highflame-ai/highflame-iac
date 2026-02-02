@@ -25,6 +25,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `GUARDIAN_DB_NAME` | Guardian database | `highflame_guardian` | -
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
+`HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
 `HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
@@ -226,3 +227,15 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
 `PORT` | Service port | `3000` | -
+
+### highflame-authz
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`DB_USERNAME` | Postgres username | nil | -
+`DB_PASSWORD` | Postgres password | nil | -
+`DB_HOST` | Postgres host | nil | -
+`DB_NAME` | Postgres database | nil | -
+`DB_PORT` | Postgres port | `5432` | -
+`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
+`AUTHZ_DB_NAME` | Postgres database | `highflame_authz` | -
