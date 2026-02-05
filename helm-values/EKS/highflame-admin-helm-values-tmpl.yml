@@ -118,3 +118,5 @@ ingress:
       paths:
         - path: /v1/admin/
           pathType: Prefix
+        - path: /v2/admin/
+          pathType: Prefix

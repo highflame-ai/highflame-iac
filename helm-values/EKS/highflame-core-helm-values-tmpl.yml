@@ -117,5 +117,7 @@ ingress:
   hosts:
     - host: api-dev.example.com
       paths:
+        - path: /v0/
+          pathType: Prefix
         - path: /v1/
           pathType: Prefix
