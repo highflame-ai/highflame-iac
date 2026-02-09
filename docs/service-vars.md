@@ -63,6 +63,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_GUARD_LANGUAGE_URL` | highflame guard language url | `http://highflame-guard-lang:8020` | -
 `HIGHFLAME_GUARD_FACTCHECK_URL` | highflame guard factual url | `http://highflame-guard-fact:8018` | -
 `HIGHFLAME_GUARD_SENTIMENT_URL` | highflame guard sentiment url | `http://highflame-guard-sentiment:8021` | -
+`HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-saas-bloom-filter-store` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
 `REFRESH_SECRETS_ON_401` | Refresh secrets on 401 | `true` | `true` or `false`
@@ -228,6 +229,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
 `PORT` | Service port | `3000` | -
+`DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure`
+`OPENAI_API_KEY` | OpenAI api key | nil | for `DEFAULT_PROVIDER=openai`
+`AZURE_API_KEY` | Azure OpenAI api key | nil | for `DEFAULT_PROVIDER=azure`
+`AZURE_API_BASE` | Azure OpenAI API base | nil | for `DEFAULT_PROVIDER=azure`
+`AZURE_API_VERSION` | Azure OpenAI version | nil | for `DEFAULT_PROVIDER=azure`
 
 ### highflame-authz
 
@@ -240,3 +246,20 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `AUTHZ_DB_NAME` | Postgres database | `javelin_data` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
+
+### highflame-aispm
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`DB_USERNAME` | Postgres username | nil | -
+`DB_PASSWORD` | Postgres password | nil | -
+`DB_HOST` | Postgres host | nil | -
+`DB_PORT` | Postgres port | `5432` | -
+`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
+`DB_NAME` | Postgres database | `javelin_data` | -
+`REDIS_HOST` | Redis host | nil | -
+`REDIS_USER` | Redis username | nil | -
+`REDIS_PASS` | Redis password | nil | -
+`REDIS_PORT` | Redis port | `6379` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
+`REDIS_CACERT` | Redis CA Cert | `""` | -
