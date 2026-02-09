@@ -51,6 +51,9 @@ secretsApiSpecific:
 worker:
   enabled: false
 
+palisadeWorker:
+  enabled: false
+
 seederJob:
   enabled: false
 

@@ -73,6 +73,29 @@ worker:
   nodeSelector:
     kube/nodegroup: "general"
 
+palisadeWorker:
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+    
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 1000m
+    limits:
+      memory: 2Gi
+      cpu: 2000m
+
+  nodeSelector:
+    kube/nodegroup: "general"
+
 seederJob:
   enabled: true
 
