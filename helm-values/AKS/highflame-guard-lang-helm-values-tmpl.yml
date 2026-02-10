@@ -30,10 +30,6 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
-
 service:
   annotations:
     alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-language-detect/health
