@@ -19,8 +19,8 @@ helm search repo highflame-charts
 
 ```bash
 export HIGHFLAME_NAMESPACE="highflame-dev"
-export HIGHFLAME_GENERIC_VER="1.0.1"
-export HIGHFLAME_REDTEAM_VER="1.0.1"
+export HIGHFLAME_GENERIC_VER="1.0.3"
+export HIGHFLAME_REDTEAM_VER="1.0.5"
 export HIGHFLAME_INGRESS_VER="1.0.0"
 ```
 

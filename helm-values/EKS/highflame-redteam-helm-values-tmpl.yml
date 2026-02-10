@@ -5,10 +5,6 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
-
 service:
   type: ClusterIP
   protocol: TCP
@@ -58,10 +54,6 @@ worker:
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
 
-  podDisruptionBudget:
-    enabled: true
-    minAvailable: 1
-
   resources:
     requests:
       memory: 1Gi
@@ -81,10 +73,6 @@ palisadeWorker:
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
 
-  podDisruptionBudget:
-    enabled: true
-    minAvailable: 1
-    
   resources:
     requests:
       memory: 1Gi
