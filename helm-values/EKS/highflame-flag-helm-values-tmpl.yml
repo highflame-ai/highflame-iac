@@ -57,7 +57,7 @@ resources:
 volumes:
   - name: goff-volume
     secret:
-      secretName: highflame-flag-file
+      secretName: highflame-goff
       optional: false
 
 volumeMounts:

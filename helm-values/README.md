@@ -24,14 +24,62 @@ export HIGHFLAME_REDTEAM_VER="1.0.5"
 export HIGHFLAME_INGRESS_VER="1.0.0"
 ```
 
+* Setting up the docker registry secret
+
+```bash
+kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
+  docker-registry highflame-registry-secret \
+  --docker-server="ghcr.io" \
+  --docker-username="username" \
+  --docker-password="<<REGISTRY_SECRET_HERE>>" \
+  --docker-email="username@example.com"
+```
+
+* Highflame service secrets
+
+    * `Highflame license`
+
+        ```bash
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
+            highflame-license --from-file=license.jwt --from-file=public.pem
+        ```
+    * `Redis cacert (optional)`
+
+        ```bash
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
+            highflame-redis-cert --from-file=redis-ca.pem
+        ```
+
+    * `GCP credential`
+
+        ```bash
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
+            highflame-gcp-cred --from-file=gcp-credential.json
+        ```
+
+    * `Feature flag config`
+
+        ```bash
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
+            highflame-goff --from-file=goff.yaml
+        ```
+
 * Service level setup and deployment
+
+    * `highflame-flag`
+
+        ```bash
+        helm upgrade --install highflame-flag highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-flag-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-flag
+        ```
 
     * `highflame-admin`
 
         ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-admin-license --from-file=license.jwt --from-file=public.pem
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-admin-redis-cert --from-file=redis-ca.pem # optional
-
         helm upgrade --install highflame-admin highflame-charts/highflame-generic \
             --namespace ${HIGHFLAME_NAMESPACE} \
             --version ${HIGHFLAME_GENERIC_VER} \
@@ -43,9 +91,6 @@ export HIGHFLAME_INGRESS_VER="1.0.0"
     * `highflame-core`
 
         ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-core-file --from-file=gcp-credential.json
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-core-redis-cert --from-file=redis-ca.pem # optional
-
         helm upgrade --install highflame-core highflame-charts/highflame-generic \
             --namespace ${HIGHFLAME_NAMESPACE} \
             --version ${HIGHFLAME_GENERIC_VER} \
@@ -74,19 +119,6 @@ export HIGHFLAME_INGRESS_VER="1.0.0"
             -f highflame-eval-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-eval
-        ```
-
-    * `highflame-flag`
-
-        ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-flag-file --from-file=goff.yaml
-
-        helm upgrade --install highflame-flag highflame-charts/highflame-generic \
-            --namespace ${HIGHFLAME_NAMESPACE} \
-            --version ${HIGHFLAME_GENERIC_VER} \
-            -f highflame-flag-helm-values-tmpl.yml --timeout=15m
-
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-flag
         ```
 
     * `highflame-guard`
@@ -122,17 +154,6 @@ export HIGHFLAME_INGRESS_VER="1.0.0"
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-hallucination
         ```
 
-    * `highflame-guard`
-
-        ```bash
-        helm upgrade --install highflame-guard highflame-charts/highflame-generic \
-            --namespace ${HIGHFLAME_NAMESPACE} \
-            --version ${HIGHFLAME_GENERIC_VER} \
-            -f highflame-guard-helm-values-tmpl.yml --timeout=15m
-
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard
-        ```
-
     * `highflame-guard-lang`
 
         ```bash
@@ -158,8 +179,6 @@ export HIGHFLAME_INGRESS_VER="1.0.0"
     * `highflame-redteam`
 
         ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic highflame-redteam-redis-cert --from-file=redis-ca.pem # optional
-
         helm upgrade --install highflame-redteam highflame-charts/highflame-redteam \
             --namespace ${HIGHFLAME_NAMESPACE} \
             --version ${HIGHFLAME_REDTEAM_VER} \

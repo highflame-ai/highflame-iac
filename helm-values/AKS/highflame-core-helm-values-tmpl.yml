@@ -57,17 +57,17 @@ secrets:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
 volumes:
-  - name: secret-volume
+  - name: gcp-cred-volume
     secret:
-      secretName: highflame-core-file
+      secretName: highflame-gcp-cred
       optional: false
   # - name: redis-cert-volume
   #   secret:
-  #     secretName: highflame-core-redis-cert
+  #     secretName: highflame-redis-cert
   #     optional: false
 
 volumeMounts:
-  - name: secret-volume
+  - name: gcp-cred-volume
     mountPath: "/app/config/gcp-credential.json"
     readOnly: true
     subPath: gcp-credential.json
