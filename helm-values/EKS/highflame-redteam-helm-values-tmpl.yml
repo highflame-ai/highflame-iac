@@ -34,7 +34,7 @@ secrets:
 # volumes:
 #   - name: redis-cert-volume
 #     secret:
-#       secretName: highflame-redteam-redis-cert
+#       secretName: highflame-redis-cert
 #       optional: false
 
 # volumeMounts:

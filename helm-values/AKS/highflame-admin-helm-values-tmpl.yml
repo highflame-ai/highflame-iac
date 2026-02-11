@@ -59,11 +59,11 @@ secrets:
 volumes:
   - name: license-volume
     secret:
-      secretName: highflame-admin-license
+      secretName: highflame-license
       optional: false
   # - name: redis-cert-volume
   #   secret:
-  #     secretName: highflame-admin-redis-cert
+  #     secretName: highflame-redis-cert
   #     optional: false
 
 volumeMounts:
