@@ -1,9 +1,9 @@
-fullnameOverride: "highflame-guard-hallucination"
+fullnameOverride: "highflame-guard-deep"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
-    port: 8015
+    path: /v1/internal/guard-deepcontext/health
+    port: 8022
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
-    port: 8015
+    path: /v1/internal/guard-deepcontext/health
+    port: 8022
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -33,7 +33,7 @@ autoscaling:
 service:
   type: ClusterIP
   protocol: TCP
-  port: 8015
+  port: 8022
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -61,7 +61,7 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/v1/internal/guard-hallucination/health"
+    appgw.ingress.kubernetes.io/health-probe-path: "/v1/internal/guard-deepcontext/health"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"
@@ -69,9 +69,9 @@ ingress:
   tls:
     - hosts:
         - model.api-dev.example.com
-      secretName: highflame-guard-hallucination-tls
+      secretName: highflame-guard-deep-tls
   hosts:
     - host: model.api-dev.example.com
       paths:
-        - path: /v1/internal/guard-hallucination/
+        - path: /v1/internal/guard-deepcontext/
           pathType: Prefix

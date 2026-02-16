@@ -1,9 +1,9 @@
-fullnameOverride: "highflame-guard"
+fullnameOverride: "highflame-shield"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
+    path: /ready
+    port: 8070
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
+    path: /ready
+    port: 8070
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -21,7 +21,7 @@ readinessProbe:
   failureThreshold: 2
 
 nodeSelector:
-  kube/nodegroup: "gpu"
+  kube/nodegroup: "general"
 
 autoscaling:
   enabled: true
@@ -33,7 +33,7 @@ autoscaling:
 service:
   type: NodePort
   protocol: TCP
-  port: 8013
+  port: 8070
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -45,20 +45,45 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 10Gi
-    cpu: 3000m
+    memory: 512Mi
+    cpu: 200m
   limits:
-    memory: 14Gi
-    cpu: 3500m
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
+volumes:
+  - name: gcp-cred-volume
+    secret:
+      secretName: highflame-gcp-cred
+      optional: false
+  # - name: redis-cert-volume
+  #   secret:
+  #     secretName: highflame-redis-cert
+  #     optional: false
+
+volumeMounts:
+  - name: gcp-cred-volume
+    mountPath: "/app/config/gcp-credential.json"
+    readOnly: true
+    subPath: gcp-credential.json
+  # - name: redis-cert-volume
+  #   mountPath: "/app/certs/redis-ca.pem"
+  #   readOnly: true
+  #   subPath: redis-ca.pem
 
 ingress:
   enabled: true
   className: "alb"
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard/health
+    alb.ingress.kubernetes.io/healthcheck-path: /ready
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -67,7 +92,7 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
     alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '2'
+    alb.ingress.kubernetes.io/group.order: '3'
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
 
     alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
@@ -76,7 +101,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: model.api-dev.example.com
+    - host: shield.api-staging.example.com
       paths:
-        - path: /v1/internal/guard/
+        - path: /
           pathType: Prefix
