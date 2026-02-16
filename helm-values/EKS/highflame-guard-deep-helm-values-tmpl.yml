@@ -1,9 +1,9 @@
-fullnameOverride: "highflame-guard"
+fullnameOverride: "highflame-guard-deep"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
+    path: /v1/internal/guard-deepcontext/health
+    port: 8022
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard/health
-    port: 8013
+    path: /v1/internal/guard-deepcontext/health
+    port: 8022
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -33,7 +33,7 @@ autoscaling:
 service:
   type: NodePort
   protocol: TCP
-  port: 8013
+  port: 8022
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -58,7 +58,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard/health
+    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-deepcontext/health
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -78,5 +78,5 @@ ingress:
   hosts:
     - host: model.api-dev.example.com
       paths:
-        - path: /v1/internal/guard/
+        - path: /v1/internal/guard-deepcontext/
           pathType: Prefix

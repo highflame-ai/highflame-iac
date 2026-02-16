@@ -1,9 +1,9 @@
-fullnameOverride: "highflame-guard-hallucination"
+fullnameOverride: "highflame-shield"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
-    port: 8015
+    path: /ready
+    port: 8070
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -12,8 +12,8 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
-    port: 8015
+    path: /ready
+    port: 8070
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -21,7 +21,7 @@ readinessProbe:
   failureThreshold: 2
 
 nodeSelector:
-  kube/nodegroup: "gpu"
+  kube/nodegroup: "general"
 
 autoscaling:
   enabled: true
@@ -33,7 +33,7 @@ autoscaling:
 service:
   type: ClusterIP
   protocol: TCP
-  port: 8015
+  port: 8070
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -45,11 +45,36 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 10Gi
-    cpu: 3000m
+    memory: 512Mi
+    cpu: 200m
   limits:
-    memory: 14Gi
-    cpu: 3500m
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
+volumes:
+  - name: gcp-cred-volume
+    secret:
+      secretName: highflame-gcp-cred
+      optional: false
+  # - name: redis-cert-volume
+  #   secret:
+  #     secretName: highflame-redis-cert
+  #     optional: false
+
+volumeMounts:
+  - name: gcp-cred-volume
+    mountPath: "/app/config/gcp-credential.json"
+    readOnly: true
+    subPath: gcp-credential.json
+  # - name: redis-cert-volume
+  #   mountPath: "/app/certs/redis-ca.pem"
+  #   readOnly: true
+  #   subPath: redis-ca.pem
 
 ingress:
   enabled: true
@@ -57,21 +82,20 @@ ingress:
   annotations:
     appgw.ingress.kubernetes.io/use-private-ip: "false"
     appgw.ingress.kubernetes.io/ssl-redirect: "true"
-    # appgw.ingress.kubernetes.io/appgw-ssl-certificate: "self-signed"
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/v1/internal/guard-hallucination/health"
+    appgw.ingress.kubernetes.io/health-probe-path: "/ready"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - model.api-dev.example.com
-      secretName: highflame-guard-hallucination-tls
+        - shield.api-staging.example.com
+      secretName: highflame-shield-tls
   hosts:
-    - host: model.api-dev.example.com
+    - host: shield.api-staging.example.com
       paths:
-        - path: /v1/internal/guard-hallucination/
+        - path: /
           pathType: Prefix

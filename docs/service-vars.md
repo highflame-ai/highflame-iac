@@ -26,12 +26,59 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
+`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
+`HIGHFLAME_AUTH_JWT_PRIVATE_KEY` | JWT PEM RSA private key, signs RS256 access tokens | nil | -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | nil | -
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
 `HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
 `HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Tenancy default enabled | `true` | `true` or `false`
 `HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
+
+### highflame-aispm
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`DB_USERNAME` | Postgres username | nil | -
+`DB_PASSWORD` | Postgres password | nil | -
+`DB_HOST` | Postgres host | nil | -
+`DB_PORT` | Postgres port | `5432` | -
+`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
+`DB_NAME` | Postgres database | `javelin_data` | -
+`REDIS_HOST` | Redis host | nil | -
+`REDIS_USER` | Redis username | nil | -
+`REDIS_PASS` | Redis password | nil | -
+`REDIS_PORT` | Redis port | `6379` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
+`REDIS_CACERT` | Redis CA Cert | `""` | -
+
+### highflame-authz
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`DB_USERNAME` | Postgres username | nil | -
+`DB_PASSWORD` | Postgres password | nil | -
+`DB_HOST` | Postgres host | nil | -
+`DB_PORT` | Postgres port | `5432` | -
+`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
+`AUTHZ_DB_NAME` | Postgres database | `javelin_data` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
+
+### highflame-cerberus
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`HIGHFLAME_URL` | Highflame API URL | `http://highflame-core:8000` | -
+`HIGHFLAME_API_KEY` | Highflame API Key | nil | -
+`LANGFUSE_API_URL` | Langfuse endpoint | `http://langfuse-web:3000` | -
+
+### highflame-collector
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | `http://highflame-cerberus:8080` | -
+`LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | `http://langfuse-web:3000` | -
 
 ### highflame-core
 
@@ -45,8 +92,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_PASS` | Redis password | nil | -
 `UNKEY_ROOT_KEY` | Unkey Root Key | nil | optional
 `UNKEY_API_ID` | Unkey api id | nil | optional
-`MODEL_ARMOR_LOCATION` | Model armor location | nil | -
 `MODEL_ARMOR_TEMPLATE` | Model armor template | nil | -
+`MODEL_ARMOR_LOCATION` | Model armor location | nil | -
 `REDIS_PORT` | Redis port | `6379` | -
 `REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_CACERT` | Redis CA Cert | `""` | -
@@ -80,39 +127,13 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `OTEL_EXPORTER_OTLP_HEADERS` | OTEL exporter headers | `""` | optional
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 
-### highflame-webapp
+### highflame-dlp
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CLERK_SECRET_KEY` | Clerk secret key | nil | -
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | -
-`NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | optional
-`NEXT_PUBLIC_DEFAULT_USER_ROLE` | Default user role | nil | -
-`NEXT_PUBLIC_PRESTRINGS` | Filter prestrings for user roles | nil | -
-`NEXT_PUBLIC_REDIRECT_URI` | Redirect url | nil | -
-`NEXT_PUBLIC_USER_ROLES` | json formatted user roles | nil | -
-`REDIRECT_URI` | Redirect url | nil | -
-`NEXT_PUBLIC_BUID_CLUSTER_MAP` | json formatted buid cluser map | nil | -
-`NEXT_PUBLIC_HA_PAIRS` | json formatted HA pair | nil | -
-`SUPPORT_SMTP_PASSKEY` | SMTP Credential | `` | -
-`SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@support.highflame.com` | -
-`SUPPORT_SMTP_SERVICE` | SMTP Service type | `Gmail` | -
-`NEXT_PUBLIC_SECRET_STORE` | Secret Store | `kubernetes` | `kubernetes` or `aws` or combination (`kubernetes,aws`)
-`NEXT_PUBLIC_CORE_INT_URL` | Highflame core internal url | `http://highflame-core:8000/` | -
-`NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
-`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/signup` | -
-`NEXT_PUBLIC_POSTHOG_HOST` | Posthog url | `https://us.i.posthog.com` | -
-`NEXT_PUBLIC_SUPPORT_SMTP_TO_EMAIL` | SMTP to mail | `support@highflame.com` | -
-`NEXT_PUBLIC_SAAS_SERVICE` | Showcase the SaaS services in the UI | `FALSE` | `TRUE` or `FALSE`
-`NEXT_PUBLIC_CLERK_SIGNUP` | Enable clerk sign up | `visible` | `visible` or `hidden`
-`NEXT_PUBLIC_BUID_MAX_GATEWAYS` | Max number of gateway | `2` | -
-`NEXT_PUBLIC_DEFAULT_USAGE_PLAN_ID` | Highflame usage plan id | `d1jy0v` | -
-`NEXT_PUBLIC_DEPLOYED_TARGET` | Deployed target env | `main` | `main` or `experimental`
-`NEXT_PUBLIC_ONBOARDING_ENABLED` | Enable Onboarding | `false` | `true` or `false`
-`OTEL_ADMIN_EMAIL` | OTEL admin username | `` | -
-`OTEL_ADMIN_PASSWORD` | OTEL admin password | `` | -
-`NEXT_PUBLIC_REDTEAM_STATIC_PROMPTS` | Enable Redteam static prompts | `false` | `true` or `false`
-`NEXT_PUBLIC_REDTEAM_TEMPLATE_SEED` | Enable Redteam template seed | `true` | `true` or `false`
+`CORS_ALLOWED_ORIGINS` | CORS allowed origins | `*` | -
+`CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
+`CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
 
 ### highflame-eval
 
@@ -122,13 +143,14 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
 `CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
 
-### highflame-dlp
+### highflame-ramparts-server
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CORS_ALLOWED_ORIGINS` | CORS allowed origins | `*` | -
-`CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
-`CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
+`LLM_PROVIDER` | Provider name | nil | -
+`LLM_MODEL` | Model name | nil | -
+`LLM_URL` | LLM complete URL | nil | -
+`LLM_API_KEY` | LLM API Key | nil | -
 
 ### highflame-redteam
 
@@ -181,15 +203,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `LOCAL_API_KEY` | Local api key | nil | for `DEFAULT_PROVIDER=local`
 `DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure` or `local` 
 
-### highflame-ramparts-server
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`LLM_PROVIDER` | Provider name | nil | -
-`LLM_MODEL` | Model name | nil | -
-`LLM_URL` | LLM complete URL | nil | -
-`LLM_API_KEY` | LLM API Key | nil | -
-
 ### highflame-scout
 
 Variable Name | Variable Value | Default Value | Acceptable Value
@@ -197,20 +210,54 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_URL` | Highflame API URL | nil | -
 `HIGHFLAME_API_KEY` | Highflame API Key | nil | -
 
-### highflame-cerberus
+### highflame-shield
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_URL` | Highflame API URL | `http://highflame-core:8000` | -
-`HIGHFLAME_API_KEY` | Highflame API Key | nil | -
-`LANGFUSE_API_URL` | Langfuse endpoint | `http://langfuse-web:3000` | -
-
-### highflame-collector
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | `http://highflame-cerberus:8080` | -
-`LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | `http://langfuse-web:3000` | -
+`ACCOUNT_ID` | Account ID | nil | -
+`REDIS_HOST` | Redis host | nil | -
+`REDIS_USER` | Redis username | nil | -
+`REDIS_PASS` | Redis password | nil | -
+`UNKEY_ROOT_KEY` | Unkey Root Key | nil | optional
+`UNKEY_API_ID` | Unkey api id | nil | optional
+`MODEL_ARMOR_TEMPLATE` | Model armor template | nil | -
+`MODEL_ARMOR_LOCATION` | Model armor location | nil | -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | nil | -
+`CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | `s3` or `gcs` or `azure-blob`
+`CLOUD_ARCHIVE_BUCKET` | Cloud archive bucket name | nil | optional
+`REDIS_PORT` | Redis port | `6379` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
+`REDIS_CACERT` | Redis CA Cert | `""` | -
+`HIGHFLAME_DEPLOYMENT_TYPE` | Deploy type | `prod` | `dev` or `prod`
+`K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
+`HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
+`HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
+`HIGHFLAME_EVAL_URL` | highflame eval url | `http://highflame-eval:8009` | -
+`HIGHFLAME_DLP_URL` | highflame dlp url | `http://highflame-dlp:8888` | -
+`HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
+`HIGHFLAME_GUARD_URL` | highflame guard url | `http://highflame-guard:8013` | -
+`HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
+`HIGHFLAME_GUARD_HALLUCINATION_URL` | highflame guard hallucination url | `http://highflame-guard-hallucination:8015` | -
+`HIGHFLAME_GUARD_PLI_URL` | highflame guard pli url | `http://highflame-guard-pli:8016` | -
+`HIGHFLAME_GUARD_LANGUAGE_URL` | highflame guard language url | `http://highflame-guard-lang:8020` | -
+`HIGHFLAME_GUARD_FACTCHECK_URL` | highflame guard factual url | `http://highflame-guard-fact:8018` | -
+`HIGHFLAME_GUARD_SENTIMENT_URL` | highflame guard sentiment url | `http://highflame-guard-sentiment:8021` | -
+`HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
+`HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-saas-bloom-filter-store` | -
+`HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
+`REFRESH_SECRETS_ON_401` | Refresh secrets on 401 | `true` | `true` or `false`
+`BYPASS_GUARDRAILS` | Bypass guardrails for streaming | `true` | `true` or `false`
+`AUTO_PROVISION_APPLICATION` | Auto provision the application | `true` | `true` or `false`
+`GOOGLE_CLOUD_PROJECT` | GCP project id | `javelin-saas` | -
+`GOOGLE_APPLICATION_CREDENTIALS` | GCP json cred path | `/app/config/gcp-credential.json` | -
+`ENABLE_SENTRY` | Sentry dsn | `false` | `true` or `false`
+`SENTRY_DSN` | Sentry dsn | `""` | optional
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
+`CLOUD_ARCHIVE_ENABLED` | Cloud archive enabled | `false` | `true` or `false`
+`CLOUD_ARCHIVE_PREFIX` | Cloud archive prefix in the storage | `shield/sessions/` | optional
+`AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
+`AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
+`AWS_REGION` | AWS Region | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
 
 ### highflame-studio
 
@@ -235,31 +282,36 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AZURE_API_BASE` | Azure OpenAI API base | nil | for `DEFAULT_PROVIDER=azure`
 `AZURE_API_VERSION` | Azure OpenAI version | nil | for `DEFAULT_PROVIDER=azure`
 
-### highflame-authz
+### highflame-webapp
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`DB_USERNAME` | Postgres username | nil | -
-`DB_PASSWORD` | Postgres password | nil | -
-`DB_HOST` | Postgres host | nil | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`AUTHZ_DB_NAME` | Postgres database | `javelin_data` | -
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
-
-### highflame-aispm
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`DB_USERNAME` | Postgres username | nil | -
-`DB_PASSWORD` | Postgres password | nil | -
-`DB_HOST` | Postgres host | nil | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`DB_NAME` | Postgres database | `javelin_data` | -
-`REDIS_HOST` | Redis host | nil | -
-`REDIS_USER` | Redis username | nil | -
-`REDIS_PASS` | Redis password | nil | -
-`REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
-`REDIS_CACERT` | Redis CA Cert | `""` | -
+`CLERK_SECRET_KEY` | Clerk secret key | nil | -
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | -
+`NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | optional
+`NEXT_PUBLIC_DEFAULT_USER_ROLE` | Default user role | nil | -
+`NEXT_PUBLIC_PRESTRINGS` | Filter prestrings for user roles | nil | -
+`NEXT_PUBLIC_REDIRECT_URI` | Redirect url | nil | -
+`NEXT_PUBLIC_USER_ROLES` | json formatted user roles | nil | -
+`REDIRECT_URI` | Redirect url | nil | -
+`NEXT_PUBLIC_BUID_CLUSTER_MAP` | json formatted buid cluser map | nil | -
+`NEXT_PUBLIC_HA_PAIRS` | json formatted HA pair | nil | -
+`SUPPORT_SMTP_PASSKEY` | SMTP Credential | `` | -
+`SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@support.highflame.com` | -
+`SUPPORT_SMTP_SERVICE` | SMTP Service type | `Gmail` | -
+`NEXT_PUBLIC_SECRET_STORE` | Secret Store | `kubernetes` | `kubernetes` or `aws` or combination (`kubernetes,aws`)
+`NEXT_PUBLIC_CORE_INT_URL` | Highflame core internal url | `http://highflame-core:8000/` | -
+`NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
+`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/signup` | -
+`NEXT_PUBLIC_POSTHOG_HOST` | Posthog url | `https://us.i.posthog.com` | -
+`NEXT_PUBLIC_SUPPORT_SMTP_TO_EMAIL` | SMTP to mail | `support@highflame.com` | -
+`NEXT_PUBLIC_SAAS_SERVICE` | Showcase the SaaS services in the UI | `FALSE` | `TRUE` or `FALSE`
+`NEXT_PUBLIC_CLERK_SIGNUP` | Enable clerk sign up | `visible` | `visible` or `hidden`
+`NEXT_PUBLIC_BUID_MAX_GATEWAYS` | Max number of gateway | `2` | -
+`NEXT_PUBLIC_DEFAULT_USAGE_PLAN_ID` | Highflame usage plan id | `d1jy0v` | -
+`NEXT_PUBLIC_DEPLOYED_TARGET` | Deployed target env | `main` | `main` or `experimental`
+`NEXT_PUBLIC_ONBOARDING_ENABLED` | Enable Onboarding | `false` | `true` or `false`
+`OTEL_ADMIN_EMAIL` | OTEL admin username | `` | -
+`OTEL_ADMIN_PASSWORD` | OTEL admin password | `` | -
+`NEXT_PUBLIC_REDTEAM_STATIC_PROMPTS` | Enable Redteam static prompts | `false` | `true` or `false`
+`NEXT_PUBLIC_REDTEAM_TEMPLATE_SEED` | Enable Redteam template seed | `true` | `true` or `false`
