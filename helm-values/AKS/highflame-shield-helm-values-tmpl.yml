@@ -2,7 +2,7 @@ fullnameOverride: "highflame-shield"
 
 livenessProbe:
   httpGet:
-    path: /ready
+    path: /health
     port: 8070
   initialDelaySeconds: 15
   periodSeconds: 10
