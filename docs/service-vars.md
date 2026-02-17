@@ -222,6 +222,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `UNKEY_API_ID` | Unkey api id | nil | optional
 `MODEL_ARMOR_TEMPLATE` | Model armor template | nil | -
 `MODEL_ARMOR_LOCATION` | Model armor location | nil | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 `CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | `s3` or `gcs` or `azure-blob`
 `CLOUD_ARCHIVE_BUCKET` | Cloud archive bucket name | nil | optional
@@ -252,7 +253,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `GOOGLE_APPLICATION_CREDENTIALS` | GCP json cred path | `/app/config/gcp-credential.json` | -
 `ENABLE_SENTRY` | Sentry dsn | `false` | `true` or `false`
 `SENTRY_DSN` | Sentry dsn | `""` | optional
-`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `CLOUD_ARCHIVE_ENABLED` | Cloud archive enabled | `false` | `true` or `false`
 `CLOUD_ARCHIVE_PREFIX` | Cloud archive prefix in the storage | `shield/sessions/` | optional
 `AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
