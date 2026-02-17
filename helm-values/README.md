@@ -40,28 +40,55 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
     * `Highflame license`
 
         ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
-            highflame-license --from-file=license.jwt --from-file=public.pem
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
+            generic highflame-license \
+            --from-file=license.jwt --from-file=public.pem \
+            --dry-run=client -o yaml | kubectl apply -f -
         ```
+
     * `Redis cacert (optional)`
 
         ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
-            highflame-redis-cert --from-file=redis-ca.pem
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
+            generic highflame-redis-cert \
+            --from-file=redis-ca.pem \
+            --dry-run=client -o yaml | kubectl apply -f -
         ```
 
     * `GCP credential`
 
         ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
-            highflame-gcp-cred --from-file=gcp-credential.json
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
+            generic highflame-gcp-cred \
+            --from-file=gcp-credential.json \
+            --dry-run=client -o yaml | kubectl apply -f -
         ```
 
     * `Feature flag config`
 
         ```bash
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret generic \
-            highflame-goff --from-file=goff.yaml
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
+            generic highflame-goff \
+            --from-file=goff.yaml \
+            --dry-run=client -o yaml | kubectl apply -f -
+        ```
+
+    * `Authz signing keys`
+
+        ```bash
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
+            generic highflame-signing-keys \
+            --from-file=./authz-signing-keys \
+            --dry-run=client -o yaml | kubectl apply -f -
+        ```
+
+    * `JWT keys`
+
+        ```bash
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
+            generic highflame-jwt-keys \
+            --from-file=./jwt \
+            --dry-run=client -o yaml | kubectl apply -f -
         ```
 
 * Service level setup and deployment
@@ -86,6 +113,17 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             -f highflame-admin-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-admin
+        ```
+
+    * `highflame-authz`
+
+        ```bash
+        helm upgrade --install highflame-authz highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-authz-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-authz
         ```
 
     * `highflame-core`
@@ -165,6 +203,17 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-lang
         ```
 
+    * `highflame-guard-deep`
+
+        ```bash
+        helm upgrade --install highflame-guard-deep highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-guard-deep-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-deep
+        ```
+
     * `highflame-ramparts-server`
 
         ```bash
@@ -218,4 +267,15 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             -f highflame-webapp-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-webapp
+        ```
+
+    * `highflame-shield`
+
+        ```bash
+        helm upgrade --install highflame-shield highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-shield-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-shield
         ```

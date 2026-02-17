@@ -15,6 +15,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AWS_KMS_KEY` | AWS KMS Key for secret manager enc | nil | optional
 `AWS_SECRET_REPLICATION_REGION` | AWS replication region | nil | optional
 `AWS_REPLICATION_KMS_KEY` | AWS KMS Key for secret manager enc in replication region | nil | optional
+`HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `REDIS_PORT` | Redis port | `6379` | -
 `REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_CACERT` | Redis CA Cert | `""` | -
@@ -27,10 +29,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
-`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
-`HIGHFLAME_AUTH_JWT_PRIVATE_KEY` | JWT PEM RSA private key, signs RS256 access tokens | nil | -
-`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | nil | -
-`HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
+`HIGHFLAME_AUTH_JWT_PRIVATE_KEY` | JWT PEM RSA private key, signs RS256 access tokens | `/app/config/jwt/jwt-private.pem` | -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 `HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
 `HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Tenancy default enabled | `true` | `true` or `false`
 `HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | -
@@ -222,7 +222,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `UNKEY_API_ID` | Unkey api id | nil | optional
 `MODEL_ARMOR_TEMPLATE` | Model armor template | nil | -
 `MODEL_ARMOR_LOCATION` | Model armor location | nil | -
-`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | nil | -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 `CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | `s3` or `gcs` or `azure-blob`
 `CLOUD_ARCHIVE_BUCKET` | Cloud archive bucket name | nil | optional
 `REDIS_PORT` | Redis port | `6379` | -
