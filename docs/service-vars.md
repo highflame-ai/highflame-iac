@@ -272,6 +272,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NODE_ENV` | Nodejs env | `production` | `development` or `production`
 `NEXT_TELEMETRY_DISABLED` | Telemetry option | `1` | `0` or `1`
 `HIGHFLAME_ADMIN_URL` |  Admin api url | `http://highflame-admin:8040` | -
+`HIGHFLAME_SHIELD_URL` |  shield api url | `http://highflame-shield:8070` | -
 `NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | -
 `JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
