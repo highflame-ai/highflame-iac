@@ -126,6 +126,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTEL exporter endpoint | `http://highflame-collector:4318/api/public/otel/v1/traces` | optional
 `OTEL_EXPORTER_OTLP_HEADERS` | OTEL exporter headers | `""` | optional
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 
 ### highflame-dlp
 
