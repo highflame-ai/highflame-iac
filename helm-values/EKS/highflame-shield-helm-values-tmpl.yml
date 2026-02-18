@@ -111,5 +111,9 @@ ingress:
   hosts:
     - host: shield.api-staging.example.com
       paths:
-        - path: /
+        - path: /v1
           pathType: Prefix
+        - path: /openapi.json
+          pathType: Exact
+        # - path: /docs
+        #   pathType: Prefix
