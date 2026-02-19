@@ -1,4 +1,4 @@
-fullnameOverride: "highflame-webapp"
+fullnameOverride: "highflame-studio"
 
 livenessProbe:
   httpGet:
@@ -22,13 +22,6 @@ readinessProbe:
 
 nodeSelector:
   kube/nodegroup: "general"
-
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 4
-  targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 80
 
 service:
   type: ClusterIP
@@ -73,10 +66,10 @@ ingress:
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - staging.example.com
-      secretName: highflame-webapp-tls
+        - studio.example.com
+      secretName: highflame-studio-tls
   hosts:
-    - host: staging.example.com
+    - host: studio.example.com
       paths:
         - path: /
           pathType: Prefix
