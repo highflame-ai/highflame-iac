@@ -15,6 +15,10 @@ helm repo update
 helm search repo highflame-charts
 ```
 
+* Set the required vars for each modules in the helm values file
+
+Please refer this [var-list](../docs/service-vars.md) to set the variables
+
 * Set the default variables such as charts version and namespace
 
 ```bash
@@ -267,6 +271,17 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             -f highflame-webapp-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-webapp
+        ```
+
+    * `highflame-studio`
+
+        ```bash
+        helm upgrade --install highflame-studio highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-studio-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-studio
         ```
 
     * `highflame-shield`
