@@ -294,3 +294,14 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-shield
         ```
+
+    * `highflame-firehog`
+
+        ```bash
+        helm upgrade --install highflame-firehog highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-firehog-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-firehog
+        ```
