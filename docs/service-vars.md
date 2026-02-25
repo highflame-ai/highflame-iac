@@ -144,6 +144,12 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
 `CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
 
+### highflame-firehog
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
+
 ### highflame-ramparts-server
 
 Variable Name | Variable Value | Default Value | Acceptable Value
