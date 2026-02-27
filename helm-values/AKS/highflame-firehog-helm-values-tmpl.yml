@@ -2,7 +2,7 @@ fullnameOverride: "highflame-firehog"
 
 livenessProbe:
   httpGet:
-    path: /health
+    path: /mcp/heathz
     port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /health
+    path: /mcp/heathz
     port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -61,17 +61,17 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/health"
+    appgw.ingress.kubernetes.io/health-probe-path: "/mcp/heathz"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - mproxy.api-staging.example.com
+        - api.example.com
       secretName: highflame-firehog-tls
   hosts:
-    - host: mproxy.api-staging.example.com
+    - host: api.example.com
       paths:
-        - path: /
+        - path: /mcp
           pathType: Prefix

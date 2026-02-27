@@ -76,7 +76,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: model.api-dev.example.com
+    - host: model.api.example.com
       paths:
         - path: /v1/internal/guard-cm/
           pathType: Prefix

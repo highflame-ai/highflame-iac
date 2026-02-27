@@ -109,7 +109,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: shield.api-staging.example.com
+    - host: shield.api.example.com
       paths:
         - path: /v1
           pathType: Prefix

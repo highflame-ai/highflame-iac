@@ -2,7 +2,7 @@ fullnameOverride: "highflame-firehog"
 
 livenessProbe:
   httpGet:
-    path: /health
+    path: /mcp/heathz
     port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /health
+    path: /mcp/heathz
     port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -58,7 +58,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-path: /mcp/heathz
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -76,7 +76,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: mproxy.api-dev.example.com
+    - host: api.example.com
       paths:
-        - path: /
+        - path: /mcp
           pathType: Prefix

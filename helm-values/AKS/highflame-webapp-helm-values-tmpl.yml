@@ -73,10 +73,10 @@ ingress:
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - staging.example.com
+        - webapp.example.com
       secretName: highflame-webapp-tls
   hosts:
-    - host: staging.example.com
+    - host: webapp.example.com
       paths:
         - path: /
           pathType: Prefix
