@@ -75,10 +75,10 @@ ingress:
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - ramparts.api-staging.example.com
+        - ramparts.api.example.com
       secretName: highflame-ramparts-server-tls
   hosts:
-    - host: ramparts.api-staging.example.com
+    - host: ramparts.api.example.com
       paths:
         - path: /v1/ramparts/
           pathType: Prefix
