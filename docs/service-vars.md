@@ -281,7 +281,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_ADMIN_URL` |  Admin api url | `http://highflame-admin:8040` | -
 `HIGHFLAME_SHIELD_URL` |  shield api url | `http://highflame-shield:8070` | -
 `NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | -
-`JWT_SECRET_KEY` | JWT Secret key | nil | -
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
 `PORT` | Service port | `3000` | -
 `DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure`
