@@ -323,3 +323,22 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `OTEL_ADMIN_PASSWORD` | OTEL admin password | `` | -
 `NEXT_PUBLIC_REDTEAM_STATIC_PROMPTS` | Enable Redteam static prompts | `false` | `true` or `false`
 `NEXT_PUBLIC_REDTEAM_TEMPLATE_SEED` | Enable Redteam template seed | `true` | `true` or `false`
+
+### highflame-collector
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | nil | -
+`CLICKHOUSE_DATABASE` | Clickhouse Database | nil | -
+`CLICKHOUSE_URL` | Clickhouse URL | nil | -
+`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
+
+
+### highflame-observatory
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CLICKHOUSE_HOST` | Clickhouse Host | nil | -
+`CLICKHOUSE_DATABASE` | Clickhouse Database | nil | -
+`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
