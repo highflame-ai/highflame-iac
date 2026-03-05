@@ -62,7 +62,7 @@ secrets:
 volumes:
   - name: jwt-keys
     secret:
-      secretName: highflame-shield-jwt-keys
+      secretName: highflame-jwt-keys
       optional: false
 
 volumeMounts:
@@ -96,7 +96,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-        - host: api.example.com
+        - host: observatory.example.com
           paths:
             - path: /
               pathType: Prefix

@@ -73,13 +73,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_API_KEY` | Highflame API Key | nil | -
 `LANGFUSE_API_URL` | Langfuse endpoint | `http://langfuse-web:3000` | -
 
-### highflame-collector
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`CERBERUS_HTTP_ENDPOINT` | Cerberus http endpoint | `http://highflame-cerberus:8080` | -
-`LANGFUSE_OTLP_ENDPOINT` | Langfuse otlp endpoint | `http://langfuse-web:3000` | -
-
 ### highflame-core
 
 Variable Name | Variable Value | Default Value | Acceptable Value
@@ -330,7 +323,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | nil | -
 `CLICKHOUSE_DATABASE` | Clickhouse Database | nil | -
-`CLICKHOUSE_URL` | Clickhouse URL | nil | -
+`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
 
 
@@ -338,6 +331,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | nil | -
 `CLICKHOUSE_HOST` | Clickhouse Host | nil | -
 `CLICKHOUSE_DATABASE` | Clickhouse Database | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -

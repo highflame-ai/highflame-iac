@@ -88,10 +88,10 @@ ingresses:
 
       tls:
         - hosts:
-            - api.example.com
+            - otel-http.api.example.com
           secretName: otel-http-tls
       hosts:
-        - host: api-example.com
+        - host: otel-http.api.example.com
           paths:
             - path: /
               pathType: Prefix
@@ -113,10 +113,10 @@ ingresses:
 
       tls:
         - hosts:
-            - api-example.com
+            - otel-grpc.api.example.com
           secretName: otel-grpc-tls
       hosts:
-        - host: api-example.com
+        - host: otel-grpc.api.example.com
           paths:
             - path: /
               pathType: Prefix

@@ -25,7 +25,7 @@ nodeSelector:
 
 podRestart:
   enabled: true
-  
+
 autoscaling:
   enabled: true
   minReplicas: 1
@@ -94,7 +94,7 @@ ingresses:
         alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
         alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
       hosts:
-        - host: api.example.com
+        - host: otel-http.api.example.com
           paths:
             - path: /
               pathType: Prefix
@@ -122,7 +122,7 @@ ingresses:
         alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
         alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
       hosts:
-        - host: api.example.com
+        - host: otel-grpc.api.example.com
           paths:
             - path: /
               pathType: Prefix

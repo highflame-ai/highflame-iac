@@ -63,7 +63,7 @@ secrets:
 volumes:
   - name: jwt-keys
     secret:
-      secretName: highflame-shield-jwt-keys
+      secretName: highflame-jwt-keys
       optional: false
 
 volumeMounts:
@@ -89,11 +89,11 @@ ingress:
 
   tls:
     - hosts:
-        - api.example.com
+        - observatory.example.com
       secretName: observatory-dev-tls
 
   hosts:
-    - host: api.example.com
+    - host: 
       paths:
         - path: /
           pathType: Prefix
