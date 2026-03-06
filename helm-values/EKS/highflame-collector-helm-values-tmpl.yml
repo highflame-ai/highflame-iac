@@ -23,9 +23,6 @@ readinessProbe:
 nodeSelector:
   kube/nodegroup: "general"
 
-podRestart:
-  enabled: true
-
 autoscaling:
   enabled: true
   minReplicas: 1
