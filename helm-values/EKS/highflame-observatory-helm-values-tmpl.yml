@@ -96,7 +96,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-        - host: observatory.example.com
-          paths:
-            - path: /
-              pathType: Prefix
+    - host: observatoryapi..example.com
+      paths:
+        - path: /
+          pathType: Prefix
