@@ -305,3 +305,25 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-firehog
         ```
+
+    * `highflame-collector`
+
+        ```bash
+        helm upgrade --install highflame-collector highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-collector-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-collector
+        ```
+
+    * `highflame-observatory`
+
+        ```bash
+        helm upgrade --install highflame-observatory highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-observatory-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-observatory
+        ```
