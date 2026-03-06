@@ -321,18 +321,18 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | nil | -
-`CLICKHOUSE_DATABASE` | Clickhouse Database | nil | -
+`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | `tcp://clickhouse-javelin-ch.clickhouse.svc.cluster.local:9000` | -
+`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
 `CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
-
 
 ### highflame-observatory
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | nil | -
-`CLICKHOUSE_HOST` | Clickhouse Host | nil | -
-`CLICKHOUSE_DATABASE` | Clickhouse Database | nil | -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
+`CLICKHOUSE_HOST` | Clickhouse Host | `clickhouse-javelin-ch.clickhouse.svc.cluster.local` | -
+`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
+`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
