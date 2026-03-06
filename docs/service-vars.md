@@ -142,6 +142,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 
 ### highflame-ramparts-server
 
