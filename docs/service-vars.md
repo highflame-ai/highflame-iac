@@ -142,6 +142,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
+`ADMIN_API_URL` | highflame admin url | `http://highflame-admin:8040` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 
 ### highflame-ramparts-server
@@ -175,7 +176,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
-`Highflame_ADMIN_URL` | Highflame admin url | `http://highflame-admin:8040` | -
+`HIGHFLAME_ADMIN_URL` | Highflame admin url | `http://highflame-admin:8040` | -
 `MODEL_HIGH_END` | Provider high model name | `gpt-4o` | -
 `MODEL_LOW_END` | Provider low model name | `gpt35` | -
 `EMBEDDING_MODEL` | Embedding model name | `text-embedding-3-small` | -
