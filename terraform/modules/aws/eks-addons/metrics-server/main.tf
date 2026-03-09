@@ -25,4 +25,10 @@ resource "helm_release" "metrics_server" {
   force_update     = false
   namespace        = var.namespace
   create_namespace = false
+  set              = [
+                        {
+                          name  = "replicas"
+                          value = "3"
+                        }
+                      ]
 }
