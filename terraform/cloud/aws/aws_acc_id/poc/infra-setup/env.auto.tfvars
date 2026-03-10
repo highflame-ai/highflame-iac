@@ -45,7 +45,7 @@ aurora_master_cluster_region             = "us-east-1"
 aurora_global_cluster_identifier         = ""
 eks_cloudwatch_retention                 = 30
 redis_cloudwatch_retention               = 30
-eks_cluster_version                      = "1.33"
+eks_cluster_version                      = "1.35"
 eks_managed_nodes_properties             = [
                                                 {
                                                     name                           = "general"
