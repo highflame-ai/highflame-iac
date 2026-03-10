@@ -196,17 +196,6 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-hallucination
         ```
 
-    * `highflame-guard-lang`
-
-        ```bash
-        helm upgrade --install highflame-guard-lang highflame-charts/highflame-generic \
-            --namespace ${HIGHFLAME_NAMESPACE} \
-            --version ${HIGHFLAME_GENERIC_VER} \
-            -f highflame-guard-lang-helm-values-tmpl.yml --timeout=15m
-
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-guard-lang
-        ```
-
     * `highflame-guard-deep`
 
         ```bash
@@ -249,17 +238,6 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             -f highflame-redteam-lab1-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-redteam-lab1
-        ```
-
-    * `highflame-scout`
-
-        ```bash
-        helm upgrade --install highflame-scout highflame-charts/highflame-generic \
-            --namespace ${HIGHFLAME_NAMESPACE} \
-            --version ${HIGHFLAME_GENERIC_VER} \
-            -f highflame-scout-helm-values-tmpl.yml --timeout=15m
-
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} get daemonsets highflame-scout
         ```
 
     * `highflame-webapp`
