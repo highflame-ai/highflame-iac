@@ -100,7 +100,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
 `HIGHFLAME_GUARD_HALLUCINATION_URL` | highflame guard hallucination url | `http://highflame-guard-hallucination:8015` | -
 `HIGHFLAME_GUARD_PLI_URL` | highflame guard pli url | `http://highflame-guard-pli:8016` | -
-`HIGHFLAME_GUARD_LANGUAGE_URL` | highflame guard language url | `http://highflame-guard-lang:8020` | -
 `HIGHFLAME_GUARD_FACTCHECK_URL` | highflame guard factual url | `http://highflame-guard-fact:8018` | -
 `HIGHFLAME_GUARD_SENTIMENT_URL` | highflame guard sentiment url | `http://highflame-guard-sentiment:8021` | -
 `HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
@@ -205,13 +204,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `LOCAL_API_KEY` | Local api key | nil | for `DEFAULT_PROVIDER=local`
 `DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure` or `local` 
 
-### highflame-scout
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`HIGHFLAME_URL` | Highflame API URL | nil | -
-`HIGHFLAME_API_KEY` | Highflame API Key | nil | -
-
 ### highflame-shield
 
 Variable Name | Variable Value | Default Value | Acceptable Value
@@ -314,8 +306,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_DEFAULT_USAGE_PLAN_ID` | Highflame usage plan id | `d1jy0v` | -
 `NEXT_PUBLIC_DEPLOYED_TARGET` | Deployed target env | `main` | `main` or `experimental`
 `NEXT_PUBLIC_ONBOARDING_ENABLED` | Enable Onboarding | `false` | `true` or `false`
-`OTEL_ADMIN_EMAIL` | OTEL admin username | `` | -
-`OTEL_ADMIN_PASSWORD` | OTEL admin password | `` | -
 `NEXT_PUBLIC_REDTEAM_STATIC_PROMPTS` | Enable Redteam static prompts | `false` | `true` or `false`
 `NEXT_PUBLIC_REDTEAM_TEMPLATE_SEED` | Enable Redteam template seed | `true` | `true` or `false`
 
