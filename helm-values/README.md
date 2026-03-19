@@ -86,12 +86,12 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             --dry-run=client -o yaml | kubectl apply -f -
         ```
 
-    * `JWT keys`
+    * `Auth keys`
 
         ```bash
         kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
-            generic highflame-jwt-keys \
-            --from-file=./jwt \
+            generic highflame-auth-keys \
+            --from-file=./auth-keys \
             --dry-run=client -o yaml | kubectl apply -f -
         ```
 
@@ -304,4 +304,15 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             -f highflame-observatory-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-observatory
+        ```
+
+    * `highflame-authn`
+
+        ```bash
+        helm upgrade --install highflame-authn highflame-charts/highflame-generic \
+            --namespace ${HIGHFLAME_NAMESPACE} \
+            --version ${HIGHFLAME_GENERIC_VER} \
+            -f highflame-authn-helm-values-tmpl.yml --timeout=15m
+
+        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-authn
         ```

@@ -61,6 +61,10 @@ volumes:
     secret:
       secretName: highflame-gcp-cred
       optional: false
+  - name: auth-keys
+    secret:
+      secretName: highflame-auth-keys
+      optional: false
   # - name: redis-cert-volume
   #   secret:
   #     secretName: highflame-redis-cert
@@ -71,6 +75,10 @@ volumeMounts:
     mountPath: "/app/config/gcp-credential.json"
     readOnly: true
     subPath: gcp-credential.json
+  - name: auth-keys
+    mountPath: "/app/config/jwt/jwt-public.pem"
+    readOnly: true
+    subPath: jwt-public.pem
   # - name: redis-cert-volume
   #   mountPath: "/app/certs/redis-ca.pem"
   #   readOnly: true
