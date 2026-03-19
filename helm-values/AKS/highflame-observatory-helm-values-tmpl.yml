@@ -57,13 +57,13 @@ secrets:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
 volumes:
-  - name: jwt-keys
+  - name: auth-keys
     secret:
-      secretName: highflame-jwt-keys
+      secretName: highflame-auth-keys
       optional: false
 
 volumeMounts:
-  - name: jwt-keys
+  - name: auth-keys
     mountPath: "/app/config/jwt/jwt-public.pem"
     readOnly: true
     subPath: jwt-public.pem

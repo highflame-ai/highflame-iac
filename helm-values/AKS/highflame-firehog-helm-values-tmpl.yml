@@ -51,6 +51,11 @@ resources:
     memory: 1024Mi
     cpu: 500m
 
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
 ingress:
   enabled: true
   className: "azure-application-gateway"
@@ -68,10 +73,10 @@ ingress:
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - api.example.com
+        - mcp.api.example.com
       secretName: highflame-firehog-tls
   hosts:
-    - host: api.example.com
+    - host: mcp.api.example.com
       paths:
-        - path: /mcp
+        - path: /
           pathType: Prefix

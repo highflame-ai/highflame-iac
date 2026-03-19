@@ -51,6 +51,11 @@ resources:
     memory: 1024Mi
     cpu: 500m
 
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
 ingress:
   enabled: true
   className: "alb"
@@ -76,7 +81,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: api.example.com
+    - host: mcp.api.example.com
       paths:
-        - path: /mcp
+        - path: /
           pathType: Prefix

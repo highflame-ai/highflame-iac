@@ -80,3 +80,8 @@ ingress:
       paths:
         - path: /v1/internal/guard-deepcontext/
           pathType: Prefix
+
+secrets:
+  enabled: true
+  secretData:
+    HIGHFLAME_MODELS_SECRET: '${HIGHFLAME_MODELS_SECRET}'

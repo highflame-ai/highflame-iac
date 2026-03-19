@@ -28,6 +28,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
+`HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
 `HIGHFLAME_AUTH_JWT_PRIVATE_KEY` | JWT PEM RSA private key, signs RS256 access tokens | `/app/config/jwt/jwt-private.pem` | -
 `HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
@@ -35,6 +36,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Tenancy default enabled | `true` | `true` or `false`
 `HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
+`MARKETPLACE_JWT_SECRET` | Highflame Marketplace secret | nil | -
+`HIGHFLAME_APP_URL` | Endpoint for studio service | nil | -
 
 ### highflame-aispm
 
@@ -52,6 +55,23 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_PORT` | Redis port | `6379` | -
 `REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_CACERT` | Redis CA Cert | `""` | -
+
+### highflame-authn
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`DB_USERNAME` | Postgres username | nil | -
+`DB_PASSWORD` | Postgres password | nil | -
+`DB_HOST` | Postgres host | nil | -
+`DB_PORT` | Postgres port | `5432` | -
+`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
+`AUTHN_DB_NAME` | Postgres database | `highflame_authn` | -
+`OTEL_ENABLED` | Enable OTEL | `true` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
+`HIGHFLAME_ISSUER` | Highflame issuer | nil | -
+`HIGHFLAME_BASE_URL` | Highflame auth base endpoint | nil | -
 
 ### highflame-authz
 
@@ -142,6 +162,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
 `HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
+`HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
+`HIGHFLAME_FIREHOG_URL` | highflame firehog url | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 
 ### highflame-ramparts-server
@@ -252,6 +274,13 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
 `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
 `AWS_REGION` | AWS Region | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
+`HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
+
+### highflame-guard-*
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
 
 ### highflame-studio
 
@@ -262,11 +291,14 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CLERK_WEBHOOK_SECRET` | Clerk webhook secret | nil | -
 `NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | `` | -
 `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
-`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/signup` | -
+`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/sign-up` | -
 `NODE_ENV` | Nodejs env | `production` | `development` or `production`
 `NEXT_TELEMETRY_DISABLED` | Telemetry option | `1` | `0` or `1`
 `HIGHFLAME_ADMIN_URL` |  Admin api url | `http://highflame-admin:8040` | -
 `HIGHFLAME_SHIELD_URL` |  shield api url | `http://highflame-shield:8070` | -
+`HIGHFLAME_AUTHN_URL` |  authn api url | `http://highflame-authn:8051` | -
+`HIGHFLAME_OBSERVATORY_URL` |  observatory api url | `http://highflame-observatory:8090` | -
+`HIGHFLAME_REDTEAM_LAB_URL` |  redteam lab api url | `http://highflame-redteam-lab1:8002` | -
 `NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
@@ -276,6 +308,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AZURE_API_KEY` | Azure OpenAI api key | nil | for `DEFAULT_PROVIDER=azure`
 `AZURE_API_BASE` | Azure OpenAI API base | nil | for `DEFAULT_PROVIDER=azure`
 `AZURE_API_VERSION` | Azure OpenAI version | nil | for `DEFAULT_PROVIDER=azure`
+`SUPPORT_SMTP_PASSKEY` | SMTP Credential | nil | -
+`MARKETPLACE_FROM_EMAIL` | SMTP from mail | nil | -
+`MARKETPLACE_NOTIFY_EMAIL` | SMTP Notify mail | nil | -
 
 ### highflame-webapp
 
@@ -291,15 +326,15 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIRECT_URI` | Redirect url | nil | -
 `NEXT_PUBLIC_BUID_CLUSTER_MAP` | json formatted buid cluser map | nil | -
 `NEXT_PUBLIC_HA_PAIRS` | json formatted HA pair | nil | -
-`SUPPORT_SMTP_PASSKEY` | SMTP Credential | `` | -
+`SUPPORT_SMTP_PASSKEY` | SMTP Credential | nil | -
 `SUPPORT_SMTP_FROM_EMAIL` | SMTP from mail | `noreply@support.highflame.com` | -
 `SUPPORT_SMTP_SERVICE` | SMTP Service type | `Gmail` | -
+`NEXT_PUBLIC_SUPPORT_SMTP_TO_EMAIL` | SMTP to mail | `support@highflame.com` | -
 `NEXT_PUBLIC_SECRET_STORE` | Secret Store | `kubernetes` | `kubernetes` or `aws` or combination (`kubernetes,aws`)
 `NEXT_PUBLIC_CORE_INT_URL` | Highflame core internal url | `http://highflame-core:8000/` | -
 `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
 `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/signup` | -
 `NEXT_PUBLIC_POSTHOG_HOST` | Posthog url | `https://us.i.posthog.com` | -
-`NEXT_PUBLIC_SUPPORT_SMTP_TO_EMAIL` | SMTP to mail | `support@highflame.com` | -
 `NEXT_PUBLIC_SAAS_SERVICE` | Showcase the SaaS services in the UI | `FALSE` | `TRUE` or `FALSE`
 `NEXT_PUBLIC_CLERK_SIGNUP` | Enable clerk sign up | `visible` | `visible` or `hidden`
 `NEXT_PUBLIC_BUID_MAX_GATEWAYS` | Max number of gateway | `2` | -
