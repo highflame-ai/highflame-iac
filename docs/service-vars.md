@@ -89,9 +89,10 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_URL` | Highflame API URL | `http://highflame-core:8000` | -
-`HIGHFLAME_API_KEY` | Highflame API Key | nil | -
-`LANGFUSE_API_URL` | Langfuse endpoint | `http://langfuse-web:3000` | -
+`HIGHFLAME_ADMIN_URL` | Highflame Admin URL | `http://highflame-admin:8040`| -
+`HIGHFLAME_SHEILD_URL` | Highflame Sheild URL | `http://highflame-shield:8070`| -
+`HIGHFLAME_COLLECTOR_URL` | Highflame Collector URL | `highflame-collector:4317`| -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
 
 ### highflame-core
 
