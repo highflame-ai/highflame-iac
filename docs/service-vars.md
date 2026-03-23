@@ -276,8 +276,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
 `AWS_REGION` | AWS Region | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
-`HIGHFLAME_AUTH_JWT_ISSUER`|Highflame JWT Issuer| nil | -
-`HIGHFLAME_AUTH_JWKS_URL` |Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer| nil | -
+`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
 
 ### highflame-guard-*
 
