@@ -130,17 +130,6 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-authz
         ```
 
-    * `highflame-core`
-
-        ```bash
-        helm upgrade --install highflame-core highflame-charts/highflame-generic \
-            --namespace ${HIGHFLAME_NAMESPACE} \
-            --version ${HIGHFLAME_GENERIC_VER} \
-            -f highflame-core-helm-values-tmpl.yml --timeout=15m
-
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-core
-        ```
-
     * `highflame-dlp`
 
         ```bash
@@ -150,17 +139,6 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             -f highflame-dlp-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-dlp
-        ```
-
-    * `highflame-eval`
-
-        ```bash
-        helm upgrade --install highflame-eval highflame-charts/highflame-generic \
-            --namespace ${HIGHFLAME_NAMESPACE} \
-            --version ${HIGHFLAME_GENERIC_VER} \
-            -f highflame-eval-helm-values-tmpl.yml --timeout=15m
-
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-eval
         ```
 
     * `highflame-guard`
@@ -238,17 +216,6 @@ kubectl --namespace ${HIGHFLAME_NAMESPACE} create secret \
             -f highflame-redteam-lab1-helm-values-tmpl.yml --timeout=15m
 
         kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-redteam-lab1
-        ```
-
-    * `highflame-webapp`
-
-        ```bash
-        helm upgrade --install highflame-webapp highflame-charts/highflame-generic \
-            --namespace ${HIGHFLAME_NAMESPACE} \
-            --version ${HIGHFLAME_GENERIC_VER} \
-            -f highflame-webapp-helm-values-tmpl.yml --timeout=15m
-
-        kubectl --namespace ${HIGHFLAME_NAMESPACE} get deployment highflame-webapp
         ```
 
     * `highflame-studio`

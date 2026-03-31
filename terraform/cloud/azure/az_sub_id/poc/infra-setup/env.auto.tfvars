@@ -37,18 +37,7 @@ postgres_storage_mb                         = 65536
 postgres_storage_tier                       = "P30"
 postgres_sku_name                           = "GP_Standard_D4ads_v5"
 postgres_source_server_id                   = ""
-workload_identity                           = [
-                                                {
-                                                  id             = 1
-                                                  namespace      = "highflame-poc"
-                                                  serviceaccount = "highflame-core"
-                                                },
-                                                {
-                                                  id             = 2
-                                                  namespace      = "highflame-poc"
-                                                  serviceaccount = "highflame-admin"
-                                                }
-                                              ]
+workload_identity                           = []
 enable_self_signed_cert                     = true
 appgw_zones                                 = [ "1", "2", "3" ]
 ssl_keyvault_secret_ids                     = []
