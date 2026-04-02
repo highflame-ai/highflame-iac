@@ -55,6 +55,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HIGHFLAME_ISSUER` | Highflame issuer | nil | -
 `HIGHFLAME_BASE_URL` | Highflame auth base endpoint | nil | -
+`HIGHFLAMW_WIMSE_DOMAIN` | Highflame WIMSE domain name | nil | -
 
 ### highflame-authz
 
