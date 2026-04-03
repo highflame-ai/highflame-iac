@@ -56,6 +56,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_ISSUER` | Highflame issuer | nil | -
 `HIGHFLAME_BASE_URL` | Highflame auth base endpoint | nil | -
 `HIGHFLAMW_WIMSE_DOMAIN` | Highflame WIMSE domain name | nil | -
+`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
+`HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
 
 ### highflame-authz
 
@@ -243,6 +245,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `SUPPORT_SMTP_PASSKEY` | SMTP Credential | nil | -
 `MARKETPLACE_FROM_EMAIL` | SMTP from mail | nil | -
 `MARKETPLACE_NOTIFY_EMAIL` | SMTP Notify mail | nil | -
+`HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
+`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
+`HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
 
 ### highflame-collector
 
