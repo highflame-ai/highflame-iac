@@ -97,6 +97,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
 `HIGHFLAME_FIREHOG_URL` | highflame firehog url | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
+`OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | -
 
 ### highflame-ramparts-server
 
