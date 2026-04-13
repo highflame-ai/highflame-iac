@@ -224,7 +224,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CLERK_SECRET_KEY` | Clerk secret key | nil | -
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | -
 `CLERK_WEBHOOK_SECRET` | Clerk webhook secret | nil | -
-`NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | `` | -
+`NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | nil | -
+`NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | -
+`NEXT_PUBLIC_FIREHOG_URL` | Endpoint for firehog service | nil | -
 `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
 `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/sign-up` | -
 `NODE_ENV` | Nodejs env | `production` | `development` or `production`
@@ -234,7 +236,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTHN_URL` |  authn api url | `http://highflame-authn:8051` | -
 `HIGHFLAME_OBSERVATORY_URL` |  observatory api url | `http://highflame-observatory:8090` | -
 `HIGHFLAME_REDTEAM_LAB_URL` |  redteam lab api url | `http://highflame-redteam-lab1:8002` | -
-`NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
 `PORT` | Service port | `3000` | -
