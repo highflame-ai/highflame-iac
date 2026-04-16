@@ -270,3 +270,4 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
+`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
