@@ -26,7 +26,7 @@ module "eks_cluster" {
   create_cloudwatch_log_group              = true
   enable_irsa                              = true
   authentication_mode                      = "API_AND_CONFIG_MAP"
-  enable_cluster_creator_admin_permissions = true
+  enable_cluster_creator_admin_permissions = false
   create_security_group                    = false
   create_node_security_group               = false
   security_group_id                        = var.eks_cluster_sg_id
