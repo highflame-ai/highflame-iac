@@ -250,6 +250,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
 `HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
 `HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
+`NEXT_PUBLIC_POSTHOG_HOST` | Posthog host | `https://us.i.posthog.com` | -
+`NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | -
 
 ### highflame-collector
 
