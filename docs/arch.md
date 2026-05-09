@@ -38,7 +38,7 @@ The following diagram illustrates the key networking components, including VPCs,
 
 This diagram shows how Highflame AI Gateway authenticates, governs, routes, and observes AI traffic from customer applications before requests reach model providers.
 
-![Highflame AI Gateway](./img/highflame-firehog-flow.png)
+![Highflame AI Gateway](./img/highflame-ai-gateway-flow.png)
 
 ## Browser Security Service Architecture
 
