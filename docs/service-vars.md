@@ -136,7 +136,10 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `EMBEDDING_MODEL` | Embedding model name | `text-embedding-3-small` | -
 `GROK_MODEL` | Grok model name | `grok-2` | -
 `ATTACK_GEN_MODEL` | Xai model name | `xai/grok-3` | -
-`DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local` 
+`DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local`
+`OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
+`OTEL_SERVICE_NAME` | Highflame collector service | `redteam-scanner` | -
+
 
 ### highflame-redteam-lab1
 
