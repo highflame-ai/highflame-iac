@@ -141,7 +141,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `OTEL_SERVICE_NAME` | Highflame collector service | `redteam-scanner` | -
 
 
-
 ### highflame-redteam-lab1
 
 Variable Name | Variable Value | Default Value | Acceptable Value
