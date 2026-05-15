@@ -1,7 +1,7 @@
 ########## Locals ##########
 locals {
   launch_prefix                     = join("-", [ var.project_name, var.project_env ])
-  user_data_tpl                     = "../../../../../../config/aws/common/template/eks_node.tpl"
+  user_data_tpl                     = "../../../../../../config/aws/template/eks_node.tpl"
   tags                              = merge(var.common_tags,
                                       {
                                         EKSCluster = var.cluster_name

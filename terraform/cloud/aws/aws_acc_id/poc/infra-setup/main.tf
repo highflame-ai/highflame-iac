@@ -159,12 +159,39 @@ module "alb_sg" {
   eks_node_security_group_id              = module.eks_sg[0].eks_nodegroup_sg_id
 }
 
+module "s3" {
+  source                                  = "../../../../../../modules/aws/s3"
+  project_name                            = var.project_name
+  project_env                             = var.project_env
+  create_bucket_list                      = var.create_bucket_list
+}
+
+module "ha_s3" {
+  source                                  = "../../../../../modules/aws/s3"
+  project_name                            = var.project_name
+  project_env                             = var.project_env
+  create_bucket_list                      = var.create_bucket_list_ha
+
+  providers                               = {
+                                              aws = aws.ha_pair
+                                            }
+}
+
+locals {
+  svc_bucket_list                         = concat(
+                                                    module.s3.bucket_name,
+                                                    module.ha_s3.bucket_name,
+                                                    var.svc_access_bucket_list
+                                                  )
+}
+
 module "svc_iam" {
   count                                   = var.enable_svc_iam == true ? 1 : 0
   source                                  = "../../../../../modules/aws/svc-iam"
   project_name                            = var.project_name
   project_env                             = var.project_env
   svc_iam_policy_list                     = var.svc_iam_policy_list
+  svc_bucket_list                         = local.svc_bucket_list
   eks_cluster_oidc_provider               = module.eks[0].eks_cluster_oidc_provider
   eks_cluster_oidc_provider_arn           = module.eks[0].eks_cluster_oidc_provider_arn
 }

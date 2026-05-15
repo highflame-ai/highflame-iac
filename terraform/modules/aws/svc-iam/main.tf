@@ -3,27 +3,6 @@ locals {
   iam_prefix                    = join("-", ([var.project_name, var.project_env]))
 }
 
-# ########## IAM_Bucket_Policy ##########
-# data "aws_iam_policy_document" "bucket_access" {
-#   statement {
-#     actions                     = [
-#                                     "s3:*"
-#                                   ]
-#     resources                   = [
-#                                       "${var.svc_s3_bucket_arn}/*",
-#                                       "${var.svc_s3_bucket_arn}"
-#                                   ]
-#     effect                      = "Allow"
-#   }
-# }
-
-# resource "aws_iam_policy" "bucket_access" {
-#   name                          = "${local.iam_prefix}-s3-access-policy"
-#   path                          = "/"
-#   description                   = "Policy for acessing the app store s3 bucket"
-#   policy                        = data.aws_iam_policy_document.bucket_access.json
-# }
-
 ########## IAM_KMS_Policy ##########
 data "aws_iam_policy_document" "kms_access" {
   statement {
@@ -44,6 +23,29 @@ resource "aws_iam_policy" "kms_access" {
   path                          = "/"
   description                   = "Policy for acessing the kms"
   policy                        = data.aws_iam_policy_document.kms_access.json
+}
+
+########## IAM_Bucket_Policy ##########
+data "aws_iam_policy_document" "bucket_access" {
+  for_each                      = toset(var.svc_bucket_list)
+  statement {
+    actions                     = [
+                                    "s3:*"
+                                  ]
+    resources                   = [
+                                    "arn:aws:s3:::${each.value}/*",
+                                    "arn:aws:s3:::${each.value}"
+                                  ]
+    effect                      = "Allow"
+  }
+}
+
+resource "aws_iam_policy" "bucket_access" {
+  for_each                      = toset(var.svc_bucket_list)
+  name                          = "${local.iam_prefix}-s3-access-policy-for-${each.value}"
+  path                          = "/"
+  description                   = "Policy for acessing the s3 bucket ${each.value}"
+  policy                        = data.aws_iam_policy_document.bucket_access[each.value].json
 }
 
 ########## IAM_Policy ##########
@@ -74,15 +76,19 @@ EOF
 
 ########## Locals ##########
 locals {
-  svc_iam_policy_list           = concat(var.svc_iam_policy_list,
-                                        [
-                                          aws_iam_policy.kms_access.arn
-                                        ])
+  svc_iam_policy_map            = merge(
+                                    { for arn in var.svc_iam_policy_list : element(split("/", arn), length(split("/", arn)) - 1) => arn },
+                                    {
+                                      "kms"         = aws_iam_policy.kms_access.arn
+                                    },
+                                    { for bucket in var.svc_bucket_list : "bucket_${bucket}" => aws_iam_policy.bucket_access[bucket].arn }
+                                  )
 }
 
+
 resource "aws_iam_role_policy_attachment" "iam_policies" {
-  count                         = length(local.svc_iam_policy_list)
+  for_each                      = local.svc_iam_policy_map
 
   role                          = aws_iam_role.svc_role.name
-  policy_arn                    = "${local.svc_iam_policy_list[count.index]}"
+  policy_arn                    = each.value
 }

@@ -1,0 +1,77 @@
+fullnameOverride: "highflame-studio"
+
+livenessProbe:
+  httpGet:
+    path: /sign-in
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 4
+
+readinessProbe:
+  httpGet:
+    path: /sign-in
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 4
+
+nodeSelector:
+  kube/nodegroup: "general"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+service:
+  annotations:
+    cloud.google.com/backend-config: '{ "default" : "highflame-studio-default" }'
+  type: NodePort
+  protocol: TCP
+  port: 3000
+
+gceIngress:
+  backendConfigs:
+    enabled: true
+    items:
+    - name: default
+      timeoutSec: 300
+      healthCheck:
+        checkIntervalSec: 15
+        timeoutSec: 5
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        type: HTTP
+        requestPath: "/sign-in"
+        port: 3000
+      securityPolicy:
+        enabled: true
+        name: "highflame-cloud-security-policy"
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: IfNotPresent
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 300m
+  limits:
+    memory: 1024Mi
+    cpu: 1000m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md

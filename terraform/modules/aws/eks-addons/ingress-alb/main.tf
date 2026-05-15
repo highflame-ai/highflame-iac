@@ -66,7 +66,7 @@ resource "helm_release" "ingress_alb" {
   namespace         = var.namespace
   force_update      = false
   create_namespace  = false
-  values = [templatefile("../../../../../config/aws/${var.project_env}/helm/ingress-alb-values.yml", {
+  values = [templatefile("../../../../../config/aws/helm/ingress-alb-values.yml", {
     k8s_cluster_name        = var.k8s_cluster_name
     ingress_replicas        = var.ingress_replicas
     k8s_service_account     = var.k8s_service_account
@@ -84,7 +84,7 @@ resource "helm_release" "dummy_ingress" {
   namespace        = var.namespace
   create_namespace = false
   values = [
-    templatefile("../../../../../config/aws/${var.project_env}/helm/dummy-ingress-values.yml", {
+    templatefile("../../../../../config/aws/helm/dummy-ingress-values.yml", {
       public_subnet_ids       = join(", ", var.public_subnet_ids)
       acm_certificate_arn     = var.acm_certificate_arn
       k8s_cluster_name        = var.k8s_cluster_name

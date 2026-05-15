@@ -54,7 +54,7 @@ resource "helm_release" "cert_manager" {
   force_update     = false
   namespace        = var.namespace
   create_namespace = false
-  values = [templatefile("../../../../../config/azure/${var.project_env}/helm/cert-manager-values.yml", {
+  values = [templatefile("../../../../../config/azure/helm/cert-manager-values.yml", {
     namespace = var.namespace
   })]
 }

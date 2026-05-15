@@ -1,0 +1,58 @@
+fullnameOverride: "highflame-redteam-lab1"
+
+service:
+  type: ClusterIP
+  protocol: TCP
+  port: 8002
+
+livenessProbe:
+  httpGet:
+    path: /v1/redteam/lab1/health
+    port: 8002
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+readinessProbe:
+  httpGet:
+    path: /v1/redteam/lab1/health
+    port: 8002
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: IfNotPresent
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 1024Mi
+    cpu: 500m
+    
+secretsApiSpecific:
+  enabled: false
+
+worker:
+  enabled: false
+
+palisadeWorker:
+  enabled: false
+
+seederJob:
+  enabled: false
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md

@@ -44,3 +44,11 @@ provider "aws" {
     tags = local.tags
   }
 }
+
+provider "aws" {
+  alias  = "ha_pair"
+  region = var.ha_region
+  default_tags {
+    tags = local.tags
+  }
+}

@@ -84,6 +84,12 @@ volumeMounts:
   #   readOnly: true
   #   subPath: redis-ca.pem
 
+serviceAccount:
+  create: true
+  automount: true
+  annotations:
+    eks.amazonaws.com/role-arn: "${SVC_IAM_ROLE}"
+
 ingress:
   enabled: true
   className: "alb"

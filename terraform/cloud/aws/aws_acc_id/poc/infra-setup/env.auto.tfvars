@@ -16,6 +16,7 @@ common_tags                              = {
                                                ManagedBy   = "Terraform"
                                             }
 region                                   = "us-east-1"
+ha_region                                = "us-west-2"
 project_name                             = "highflame"
 project_env                              = "poc"
 vpc_cidr                                 = "10.1.0.0/16" # Mask must be /16
@@ -51,7 +52,7 @@ eks_managed_nodes_properties             = [
                                                     name                           = "general"
                                                     eks_node_ami_type              = "AL2023_x86_64_STANDARD"
                                                     eks_node_ami_id                = ""
-                                                    eks_node_instance_type         = "t3.xlarge"
+                                                    eks_node_instance_type         = "c6a.2xlarge"
                                                     eks_node_capacity_type         = "ON_DEMAND" # ON_DEMAND or SPOT
                                                     eks_node_block_device_name     = "/dev/xvda"
                                                     eks_node_block_device_size     = 100
@@ -75,3 +76,9 @@ eks_managed_nodes_properties             = [
 global_accelerator_listener_arn          = ""
 global_accelerator_traffic_percentage    = 100
 alb_arn                                  = ""
+create_bucket_list                       = [
+                                              "highflame-poc-shield-scan"
+                                            ]
+create_bucket_list_ha                    = [
+                                              "highflame-poc-clickhouse-bkp"
+                                            ]

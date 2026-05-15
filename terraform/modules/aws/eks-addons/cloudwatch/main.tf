@@ -67,7 +67,7 @@ resource "helm_release" "aws_cloudwatch_metrics" {
   force_update     = false
   namespace        = var.namespace
   create_namespace = false
-  values = [templatefile("../../../../../config/aws/${var.project_env}/helm/cloudwatch-metrics-values.yml", {
+  values = [templatefile("../../../../../config/aws/helm/cloudwatch-metrics-values.yml", {
     k8s_cluster_name        = var.k8s_cluster_name
   })]
   set = [

@@ -1,0 +1,64 @@
+fullnameOverride: "highflame-flag"
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 1031
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 1031
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+podRestart:
+  enabled: true
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+service:
+  type: ClusterIP
+  protocol: TCP
+  port: 1031
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: IfNotPresent
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 64Mi
+    cpu: 50m
+  limits:
+    memory: 256Mi
+    cpu: 200m
+
+volumes:
+  - name: goff-volume
+    secret:
+      secretName: highflame-goff
+      optional: false
+
+volumeMounts:
+  - name: goff-volume
+    mountPath: /goff/config/goff.yaml
+    readOnly: true
+    subPath: goff.yaml

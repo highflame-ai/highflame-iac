@@ -1,0 +1,92 @@
+gceIngress:
+  frontendConfig:
+    enabled: true
+    sslPolicy: 
+      enabled: true
+      name: highflame-cloud-ssl-policy
+  uniqueManagedCertificate:
+    enabled: true
+    certificateList:
+      - certName: control-cert
+        domain: control.example.com
+      - certName: gateway-cert
+        domain: gateway.example.com
+      - certName: observatory-cert
+        domain: observatory.api.example.com
+      - certName: data-cert
+        domain: api.example.com
+      - certName: studio-cert
+        domain: studio.example.com
+      - certName: shield-cert
+        domain: shield.api.example.com
+      - certName: cerberus-cert
+        domain: cerberus.api.example.com
+      - certName: collector-http-cert
+        domain: otel-http.api.example.com
+      - certName: collector-grpc-cert
+        domain: otel-grpc.api.example.com
+ingress:
+  enabled: true
+  annotations:
+    networking.gke.io/managed-certificates: "control-cert, gateway-cert, observatory-cert, data-cert, studio-cert, shield-cert, cerberus-cert, collector-http-cert, collector-grpc-cert"
+    kubernetes.io/ingress.global-static-ip-name: highflame-poc-ingress-ip
+    networking.gke.io/v1beta1.FrontendConfig: highflame-ingress
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.class: "gce"
+  hosts:
+    - host: control.example.com
+      paths:
+        - path: /v1/admin/
+          pathType: Prefix
+          serviceName: "highflame-admin"
+          servicePort: 8040
+        - path: /v2/admin/
+          pathType: Prefix
+          serviceName: "highflame-admin"
+          servicePort: 8040
+        - path: /v1/auth
+          pathType: Prefix
+          serviceName: "highflame-authn"
+          servicePort: 8051
+    - host: gateway.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-firehog"
+          servicePort: 8080
+    - host: observatory.api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-observatory"
+          servicePort: 8090
+    - host: studio.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-studio"
+          servicePort: 3000
+    - host: shield.api.example.com
+      paths:
+        - path: /v1
+          pathType: Prefix
+          serviceName: "highflame-shield"
+          servicePort: 8070
+    - host: cerberus.api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-cerberus"
+          servicePort: 8082
+    - host: otel-http.api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-collector"
+          servicePort: 4318
+    - host: otel-grpc.api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-collector"
+          servicePort: 4317

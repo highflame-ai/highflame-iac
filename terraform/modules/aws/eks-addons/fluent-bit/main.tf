@@ -25,7 +25,7 @@ resource "helm_release" "fluent_bit_daemonset" {
   namespace        = var.namespace
   create_namespace = false
   values = [
-    templatefile("../../../../../config/aws/${var.project_env}/helm/fluent-bit-${var.fluent_output}-values.yml", {
+    templatefile("../../../../../config/aws/helm/fluent-bit-${var.fluent_output}-values.yml", {
       k8s_cluster_name                      = var.k8s_cluster_name
       service_namespace                     = var.service_namespace
       region                                = var.region
