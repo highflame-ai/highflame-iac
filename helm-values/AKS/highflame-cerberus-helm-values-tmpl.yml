@@ -93,5 +93,5 @@ ingress:
   hosts:
     - host: api.example.com
       paths:
-        - path: /
+        - path: /v1/cerberus
           pathType: Prefix

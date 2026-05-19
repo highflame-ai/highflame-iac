@@ -79,7 +79,7 @@ gceIngress:
         timeoutSec: 300
         healthCheck:
           type: HTTP
-          requestPath: "/"
+          requestPath: "/healthz"
           port: 4317
           checkIntervalSec: 15
           timeoutSec: 5
