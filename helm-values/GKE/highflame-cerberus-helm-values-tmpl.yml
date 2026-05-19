@@ -1,8 +1,9 @@
 fullnameOverride: "highflame-cerberus"
 
 livenessProbe:
-  tcpSocket:
-    port: 8080
+  httpGet:
+    path: /livez
+    port: 8082
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -10,8 +11,9 @@ livenessProbe:
   failureThreshold: 2
 
 readinessProbe:
-  tcpSocket:
-    port: 8080
+  httpGet:
+    path: /healthz
+    port: 8082
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -47,7 +49,7 @@ gceIngress:
         healthyThreshold: 2
         unhealthyThreshold: 2
         type: HTTP
-        requestPath: "/health"
+        requestPath: "/healthz"
         port: 8040
       securityPolicy:
         enabled: true

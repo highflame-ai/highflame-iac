@@ -7,7 +7,7 @@ service:
 
 livenessProbe:
   httpGet:
-    path: /v1/redteam/lab1/health
+    path: /livez
     port: 8002
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -16,7 +16,7 @@ livenessProbe:
   failureThreshold: 2
 readinessProbe:
   httpGet:
-    path: /v1/redteam/lab1/health
+    path: /healthz
     port: 8002
   initialDelaySeconds: 15
   periodSeconds: 10

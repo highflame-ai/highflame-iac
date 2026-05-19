@@ -2,7 +2,7 @@ fullnameOverride: "highflame-admin"
 
 livenessProbe:
   httpGet:
-    path: /v1/admin/healthz
+    path: /livez
     port: 8040
   initialDelaySeconds: 15
   periodSeconds: 10

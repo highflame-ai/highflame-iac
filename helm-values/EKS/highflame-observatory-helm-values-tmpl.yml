@@ -2,7 +2,7 @@ fullnameOverride: "highflame-observatory"
 
 livenessProbe:
   httpGet:
-    path: /v1/observatory/health
+    path: /livez
     port: 8090
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/observatory/ready
+    path: /healthz
     port: 8090
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -78,7 +78,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/observatory/health
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'

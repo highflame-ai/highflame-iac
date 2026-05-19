@@ -2,7 +2,7 @@ fullnameOverride: "highflame-collector"
 
 livenessProbe:
   httpGet:
-    path: /v1/otel-http
+    path: /livez
     port: 13133
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/otel-http
+    path: /healthz
     port: 13133
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -76,7 +76,7 @@ ingresses:
         appgw.ingress.kubernetes.io/backend-protocol: "http"
         appgw.ingress.kubernetes.io/request-timeout: "300"
 
-        appgw.ingress.kubernetes.io/health-probe-path: "/v1/otel-http/healthz"
+        appgw.ingress.kubernetes.io/health-probe-path: "/healthz"
         appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
         appgw.ingress.kubernetes.io/health-probe-interval: "15"
         appgw.ingress.kubernetes.io/health-probe-timeout: "5"
