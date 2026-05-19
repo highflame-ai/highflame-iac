@@ -88,10 +88,10 @@ ingress:
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - cerberus.api.example.com
-      secretName: highflame-admin-tls
+        - api.example.com
+      secretName: highflame-cerberus-tls
   hosts:
-    - host: cerberus.api.example.com
+    - host: api.example.com
       paths:
         - path: /
           pathType: Prefix

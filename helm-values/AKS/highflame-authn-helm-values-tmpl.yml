@@ -84,10 +84,10 @@ ingress:
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - api.example.com
+        - control.example.com
       secretName: highflame-authn-tls
   hosts:
-    - host: api.example.com
+    - host: control.example.com
       paths:
         - path: /v1/auth/
           pathType: Prefix
