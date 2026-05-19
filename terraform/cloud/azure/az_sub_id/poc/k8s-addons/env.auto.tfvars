@@ -6,7 +6,6 @@ enable_storageclass             = false
 enable_namespace                = false
 enable_cert_manager             = false
 enable_docker_secret            = false
-enable_aks_addons_secret        = false
 ## Resource Variables
 common_tags                     = {
                                     ManagedBy   = "Terraform"

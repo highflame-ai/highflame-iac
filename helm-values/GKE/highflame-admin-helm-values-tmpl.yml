@@ -1,0 +1,113 @@
+fullnameOverride: "highflame-admin"
+
+livenessProbe:
+  httpGet:
+    path: /v1/admin/healthz
+    port: 8040
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+readinessProbe:
+  httpGet:
+    path: /v1/admin/healthz
+    port: 8040
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+nodeSelector:
+  kube/nodegroup: "general"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+service:
+  annotations:
+    cloud.google.com/backend-config: '{ "default" : "highflame-admin-default" }'
+  type: NodePort
+  protocol: TCP
+  port: 8040
+
+gceIngress:
+  backendConfigs:
+    enabled: true
+    items:
+    - name: default
+      timeoutSec: 300
+      healthCheck:
+        checkIntervalSec: 15
+        timeoutSec: 5
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        type: HTTP
+        requestPath: "/v1/admin/healthz"
+        port: 8040
+      securityPolicy:
+        enabled: true
+        name: "highflame-cloud-security-policy"
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: IfNotPresent
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 200m
+  limits:
+    memory: 1024Mi
+    cpu: 500m
+
+volumes:
+  - name: license-volume
+    secret:
+      secretName: highflame-license
+      optional: false
+  - name: auth-keys
+    secret:
+      secretName: highflame-auth-keys
+      optional: false
+  - name: redis-cert-volume
+    secret:
+      secretName: highflame-redis-cert
+      optional: false
+
+volumeMounts:
+  - name: license-volume
+    mountPath: "/app/license"
+    readOnly: true
+  - name: auth-keys
+    mountPath: "/app/config/jwt"
+    readOnly: true
+  - name: redis-cert-volume
+    mountPath: "/app/certs/redis-ca.pem"
+    readOnly: true
+    subPath: redis-ca.pem
+
+serviceAccount:
+  create: true
+  automount: true
+  # annotations:
+  #   iam.gke.io/gcp-service-account: "${SVC_SA_EMAIL_ID}"
+  rules:
+    - apiGroups: [ "" ]
+      resources: [ "secrets" ]
+      verbs: [ "get", "list", "create", "update", "patch", "delete" ]
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md

@@ -53,18 +53,6 @@ variable "enable_ingress_alb" {
   type        = bool
 }
 
-variable "enable_prometheus" {
-  description = "enable prometheus"
-  type        = bool
-  default     = false
-}
-
-variable "enable_grafana" {
-  description = "enable grafana"
-  type        = bool
-  default     = false
-}
-
 variable "enable_metrics_server" {
   description = "enable metrics server"
   type        = bool
@@ -110,12 +98,6 @@ variable "fluent_output" {
   default     = "cloudwatch"
 }
 
-variable "prometheus_disk_size" {
-  description = "Prometheus Disk size"
-  type        = string
-  default     = "50Gi"
-}
-
 variable "storage_classname" {
   description = "Highflame StorageClass"
   type        = string
@@ -135,22 +117,6 @@ variable "highflame_ingress_helm_version" {
 
 variable "frontend_acm_certificate_arn" {
   description = "ACM Certificate ARN for Frontend"
-  type        = string
-}
-
-variable "grafana_acm_certificate_arn" {
-  description = "ACM Certificate ARN for Grafana"
-  type        = string
-}
-
-variable "grafana_disk_size" {
-  description = "Grafana Disk size"
-  type        = string
-  default     = "10Gi"
-}
-
-variable "grafana_domain" {
-  description = "Grafana Domain Name"
   type        = string
 }
 

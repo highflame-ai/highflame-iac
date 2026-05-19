@@ -58,6 +58,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAMW_WIMSE_DOMAIN` | Highflame WIMSE domain name | nil | -
 `HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
 `HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
+`HIGHFLAME_WIMSE_DOMAIN` | Whitelisting the domain | nil | -
 
 ### highflame-authz
 
@@ -84,6 +85,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
+`HAPROXY_CFG` | HAProxy config file path | `/app/haproxy.cfg` | -
+`SVC_PORT` | Service serving port | `8009` | -
 `CORS_ALLOWED_ORIGINS` | CORS allowed origins | `*` | -
 `CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
 `CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
@@ -94,7 +97,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
 `HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
+`HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
 `HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
+`HIGHFLAME_MCP_URL` | highflame mcp url | nil | `only for dev`
 `HIGHFLAME_FIREHOG_URL` | highflame firehog url | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | -
@@ -183,18 +188,15 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `HIGHFLAME_DEPLOYMENT_TYPE` | Deploy type | `prod` | `dev` or `prod`
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
+`HIGHFLAME_GCP_DLP_ENDPOINT` | highflame dlp url | `http://highflame-dlp:8888` | -
 `HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
-`HIGHFLAME_EVAL_URL` | highflame eval url | `http://highflame-eval:8009` | -
 `HIGHFLAME_DLP_URL` | highflame dlp url | `http://highflame-dlp:8888` | -
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_GUARD_URL` | highflame guard url | `http://highflame-guard:8013` | -
 `HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
-`HIGHFLAME_GUARD_HALLUCINATION_URL` | highflame guard hallucination url | `http://highflame-guard-hallucination:8015` | -
-`HIGHFLAME_GUARD_PLI_URL` | highflame guard pli url | `http://highflame-guard-pli:8016` | -
-`HIGHFLAME_GUARD_LANGUAGE_URL` | highflame guard language url | `http://highflame-guard-lang:8020` | -
-`HIGHFLAME_GUARD_FACTCHECK_URL` | highflame guard factual url | `http://highflame-guard-fact:8018` | -
-`HIGHFLAME_GUARD_SENTIMENT_URL` | highflame guard sentiment url | `http://highflame-guard-sentiment:8021` | -
+`HIGHFLAME_GUARD_HALLUCINATION_URL` | highflame guard hallucination url | `http://highflame-guard-hall:8015` | -
+`HIGHFLAME_GUARD_PII_URL` | highflame guard pii url | `http://highflame-guard-pii:8018` | -
 `HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-saas-bloom-filter-store` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
@@ -209,9 +211,10 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CLOUD_ARCHIVE_PREFIX` | Cloud archive prefix in the storage | `shield/sessions/` | optional
 `AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
 `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
-`AWS_REGION` | AWS Region | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
+`AWS_REGION` | AWS Region | `""` | for `AWS deployment`
+`HIGHFLAME_SCAN_STORAGE_BUCKET`| Highflame scan s3 bucket name | nil | -
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
-`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer| nil | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
 
 ### highflame-guard-*
@@ -219,6 +222,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
+`HF_HUB_ENABLE_HF_TRANSFER` | Enable huggingface transfer | `1` | -
 
 ### highflame-studio
 
@@ -240,7 +244,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_OBSERVATORY_URL` |  observatory api url | `http://highflame-observatory:8090` | -
 `HIGHFLAME_REDTEAM_LAB_URL` |  redteam lab api url | `http://highflame-redteam-lab1:8002` | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
-`HOSTNAME` | Service hostname | `0.0.0.0` | nil | -
+`HOSTNAME` | Service hostname | `0.0.0.0` | -
 `PORT` | Service port | `3000` | -
 `DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure`
 `OPENAI_API_KEY` | OpenAI api key | nil | for `DEFAULT_PROVIDER=openai`
@@ -255,6 +259,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
 `NEXT_PUBLIC_POSTHOG_HOST` | Posthog host | `https://us.i.posthog.com` | -
 `NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | -
+`NEXT_PUBLIC_AUTHN_URL` | highflame authn endpoint | nil | -
 
 ### highflame-collector
 

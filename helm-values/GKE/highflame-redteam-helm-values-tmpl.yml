@@ -1,0 +1,80 @@
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+service:
+  type: ClusterIP
+  protocol: TCP
+  port: 8001
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: IfNotPresent
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 1Gi
+    cpu: 500m
+  limits:
+    memory: 2Gi
+    cpu: 1000m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
+volumes:
+  - name: redis-cert-volume
+    secret:
+      secretName: highflame-redis-cert
+      optional: false
+
+volumeMounts:
+  - name: redis-cert-volume
+    mountPath: "/app/certs/redis-ca.pem"
+    readOnly: true
+    subPath: redis-ca.pem
+
+nodeSelector:
+  kube/nodegroup: "general"
+
+worker:
+  autoscaling:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 1000m
+    limits:
+      memory: 2Gi
+      cpu: 2000m
+
+  nodeSelector:
+    kube/nodegroup: "general"
+
+seederJob:
+  enabled: true
+
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 1000m
+    limits:
+      memory: 2Gi
+      cpu: 2000m
+
+  nodeSelector:
+    kube/nodegroup: "general"

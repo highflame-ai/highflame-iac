@@ -73,32 +73,6 @@ module "ingress_alb" {
   alb_security_group_ids             = data.terraform_remote_state.infra_setup_tf.outputs.alb_security_group_ids
 }
 
-module "prometheus" {
-  count                              = var.enable_prometheus == true ? 1 : 0
-  source                             = "../../../../../modules/aws/eks-addons/prometheus"
-  project_name                       = var.project_name
-  project_env                        = var.project_env
-  namespace                          = var.service_namespace
-  service_namespace                  = var.service_namespace
-  prometheus_disk_size               = var.prometheus_disk_size
-  storage_classname                  = var.storage_classname
-}
-
-module "grafana" {
-  count                              = var.enable_grafana == true ? 1 : 0
-  source                             = "../../../../../modules/aws/eks-addons/grafana"
-  project_name                       = var.project_name
-  project_env                        = var.project_env
-  namespace                          = var.service_namespace
-  storage_classname                  = var.storage_classname
-  grafana_disk_size                  = var.grafana_disk_size
-  grafana_domain                     = var.grafana_domain
-  acm_certificate_arn                = var.grafana_acm_certificate_arn
-  k8s_cluster_name                   = data.terraform_remote_state.infra_setup_tf.outputs.k8s_cluster_name
-  public_subnet_ids                  = data.terraform_remote_state.infra_setup_tf.outputs.vpc_public_subnet_ids
-  alb_security_group_ids             = data.terraform_remote_state.infra_setup_tf.outputs.alb_security_group_ids
-}
-
 module "metrics_server" {
   count                              = var.enable_metrics_server == true ? 1 : 0
   source                             = "../../../../../modules/aws/eks-addons/metrics-server"

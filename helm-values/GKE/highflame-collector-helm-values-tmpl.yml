@@ -1,0 +1,95 @@
+fullnameOverride: "highflame-collector"
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 13133
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 13133
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+nodeSelector:
+  kube/nodegroup: "general"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+service:
+  type: NodePort
+  ports:
+    - name: otlp-grpc
+      port: 4317
+    - name: otlp-http
+      port: 4318
+    - name: metrics
+      port: 8888
+    - name: healthz
+      port: 13133
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: IfNotPresent
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 1024Mi
+    cpu: 200m
+
+gceIngress:
+  backendConfigs:
+    enabled: true
+    items:
+      - name: http
+        timeoutSec: 300
+        healthCheck:
+          type: HTTP
+          requestPath: "/healthz"
+          port: 4318
+          checkIntervalSec: 15
+          timeoutSec: 5
+          healthyThreshold: 2
+          unhealthyThreshold: 2
+        securityPolicy:
+          enabled: true
+          name: "highflame-cloud-security-policy"
+      - name: grpc
+        timeoutSec: 300
+        healthCheck:
+          type: HTTP
+          requestPath: "/"
+          port: 4317
+          checkIntervalSec: 15
+          timeoutSec: 5
+          healthyThreshold: 2
+          unhealthyThreshold: 2
+        securityPolicy:
+          enabled: true
+          name: "highflame-cloud-security-policy"
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md

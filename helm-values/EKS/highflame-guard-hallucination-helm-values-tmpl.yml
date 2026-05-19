@@ -1,4 +1,4 @@
-fullnameOverride: "highflame-guard-hallucination"
+fullnameOverride: "highflame-guard-hall"
 
 livenessProbe:
   httpGet:
@@ -51,37 +51,7 @@ resources:
     memory: 14Gi
     cpu: 3500m
 
-ingress:
-  enabled: true
-  className: "alb"
-  annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
-    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/internal/guard-hallucination/health
-    alb.ingress.kubernetes.io/target-type: instance
-    alb.ingress.kubernetes.io/ssl-redirect: '443'
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
-    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
-    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
-    alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
-    alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '2'
-    alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
-
-    alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
-    alb.ingress.kubernetes.io/group.name: ${K8S_CLUSTER_NAME}-group
-    alb.ingress.kubernetes.io/subnets: ${PUBLIC_SUBNET_IDS}
-    alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
-    alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
-  hosts:
-    - host: model.api.example.com
-      paths:
-        - path: /v1/internal/guard-hallucination/
-          pathType: Prefix
-
 secrets:
   enabled: true
   secretData:
-    HIGHFLAME_MODELS_SECRET: '${HIGHFLAME_MODELS_SECRET}'
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md

@@ -39,18 +39,6 @@ variable "enable_storageclass" {
   type        = bool
 }
 
-variable "enable_prometheus" {
-  description = "enable prometheus"
-  type        = bool
-  default     = false
-}
-
-variable "enable_grafana" {
-  description = "enable grafana"
-  type        = bool
-  default     = false
-}
-
 variable "enable_namespace" {
   description = "Enable Namespace Setup"
   type        = bool
@@ -61,20 +49,9 @@ variable "enable_docker_secret" {
   type        = bool
 }
 
-variable "enable_aks_addons_secret" {
-  description = "enable AKS addon Secrets"
-  type        = bool
-}
-
 variable "enable_cert_manager" {
   description = "enable cert manager"
   type        = bool
-}
-
-variable "prometheus_disk_size" {
-  description = "Prometheus Disk size"
-  type        = string
-  default     = "50Gi"
 }
 
 variable "storage_classname" {
@@ -86,18 +63,6 @@ variable "storage_classname" {
 variable "service_namespace" {
   description = "Highflame Deployment namespace"
   type        = string
-}
-
-variable "grafana_disk_size" {
-  description = "Grafana Disk size"
-  type        = string
-  default     = "10Gi"
-}
-
-variable "grafana_domain" {
-  description = "Grafana Domain Name"
-  type        = string
-  default     = ""
 }
 
 variable "registry_server" {

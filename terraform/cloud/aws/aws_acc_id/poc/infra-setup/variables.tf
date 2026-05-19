@@ -3,6 +3,11 @@ variable "region" {
   type = string
 }
 
+variable "ha_region" {
+  description = "AWS HA Region"
+  type        = string
+}
+
 variable "project_name" {
   description = "Project Name"
   type        = string
@@ -107,9 +112,6 @@ variable "svc_iam_policy_list" {
   description = "List of IAM Policies for Service"
   type        = list(string)
   default     = [
-                  "arn:aws:iam::aws:policy/AmazonBedrockFullAccess",
-                  "arn:aws:iam::aws:policy/AWSCloudTrail_ReadOnlyAccess",
-                  "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",
                   "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
                 ]
 }
@@ -228,4 +230,22 @@ variable "aurora_global_cluster_identifier" {
 variable "aurora_instance_db_class" {
   description = "Aurora instance class"
   type        = string
+}
+
+variable "create_bucket_list" {
+  description = "Bucket suffix list to create"
+  type        = list(string)
+  default     = []
+}
+
+variable "create_bucket_list_ha" {
+  description = "Bucket suffix list to create in HA region"
+  type        = list(string)
+  default     = []
+}
+
+variable "svc_access_bucket_list" {
+  description = "svc access bucket list"
+  type        = list(string)
+  default     = []
 }

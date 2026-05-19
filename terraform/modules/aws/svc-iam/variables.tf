@@ -8,12 +8,6 @@ variable "project_env" {
   type        = string
 }
 
-variable "svc_s3_bucket_arn" {
-  description = "Service S3 Bucket"
-  type        = string
-  default     = ""
-}
-
 variable "eks_cluster_oidc_provider_arn" {
   description = "EKS cluster oidc provider arn"
   type        = string
@@ -26,5 +20,10 @@ variable "eks_cluster_oidc_provider" {
 
 variable "svc_iam_policy_list" {
   description = "List of IAM Policies for Service"
+  type        = list(string)
+}
+
+variable "svc_bucket_list" {
+  description = "svc bucket list"
   type        = list(string)
 }
