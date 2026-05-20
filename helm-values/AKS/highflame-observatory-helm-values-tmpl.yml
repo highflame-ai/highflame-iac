@@ -2,7 +2,7 @@ fullnameOverride: "highflame-observatory"
 
 livenessProbe:
   httpGet:
-    path: /health
+    path: /livez
     port: 8090
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /ready
+    path: /healthz
     port: 8090
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -77,17 +77,17 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/health"
+    appgw.ingress.kubernetes.io/health-probe-path: "/healthz"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"
     appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
   tls:
     - hosts:
-        - observatory.api.example.com
+        - api.example.com
       secretName: highflame-observatory-tls
   hosts:
-    - host: observatory.api.example.com
+    - host: api.example.com
       paths:
-        - path: /
+        - path: /v1/observatory
           pathType: Prefix

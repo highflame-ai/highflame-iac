@@ -2,7 +2,7 @@ fullnameOverride: "highflame-collector"
 
 livenessProbe:
   httpGet:
-    path: /
+    path: /livez
     port: 13133
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /
+    path: /healthz
     port: 13133
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -79,7 +79,7 @@ gceIngress:
         timeoutSec: 300
         healthCheck:
           type: HTTP
-          requestPath: "/"
+          requestPath: "/healthz"
           port: 4317
           checkIntervalSec: 15
           timeoutSec: 5

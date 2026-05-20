@@ -2,7 +2,7 @@ fullnameOverride: "highflame-authz"
 
 livenessProbe:
   httpGet:
-    path: /health
+    path: /livez
     port: 8050
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /ready
+    path: /healthz
     port: 8050
   initialDelaySeconds: 15
   periodSeconds: 10

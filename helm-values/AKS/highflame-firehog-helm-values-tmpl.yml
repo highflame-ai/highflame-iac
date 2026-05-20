@@ -2,7 +2,7 @@ fullnameOverride: "highflame-firehog"
 
 livenessProbe:
   httpGet:
-    path: /heathz
+    path: /livez
     port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /heathz
+    path: /healthz
     port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -66,7 +66,7 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     appgw.ingress.kubernetes.io/backend-protocol: "http"
     appgw.ingress.kubernetes.io/request-timeout: "300"
-    appgw.ingress.kubernetes.io/health-probe-path: "/heathz"
+    appgw.ingress.kubernetes.io/health-probe-path: "/healthz"
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
     appgw.ingress.kubernetes.io/health-probe-interval: "15"
     appgw.ingress.kubernetes.io/health-probe-timeout: "5"

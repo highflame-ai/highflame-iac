@@ -2,7 +2,7 @@ fullnameOverride: "highflame-firehog"
 
 livenessProbe:
   httpGet:
-    path: /healthz
+    path: /livez
     port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10

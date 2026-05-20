@@ -2,7 +2,7 @@ fullnameOverride: "highflame-guard-hall"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
+    path: /livez
     port: 8015
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-hallucination/health
+    path: /healthz
     port: 8015
   initialDelaySeconds: 15
   periodSeconds: 10

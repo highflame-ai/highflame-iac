@@ -54,4 +54,4 @@ resources:
 secrets:
   enabled: true
   secretData:
-    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+    HIGHFLAME_MODELS_SECRET: '${HIGHFLAME_MODELS_SECRET}'

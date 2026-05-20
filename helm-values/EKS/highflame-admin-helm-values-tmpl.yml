@@ -2,7 +2,7 @@ fullnameOverride: "highflame-admin"
 
 livenessProbe:
   httpGet:
-    path: /v1/admin/healthz
+    path: /livez
     port: 8040
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/admin/healthz
+    path: /healthz
     port: 8040
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -99,7 +99,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-path: /v1/admin/healthz
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -108,7 +108,7 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
     alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '2'
+    alb.ingress.kubernetes.io/group.order: '1'
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
 
     alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
@@ -117,7 +117,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: api.example.com
+    - host: control.example.com
       paths:
         - path: /v1/admin/
           pathType: Prefix

@@ -3,7 +3,7 @@ progressDeadlineSeconds: 1200
 
 livenessProbe:
   httpGet:
-    path: /v1/guard/local_dlp/healthz
+    path: /livez
     port: 8888
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -13,7 +13,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/guard/local_dlp/healthz
+    path: /healthz
     port: 8888
   initialDelaySeconds: 30
   periodSeconds: 10

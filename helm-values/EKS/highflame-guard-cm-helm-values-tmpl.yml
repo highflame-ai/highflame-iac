@@ -2,7 +2,7 @@ fullnameOverride: "highflame-guard-cm"
 
 livenessProbe:
   httpGet:
-    path: /v1/internal/guard-cm/health
+    path: /livez
     port: 8014
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /v1/internal/guard-cm/health
+    path: /healthz
     port: 8014
   initialDelaySeconds: 15
   periodSeconds: 10

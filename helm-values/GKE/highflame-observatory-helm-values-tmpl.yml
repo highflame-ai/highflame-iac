@@ -1,8 +1,8 @@
-fullnameOverride: "highflame-Observatory"
+fullnameOverride: "highflame-observatory"
 
 livenessProbe:
   httpGet:
-    path: /health
+    path: /livez
     port: 8090
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -12,7 +12,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /ready
+    path: /healthz
     port: 8090
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -49,7 +49,7 @@ gceIngress:
         healthyThreshold: 2
         unhealthyThreshold: 2
         type: HTTP
-        requestPath: "/ready"
+        requestPath: "/healthz"
         port: 8090
       securityPolicy:
         enabled: true
