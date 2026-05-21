@@ -89,5 +89,5 @@ ingress:
   hosts:
     - host: api.example.com
       paths:
-        - path: /v1/observatory
+        - path: /v1/obs
           pathType: Prefix

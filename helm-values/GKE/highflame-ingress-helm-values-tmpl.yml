@@ -44,7 +44,7 @@ ingress:
           pathType: Prefix
           serviceName: "highflame-cerberus"
           servicePort: 8082
-        - path: /v1/observatory
+        - path: /v1/obs
           pathType: Prefix
           serviceName: "highflame-observatory"
           servicePort: 8090
