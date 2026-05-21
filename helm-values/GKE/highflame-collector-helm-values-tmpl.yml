@@ -31,7 +31,7 @@ autoscaling:
   targetMemoryUtilizationPercentage: 80
 
 service:
-  type: NodePort
+  type: ClusterIP
   ports:
     - name: otlp-grpc
       port: 4317
@@ -57,37 +57,6 @@ resources:
   limits:
     memory: 1024Mi
     cpu: 200m
-
-gceIngress:
-  backendConfigs:
-    enabled: true
-    items:
-      - name: http
-        timeoutSec: 300
-        healthCheck:
-          type: HTTP
-          requestPath: "/healthz"
-          port: 4318
-          checkIntervalSec: 15
-          timeoutSec: 5
-          healthyThreshold: 2
-          unhealthyThreshold: 2
-        securityPolicy:
-          enabled: true
-          name: "highflame-cloud-security-policy"
-      - name: grpc
-        timeoutSec: 300
-        healthCheck:
-          type: HTTP
-          requestPath: "/healthz"
-          port: 4317
-          checkIntervalSec: 15
-          timeoutSec: 5
-          healthyThreshold: 2
-          unhealthyThreshold: 2
-        securityPolicy:
-          enabled: true
-          name: "highflame-cloud-security-policy"
 
 secrets:
   enabled: true

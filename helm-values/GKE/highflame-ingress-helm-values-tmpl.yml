@@ -52,14 +52,6 @@ ingress:
           pathType: Prefix
           serviceName: "highflame-shield"
           servicePort: 8070
-        - path: /v1/otel-http
-          pathType: Prefix
-          serviceName: "highflame-collector"
-          servicePort: 4318
-        - path: /v1/otel-grpc
-          pathType: Prefix
-          serviceName: "highflame-collector"
-          servicePort: 4317
     - host: gateway.example.com
       paths:
         - path: /
