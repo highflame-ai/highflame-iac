@@ -1,7 +1,7 @@
 autoscaling:
   enabled: true
   minReplicas: 2
-  maxReplicas: 4
+  maxReplicas: 6
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
@@ -68,8 +68,8 @@ worker:
 palisadeWorker:
   autoscaling:
     enabled: true
-    minReplicas: 1
-    maxReplicas: 4
+    minReplicas: 4
+    maxReplicas: 8
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
 
@@ -86,7 +86,6 @@ palisadeWorker:
 
 seederJob:
   enabled: true
-
   resources:
     requests:
       memory: 3Gi
