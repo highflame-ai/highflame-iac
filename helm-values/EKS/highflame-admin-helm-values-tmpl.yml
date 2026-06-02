@@ -87,10 +87,12 @@ serviceAccount:
   automount: true
   annotations:
     eks.amazonaws.com/role-arn: "${SVC_IAM_ROLE}"
-  rules:
-    - apiGroups: [ "" ]
-      resources: [ "secrets" ]
-      verbs: [ "get", "list", "create", "update", "patch", "delete" ]
+  role:
+    create: true
+    rules:
+      - apiGroups: [ "" ]
+        resources: [ "secrets" ]
+        verbs: [ "get", "list", "create", "update", "patch", "delete" ]
 
 ingress:
   enabled: true
@@ -119,7 +121,7 @@ ingress:
   hosts:
     - host: control.example.com
       paths:
-        - path: /v1/admin/
+        - path: /v1/admin
           pathType: Prefix
-        - path: /v2/admin/
+        - path: /v2/admin
           pathType: Prefix

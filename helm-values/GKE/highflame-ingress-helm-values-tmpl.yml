@@ -13,12 +13,14 @@ gceIngress:
         domain: api.example.com
       - certName: gateway-cert
         domain: gateway.example.com
+      - certName: auth-cert
+        domain: auth.example.com
       - certName: studio-cert
         domain: studio.example.com
 ingress:
   enabled: true
   annotations:
-    networking.gke.io/managed-certificates: "control-cert, data-cert, gateway-cert, studio-cert"
+    networking.gke.io/managed-certificates: "control-cert, data-cert, gateway-cert, auth-cert, studio-cert"
     kubernetes.io/ingress.global-static-ip-name: highflame-poc-ingress-ip
     networking.gke.io/v1beta1.FrontendConfig: highflame-ingress
     kubernetes.io/ingress.allow-http: "true"
@@ -26,11 +28,11 @@ ingress:
   hosts:
     - host: control.example.com
       paths:
-        - path: /v1/admin/
+        - path: /v1/admin
           pathType: Prefix
           serviceName: "highflame-admin"
           servicePort: 8040
-        - path: /v2/admin/
+        - path: /v2/admin
           pathType: Prefix
           serviceName: "highflame-admin"
           servicePort: 8040
@@ -58,6 +60,12 @@ ingress:
           pathType: Prefix
           serviceName: "highflame-firehog"
           servicePort: 8080
+    - host: auth.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-authn"
+          servicePort: 8051
     - host: studio.example.com
       paths:
         - path: /

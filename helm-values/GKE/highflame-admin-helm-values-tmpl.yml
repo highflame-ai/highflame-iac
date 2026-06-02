@@ -102,10 +102,12 @@ serviceAccount:
   automount: true
   # annotations:
   #   iam.gke.io/gcp-service-account: "${SVC_SA_EMAIL_ID}"
-  rules:
-    - apiGroups: [ "" ]
-      resources: [ "secrets" ]
-      verbs: [ "get", "list", "create", "update", "patch", "delete" ]
+  role:
+    create: true
+    rules:
+      - apiGroups: [ "" ]
+        resources: [ "secrets" ]
+        verbs: [ "get", "list", "create", "update", "patch", "delete" ]
 
 secrets:
   enabled: true
