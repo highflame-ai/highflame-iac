@@ -10,15 +10,16 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_HOST` | Postgres host | nil | -
 `DB_NAME` | Postgres database | `javelin_data` | -
 `REDIS_HOST` | Redis host | nil | -
+`REDIS_PORT` | Redis port | `6379` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_USER` | Redis username | nil | -
 `REDIS_PASS` | Redis password | nil | -
+`REDIS_CACERT` | Redis cacert | `""` | -
 `AWS_KMS_KEY` | AWS KMS Key for secret manager enc | nil | optional
 `AWS_SECRET_REPLICATION_REGION` | AWS replication region | nil | optional
 `AWS_REPLICATION_KMS_KEY` | AWS KMS Key for secret manager enc in replication region | nil | optional
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
-`REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | -
 `DB_PORT` | Postgres port | `5432` | -
@@ -29,7 +30,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
 `HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
-`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
+`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070/v1/shield` | -
 `HIGHFLAME_AUTH_JWT_PRIVATE_KEY` | JWT PEM RSA private key, signs RS256 access tokens | `/app/config/jwt/jwt-private.pem` | -
 `HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 `HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
@@ -49,6 +50,12 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `AUTHN_DB_NAME` | Postgres database | `highflame_authn` | -
+`REDIS_HOST` | Redis host | nil | -
+`REDIS_PORT` | Redis port | `6379` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
+`REDIS_USER` | Redis username | nil | -
+`REDIS_PASS` | Redis password | nil | -
+`REDIS_CACERT` | Redis cacert | `""` | -
 `OTEL_ENABLED` | Enable OTEL | `true` | -
 `OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
@@ -77,7 +84,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_ADMIN_URL` | Highflame Admin URL | `http://highflame-admin:8040`| -
-`HIGHFLAME_SHEILD_URL` | Highflame Sheild URL | `http://highflame-shield:8070`| -
+`HIGHFLAME_SHEILD_URL` | Highflame Sheild URL | `http://highflame-shield:8070/v1/shield`| -
 `HIGHFLAME_COLLECTOR_URL` | Highflame Collector URL | `highflame-collector:4317`| -
 `HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
 
@@ -95,23 +102,13 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070` | -
+`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070/v1/shield` | -
 `HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
 `HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
 `HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
-`HIGHFLAME_MCP_URL` | highflame mcp url | nil | `only for dev`
 `HIGHFLAME_FIREHOG_URL` | highflame firehog url | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | -
-
-### highflame-ramparts-server
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`LLM_PROVIDER` | Provider name | nil | -
-`LLM_MODEL` | Model name | nil | -
-`LLM_URL` | LLM complete URL | nil | -
-`LLM_API_KEY` | LLM API Key | nil | -
 
 ### highflame-redteam
 
@@ -173,8 +170,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `ACCOUNT_ID` | Account ID | nil | -
 `REDIS_HOST` | Redis host | nil | -
+`REDIS_PORT` | Redis port | `6379` | -
+`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_USER` | Redis username | nil | -
 `REDIS_PASS` | Redis password | nil | -
+`REDIS_CACERT` | Redis cacert | `""` | -
 `UNKEY_ROOT_KEY` | Unkey Root Key | nil | optional
 `UNKEY_API_ID` | Unkey api id | nil | optional
 `MODEL_ARMOR_TEMPLATE` | Model armor template | nil | -
@@ -183,8 +183,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 `CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | `s3` or `gcs` or `azure-blob`
 `CLOUD_ARCHIVE_BUCKET` | Cloud archive bucket name | nil | optional
-`REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `HIGHFLAME_DEPLOYMENT_TYPE` | Deploy type | `prod` | `dev` or `prod`
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
@@ -195,7 +193,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_GUARD_URL` | highflame guard url | `http://highflame-guard:8013` | -
 `HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
-`HIGHFLAME_GUARD_HALLUCINATION_URL` | highflame guard hallucination url | `http://highflame-guard-hall:8015` | -
 `HIGHFLAME_GUARD_PII_URL` | highflame guard pii url | `http://highflame-guard-pii:8018` | -
 `HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-saas-bloom-filter-store` | -
@@ -239,7 +236,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NODE_ENV` | Nodejs env | `production` | `development` or `production`
 `NEXT_TELEMETRY_DISABLED` | Telemetry option | `1` | `0` or `1`
 `HIGHFLAME_ADMIN_URL` |  Admin api url | `http://highflame-admin:8040` | -
-`HIGHFLAME_SHIELD_URL` |  shield api url | `http://highflame-shield:8070` | -
+`HIGHFLAME_SHIELD_URL` |  shield api url | `http://highflame-shield:8070/v1/shield` | -
 `HIGHFLAME_AUTHN_URL` |  authn api url | `http://highflame-authn:8051` | -
 `HIGHFLAME_OBSERVATORY_URL` |  observatory api url | `http://highflame-observatory:8090` | -
 `HIGHFLAME_REDTEAM_LAB_URL` |  redteam lab api url | `http://highflame-redteam-lab1:8002` | -
@@ -280,4 +277,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_RECEIPT_AUTHN_JWKS_URL` | Highflame receipt authn JWKS URL | `http://highflame-authn:8051/v1/auth/.well-known/highflame-receipt-keys` | -
