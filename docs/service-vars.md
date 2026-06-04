@@ -257,6 +257,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_POSTHOG_HOST` | Posthog host | `https://us.i.posthog.com` | -
 `NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | -
 `NEXT_PUBLIC_AUTHN_URL` | highflame authn endpoint | nil | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
 
 ### highflame-collector
 
