@@ -1,9 +1,9 @@
-fullnameOverride: "highflame-admin"
+fullnameOverride: "highflame-ramparts-server"
 
 livenessProbe:
   httpGet:
     path: /livez
-    port: 8040
+    port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -13,7 +13,7 @@ livenessProbe:
 readinessProbe:
   httpGet:
     path: /healthz
-    port: 8040
+    port: 8080
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -23,17 +23,19 @@ readinessProbe:
 nodeSelector:
   kube/nodegroup: "general"
 
+terminationGracePeriodSeconds: 60
+
 autoscaling:
   enabled: true
   minReplicas: 2
-  maxReplicas: 6
+  maxReplicas: 4
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
 service:
   type: NodePort
   protocol: TCP
-  port: 8040
+  port: 8080
 
 image:
   repository: "${DOCKER_IMAGE}"
@@ -43,6 +45,11 @@ image:
 imagePullSecrets:
   - name: highflame-registry-secret
 
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+
 resources:
   requests:
     memory: 256Mi
@@ -50,42 +57,6 @@ resources:
   limits:
     memory: 1024Mi
     cpu: 500m
-
-secrets:
-  enabled: true
-  secretData:
-    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
-
-volumes:
-  - name: license-volume
-    secret:
-      secretName: highflame-license
-      optional: false
-  # - name: redis-cert-volume
-  #   secret:
-  #     secretName: highflame-redis-cert
-  #     optional: false
-
-volumeMounts:
-  - name: license-volume
-    mountPath: "/app/license"
-    readOnly: true
-  # - name: redis-cert-volume
-  #   mountPath: "/app/certs/redis-ca.pem"
-  #   readOnly: true
-  #   subPath: redis-ca.pem
-
-serviceAccount:
-  create: true
-  automount: true
-  annotations:
-    eks.amazonaws.com/role-arn: "${SVC_IAM_ROLE}"
-  role:
-    create: true
-    rules:
-      - apiGroups: [ "" ]
-        resources: [ "secrets" ]
-        verbs: [ "get", "list", "create", "update", "patch", "delete" ]
 
 ingress:
   enabled: true
@@ -103,7 +74,7 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
     alb.ingress.kubernetes.io/success-codes: '200'
-    alb.ingress.kubernetes.io/group.order: '1'
+    alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=300"
 
     alb.ingress.kubernetes.io/load-balancer-name: ${K8S_CLUSTER_NAME}-alb-ingress
@@ -112,9 +83,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: control.example.com
+    - host: api.example.com
       paths:
-        - path: /v1/admin
-          pathType: Prefix
-        - path: /v2/admin
+        - path: /v1/ramparts
           pathType: Prefix

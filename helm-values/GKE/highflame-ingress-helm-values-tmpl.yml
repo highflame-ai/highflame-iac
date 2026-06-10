@@ -54,6 +54,10 @@ ingress:
           pathType: Prefix
           serviceName: "highflame-shield"
           servicePort: 8070
+        - path: /v1/ramparts
+          pathType: Prefix
+          serviceName: "highflame-ramparts-server"
+          servicePort: 8080
     - host: gateway.example.com
       paths:
         - path: /

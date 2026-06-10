@@ -57,12 +57,12 @@ secrets:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
 volumes:
-  - name: signing-keys-volume
+  - name: signing-keys
     secret:
       secretName: highflame-signing-keys
       optional: false
 
 volumeMounts:
-  - name: signing-keys-volume
+  - name: signing-keys
     mountPath: "/app/keys"
     readOnly: true

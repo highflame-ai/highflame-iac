@@ -59,18 +59,6 @@ secrets:
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
-volumes:
-  - name: auth-keys
-    secret:
-      secretName: highflame-auth-keys
-      optional: false
-
-volumeMounts:
-  - name: auth-keys
-    mountPath: "/app/config/jwt/jwt-public.pem"
-    readOnly: true
-    subPath: jwt-public.pem
-    
 ingress:
   enabled: true
   className: "alb"

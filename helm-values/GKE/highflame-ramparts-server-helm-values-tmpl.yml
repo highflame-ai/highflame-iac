@@ -1,41 +1,43 @@
-fullnameOverride: "highflame-studio"
+fullnameOverride: "highflame-ramparts-server"
 
 livenessProbe:
   httpGet:
-    path: /sign-in
-    port: 3000
-  initialDelaySeconds: 30
+    path: /livez
+    port: 8080
+  initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 4
+  failureThreshold: 2
 
 readinessProbe:
   httpGet:
-    path: /sign-in
-    port: 3000
-  initialDelaySeconds: 30
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 4
+  failureThreshold: 2
 
 nodeSelector:
   kube/nodegroup: "general"
 
+terminationGracePeriodSeconds: 60
+
 autoscaling:
   enabled: true
   minReplicas: 2
-  maxReplicas: 6
+  maxReplicas: 4
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
 service:
   annotations:
-    cloud.google.com/backend-config: '{ "default" : "highflame-studio-default" }'
+    cloud.google.com/backend-config: '{ "default" : "highflame-ramparts-server-default" }'
   type: NodePort
   protocol: TCP
-  port: 3000
+  port: 8080
 
 gceIngress:
   backendConfigs:
@@ -49,48 +51,29 @@ gceIngress:
         healthyThreshold: 2
         unhealthyThreshold: 2
         type: HTTP
-        requestPath: "/sign-in"
-        port: 3000
+        requestPath: "/healthz"
+        port: 8080
       securityPolicy:
         enabled: true
         name: "highflame-cloud-security-policy"
 
 image:
   repository: "${DOCKER_IMAGE}"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: ${IMAGE_TAG}
 
 imagePullSecrets:
   - name: highflame-registry-secret
-
-resources:
-  requests:
-    memory: 512Mi
-    cpu: 300m
-  limits:
-    memory: 1024Mi
-    cpu: 1000m
 
 secrets:
   enabled: true
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
-volumes:
-  - name: auth-keys
-    secret:
-      secretName: highflame-auth-keys
-      optional: false
-  - name: oauth-keys
-    secret:
-      secretName: highflame-oauth-keys
-      optional: false
-
-volumeMounts:
-  - name: auth-keys
-    mountPath: "/app/keys/auth"
-    readOnly: true
-  - name: oauth-keys
-    mountPath: "/app/keys/oauth/oauth-signing-key.pem"
-    readOnly: true
-    subPath: oauth-signing-key.pem
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 200m
+  limits:
+    memory: 1024Mi
+    cpu: 500m

@@ -71,18 +71,6 @@ resources:
     memory: 1024Mi
     cpu: 200m
 
-volumes:
-  - name: auth-keys
-    secret:
-      secretName: highflame-auth-keys
-      optional: false
-
-volumeMounts:
-  - name: auth-keys
-    mountPath: "/app/config/jwt/jwt-public.pem"
-    readOnly: true
-    subPath: jwt-public.pem
-
 secrets:
   enabled: true
   secretData:

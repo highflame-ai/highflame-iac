@@ -9,6 +9,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_PASSWORD` | Postgres password | nil | -
 `DB_HOST` | Postgres host | nil | -
 `DB_NAME` | Postgres database | `javelin_data` | -
+`DB_PORT` | Postgres port | `5432` | -
+`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `REDIS_HOST` | Redis host | nil | -
 `REDIS_PORT` | Redis port | `6379` | -
 `REDIS_TLS` | Redis TLS | `false` | `true` or `false`
@@ -20,10 +22,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AWS_REPLICATION_KMS_KEY` | AWS KMS Key for secret manager enc in replication region | nil | optional
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
-`REDIS_CACERT` | Redis CA Cert | `""` | -
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
 `GUARDIAN_DB_NAME` | Guardian database | `highflame_guardian` | -
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
@@ -31,8 +30,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
 `HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070/v1/shield` | -
-`HIGHFLAME_AUTH_JWT_PRIVATE_KEY` | JWT PEM RSA private key, signs RS256 access tokens | `/app/config/jwt/jwt-private.pem` | -
-`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 `HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
 `HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Tenancy default enabled | `true` | `true` or `false`
 `HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | -
@@ -110,6 +107,15 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | -
 
+### highflame-ramparts-server
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`LLM_PROVIDER` | Provider name | nil | -
+`LLM_MODEL` | Model name | nil | -
+`LLM_URL` | LLM complete URL | nil | -
+`LLM_API_KEY` | LLM API Key | nil | -
+
 ### highflame-redteam
 
 Variable Name | Variable Value | Default Value | Acceptable Value
@@ -180,7 +186,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `MODEL_ARMOR_TEMPLATE` | Model armor template | nil | -
 `MODEL_ARMOR_LOCATION` | Model armor location | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
-`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | JWT PEM RSA public key, verifies RS256 access tokens | `/app/config/jwt/jwt-public.pem` | -
 `CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | `s3` or `gcs` or `azure-blob`
 `CLOUD_ARCHIVE_BUCKET` | Cloud archive bucket name | nil | optional
 `REDIS_CACERT` | Redis CA Cert | `""` | -
@@ -252,12 +257,14 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `MARKETPLACE_FROM_EMAIL` | SMTP from mail | nil | -
 `MARKETPLACE_NOTIFY_EMAIL` | SMTP Notify mail | nil | -
 `HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
-`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
+`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/auth/jwt-private.pem` | -
 `HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
 `NEXT_PUBLIC_POSTHOG_HOST` | Posthog host | `https://us.i.posthog.com` | -
 `NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | -
 `NEXT_PUBLIC_AUTHN_URL` | highflame authn endpoint | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
+`HIGHFLAME_OAUTH_SIGNING_KEY_ID` | Highflame oauth signing key ID | nil | -
+`HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Highflame oauth signing key | `/app/keys/oauth/oauth-signing-key.pem` | -
 
 ### highflame-collector
 
@@ -272,7 +279,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
 `CLICKHOUSE_HOST` | Clickhouse Host | `clickhouse-javelin-ch.clickhouse.svc.cluster.local` | -
 `CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
 `CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -

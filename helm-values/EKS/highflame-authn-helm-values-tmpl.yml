@@ -61,11 +61,19 @@ volumes:
     secret:
       secretName: highflame-auth-keys
       optional: false
+  # - name: redis-cert-volume
+  #   secret:
+  #     secretName: highflame-redis-cert
+  #     optional: false
 
 volumeMounts:
   - name: auth-keys
     mountPath: "/app/keys"
     readOnly: true
+  # - name: redis-cert-volume
+  #   mountPath: "/app/certs/redis-ca.pem"
+  #   readOnly: true
+  #   subPath: redis-ca.pem
 
 ingress:
   enabled: true

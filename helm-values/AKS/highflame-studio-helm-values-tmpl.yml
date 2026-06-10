@@ -49,6 +49,25 @@ secrets:
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
+volumes:
+  - name: auth-keys
+    secret:
+      secretName: highflame-auth-keys
+      optional: false
+  - name: oauth-keys
+    secret:
+      secretName: highflame-oauth-keys
+      optional: false
+
+volumeMounts:
+  - name: auth-keys
+    mountPath: "/app/keys/auth"
+    readOnly: true
+  - name: oauth-keys
+    mountPath: "/app/keys/oauth/oauth-signing-key.pem"
+    readOnly: true
+    subPath: oauth-signing-key.pem
+
 ingress:
   enabled: true
   className: "azure-application-gateway"
