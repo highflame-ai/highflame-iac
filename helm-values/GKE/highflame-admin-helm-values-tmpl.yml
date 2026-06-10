@@ -76,10 +76,6 @@ volumes:
     secret:
       secretName: highflame-license
       optional: false
-  - name: auth-keys
-    secret:
-      secretName: highflame-auth-keys
-      optional: false
   - name: redis-cert-volume
     secret:
       secretName: highflame-redis-cert
@@ -88,9 +84,6 @@ volumes:
 volumeMounts:
   - name: license-volume
     mountPath: "/app/license"
-    readOnly: true
-  - name: auth-keys
-    mountPath: "/app/config/jwt"
     readOnly: true
   - name: redis-cert-volume
     mountPath: "/app/certs/redis-ca.pem"
