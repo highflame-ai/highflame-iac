@@ -200,7 +200,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
 `HIGHFLAME_GUARD_PII_URL` | highflame guard pii url | `http://highflame-guard-pii:8018` | -
 `HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
-`HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-saas-bloom-filter-store` | -
+`HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-prod-bloom-filter` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
 `REFRESH_SECRETS_ON_401` | Refresh secrets on 401 | `true` | `true` or `false`
 `BYPASS_GUARDRAILS` | Bypass guardrails for streaming | `true` | `true` or `false`
