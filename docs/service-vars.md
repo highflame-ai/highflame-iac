@@ -248,17 +248,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | -
 `PORT` | Service port | `3000` | -
-`DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure`
-`OPENAI_API_KEY` | OpenAI api key | nil | for `DEFAULT_PROVIDER=openai`
-`AZURE_API_KEY` | Azure OpenAI api key | nil | for `DEFAULT_PROVIDER=azure`
-`AZURE_API_BASE` | Azure OpenAI API base | nil | for `DEFAULT_PROVIDER=azure`
-`AZURE_API_VERSION` | Azure OpenAI version | nil | for `DEFAULT_PROVIDER=azure`
 `SUPPORT_SMTP_PASSKEY` | SMTP Credential | nil | -
 `MARKETPLACE_FROM_EMAIL` | SMTP from mail | nil | -
 `MARKETPLACE_NOTIFY_EMAIL` | SMTP Notify mail | nil | -
 `HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
 `HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/auth/jwt-private.pem` | -
-`HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
 `NEXT_PUBLIC_POSTHOG_HOST` | Posthog host | `https://us.i.posthog.com` | -
 `NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | -
 `NEXT_PUBLIC_AUTHN_URL` | highflame authn endpoint | nil | -
