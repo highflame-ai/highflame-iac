@@ -56,20 +56,20 @@ eks_managed_nodes_properties             = [
                                                     eks_node_capacity_type         = "ON_DEMAND" # ON_DEMAND or SPOT
                                                     eks_node_block_device_name     = "/dev/xvda"
                                                     eks_node_block_device_size     = 100
-                                                    eks_node_min_size              = 1
-                                                    eks_node_max_size              = 1
+                                                    eks_node_min_size              = 6
+                                                    eks_node_max_size              = 12
                                                     enable_bootstrap_user_data     = false # true only if you are using eks_node_ami_id
                                                 },
                                                 {
                                                     name                           = "gpu"
                                                     eks_node_ami_type              = "AL2023_x86_64_NVIDIA"
                                                     eks_node_ami_id                = ""
-                                                    eks_node_instance_type         = "g4dn.xlarge"
+                                                    eks_node_instance_type         = "g6.4xlarge"
                                                     eks_node_capacity_type         = "ON_DEMAND" # ON_DEMAND or SPOT
                                                     eks_node_block_device_name     = "/dev/xvda"
                                                     eks_node_block_device_size     = 100
                                                     eks_node_min_size              = 2
-                                                    eks_node_max_size              = 2
+                                                    eks_node_max_size              = 4
                                                     enable_bootstrap_user_data     = false # true only if you are using eks_node_ami_id
                                                 }
                                             ]

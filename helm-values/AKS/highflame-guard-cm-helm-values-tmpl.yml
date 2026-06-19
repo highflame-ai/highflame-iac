@@ -45,10 +45,10 @@ imagePullSecrets:
 
 resources:
   requests:
-    memory: 10Gi
-    cpu: 3000m
+    memory: 15Gi
+    cpu: 3500m
   limits:
-    memory: 14Gi
+    memory: 15Gi
     cpu: 3500m
 
 secrets:
