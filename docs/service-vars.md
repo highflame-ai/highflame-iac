@@ -63,6 +63,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
 `HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
 `HIGHFLAME_WIMSE_DOMAIN` | Whitelisting the domain | nil | -
+`HIGHFLAME_AUTH_ASSERTION_RESOLVER_AUDIENCE` | authn assertion resolver | `highflame-authn` | -
+`HIGHFLAME_AUTH_ASSERTION_RESOLVER_TRUSTED_ISSUERS` | authn assertion resolver trusted issuers | `[{"issuer":"highflame-studio","jwks_url":"http://highflame-studio:3000/.well-known/jwks.json"}]` | -
+`HIGHFLAME_ALLOW_UNSAFE_DEV_STUB` | enable / disable the unsafe dev attestation stub | `false` | `true` or `false`
 
 ### highflame-authz
 
@@ -218,6 +221,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_RECEIPT_SIGNING_AUTHN_BASE_URL`| Highflame signin authn base url | nil | -
+`HIGHFLAME_RECEIPT_SIGNING_ENABLED`| Highflame signing enabled | nil | `true` or `false`
+`HIGHFLAME_AUTHN_BASE_URL`| Highflame authn url | `http://highflame-authn:8051` | -
 
 ### highflame-guard-*
 
@@ -258,6 +264,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
 `HIGHFLAME_OAUTH_SIGNING_KEY_ID` | Highflame oauth signing key ID | nil | -
 `HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Highflame oauth signing key | `/app/keys/oauth/oauth-signing-key.pem` | -
+`HIGHFLAME_OAUTH_ASSERTION_AUDIENCE` | Highflame oauth assertion | `highflame-authn` | -
+`HIGHFLAME_OAUTH_AUTHORIZE_URL` | Highflame oauth authorize url | `http://highflame-authn:8051/oauth2/authorize` | -
+`HIGHFLAME_RAMPARTS_URL` | Highflame ramparts server | `http://highflame-ramparts-server:8080` | -
+`NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS` | Highflame clerk redirect origins | nil | -
+`NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
 
 ### highflame-collector
 
