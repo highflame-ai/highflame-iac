@@ -232,7 +232,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `CLERK_SECRET_KEY` | Clerk secret key | nil | -
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | -
-`CLERK_WEBHOOK_SECRET` | Clerk webhook secret | nil | -
 `NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | nil | -
 `NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | -
 `NEXT_PUBLIC_FIREHOG_URL` | Endpoint for firehog service | nil | -
