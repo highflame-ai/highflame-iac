@@ -10,7 +10,9 @@ project_name                           = "highflame"
 project_env                            = "poc"
 pg_db_list                             = [
                                             "javelin_redteam",
-                                            "highflame_guardian"
+                                            "highflame_guardian",
+                                            "highflame_authn",
+                                            "highflame_discovery"
                                           ]
 pg_extensions                          = [
                                           {

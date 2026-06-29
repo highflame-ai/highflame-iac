@@ -88,6 +88,34 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_COLLECTOR_URL` | Highflame Collector URL | `highflame-collector:4317`| -
 `HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
 
+### highflame-collector
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | `tcp://clickhouse-javelin-ch.clickhouse.svc.cluster.local:9000` | -
+`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
+`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
+`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
+
+### highflame-discovery
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`DB_USERNAME` | Postgres username | nil | -
+`DB_PASSWORD` | Postgres password | nil | -
+`DB_HOST` | Postgres host | nil | -
+`DB_PORT` | Postgres port | `5432` | -
+`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
+`DISCOVERY_DB_NAME` | Postgres database | `highflame_discovery` | -
+`HIGHFLAME_DEPLOYMENT_TYPE` | Deployment type | `prod` | -
+`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`OTEL_ENABLED` | Enable OTEL | `true` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
+`HIGHFLAME_ZEROID_BASE_URL` | Highflame zeriod base url | `http://highflame-authn:8051` | -
+`HIGHFLAME_SYNC_ENABLED` | Highflame sync enabled or disabled | `true` | `true` or `false`
+`HIGHFLAME_SYNC_TICK_SECONDS` | Highflame sync tick interval | `86400` | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
+
 ### highflame-dlp
 
 Variable Name | Variable Value | Default Value | Acceptable Value
@@ -110,14 +138,25 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | -
 
-### highflame-ramparts-server
+### highflame-guard-*
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`LLM_PROVIDER` | Provider name | nil | -
-`LLM_MODEL` | Model name | nil | -
-`LLM_URL` | LLM complete URL | nil | -
-`LLM_API_KEY` | LLM API Key | nil | -
+`HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
+`HF_HUB_ENABLE_HF_TRANSFER` | Enable huggingface transfer | `1` | -
+
+### highflame-observatory
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`CLICKHOUSE_HOST` | Clickhouse Host | `clickhouse-javelin-ch.clickhouse.svc.cluster.local` | -
+`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
+`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
+`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
+`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_RECEIPT_AUTHN_JWKS_URL` | Highflame receipt authn JWKS URL | `http://highflame-authn:8051/v1/auth/.well-known/highflame-receipt-keys` | -
 
 ### highflame-redteam
 
@@ -150,7 +189,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local`
 `OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
 `OTEL_SERVICE_NAME` | Highflame collector service | `redteam-scanner` | -
-
 
 ### highflame-redteam-lab1
 
@@ -225,13 +263,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_RECEIPT_SIGNING_ENABLED`| Highflame signing enabled | nil | `true` or `false`
 `HIGHFLAME_AUTHN_BASE_URL`| Highflame authn url | `http://highflame-authn:8051` | -
 
-### highflame-guard-*
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
-`HF_HUB_ENABLE_HF_TRANSFER` | Enable huggingface transfer | `1` | -
-
 ### highflame-studio
 
 Variable Name | Variable Value | Default Value | Acceptable Value
@@ -270,24 +301,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS` | Highflame clerk redirect origins | nil | -
 `NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
 
-### highflame-collector
+### highflame-ramparts-server
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | `tcp://clickhouse-javelin-ch.clickhouse.svc.cluster.local:9000` | -
-`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
-`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
-`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
-
-### highflame-observatory
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`CLICKHOUSE_HOST` | Clickhouse Host | `clickhouse-javelin-ch.clickhouse.svc.cluster.local` | -
-`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
-`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
-`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
-`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
-`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
-`HIGHFLAME_RECEIPT_AUTHN_JWKS_URL` | Highflame receipt authn JWKS URL | `http://highflame-authn:8051/v1/auth/.well-known/highflame-receipt-keys` | -
+`LLM_PROVIDER` | Provider name | nil | -
+`LLM_MODEL` | Model name | nil | -
+`LLM_URL` | LLM complete URL | nil | -
+`LLM_API_KEY` | LLM API Key | nil | -
