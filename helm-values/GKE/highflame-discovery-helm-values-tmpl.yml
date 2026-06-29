@@ -1,0 +1,76 @@
+fullnameOverride: "highflame-discovery"
+
+livenessProbe:
+  httpGet:
+    path: /livez
+    port: 8095
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 8095
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+nodeSelector:
+  kube/nodegroup: "general"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+service:
+  annotations:
+    cloud.google.com/backend-config: '{ "default" : "highflame-discovery-default" }'
+  protocol: TCP
+  port: 8095
+
+gceIngress:
+  backendConfigs:
+    enabled: true
+    items:
+    - name: default
+      timeoutSec: 300
+      healthCheck:
+        checkIntervalSec: 15
+        timeoutSec: 5
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        type: HTTP
+        requestPath: "/healthz"
+        port: 8095
+      securityPolicy:
+        enabled: true
+        name: "highflame-cloud-security-policy"
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: Always
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 200m
+  limits:
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
