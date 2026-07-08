@@ -56,6 +56,16 @@ secrets:
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
 
+serviceAccount:
+  create: true
+  automount: true
+  role:
+    create: true
+    rules:
+      - apiGroups: [ "" ]
+        resources: [ "secrets" ]
+        verbs: [ "get", "list", "create", "update", "patch", "delete" ]
+
 ingress:
   enabled: true
   className: "alb"
