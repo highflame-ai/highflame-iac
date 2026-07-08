@@ -115,16 +115,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_SYNC_ENABLED` | Highflame sync enabled or disabled | `true` | `true` or `false`
 `HIGHFLAME_SYNC_TICK_SECONDS` | Highflame sync tick interval | `86400` | -
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
-
-### highflame-dlp
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`HAPROXY_CFG` | HAProxy config file path | `/app/haproxy.cfg` | -
-`SVC_PORT` | Service serving port | `8009` | -
-`CORS_ALLOWED_ORIGINS` | CORS allowed origins | `*` | -
-`CORS_ALLOWED_METHODS` | CORS allowed methods | `POST,GET,OPTIONS` | -
-`CORS_ALLOWED_HEADERS` | CORS allowed headers | `Authorization,Content-Type,x-api-key,x-javelin-user,x-javelin-userrole` | -
+`HIGHFLAME_SECRETS_BACKEND`| Highflame secrets store | `kubernetes` | -
 
 ### highflame-firehog
 
@@ -232,10 +223,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_CACERT` | Redis CA Cert | `""` | -
 `HIGHFLAME_DEPLOYMENT_TYPE` | Deploy type | `prod` | `dev` or `prod`
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
-`HIGHFLAME_GCP_DLP_ENDPOINT` | highflame dlp url | `http://highflame-dlp:8888` | -
 `HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
-`HIGHFLAME_DLP_URL` | highflame dlp url | `http://highflame-dlp:8888` | -
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_GUARD_URL` | highflame guard url | `http://highflame-guard:8013` | -
 `HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
@@ -243,6 +232,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-prod-bloom-filter` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
+`HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `s3` | `s3`
 `REFRESH_SECRETS_ON_401` | Refresh secrets on 401 | `true` | `true` or `false`
 `BYPASS_GUARDRAILS` | Bypass guardrails for streaming | `true` | `true` or `false`
 `AUTO_PROVISION_APPLICATION` | Auto provision the application | `true` | `true` or `false`
@@ -259,7 +249,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
-`HIGHFLAME_RECEIPT_SIGNING_AUTHN_BASE_URL`| Highflame signin authn base url | nil | -
+`HIGHFLAME_RECEIPT_SIGNING_AUTHN_BASE_URL`| Highflame signin authn base url | `http://highflame-authn:8051` | -
 `HIGHFLAME_RECEIPT_SIGNING_ENABLED`| Highflame signing enabled | nil | `true` or `false`
 `HIGHFLAME_AUTHN_BASE_URL`| Highflame authn url | `http://highflame-authn:8051` | -
 
