@@ -129,6 +129,18 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | -
 
+### highflame-forge
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`FORGE_HOST` | Highflame forge service host | `0.0.0.0` | -
+`FORGE_PORT` | Highflame forge service port | `8100` | -
+`FORGE_AUTH_MODE` | Highflame forge service auth mode | `rs256` | -
+`FORGE_BACKEND` | Highflame forge service backend config | `local` | -
+`OTEL_SERVICE_NAME` | Highflame OTEL service name | `forge` | -
+`FORGE_JWT_PUBLIC_KEY_PATH` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
+
 ### highflame-guard-*
 
 Variable Name | Variable Value | Default Value | Acceptable Value

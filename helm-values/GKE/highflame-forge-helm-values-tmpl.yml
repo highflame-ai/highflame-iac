@@ -1,0 +1,44 @@
+fullnameOverride: "highflame-forge"
+
+nodeSelector:
+  kube/nodegroup: "general"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+service:
+  type: ClusterIP
+  protocol: TCP
+  port: 8100
+
+image:
+  repository: "${DOCKER_IMAGE}"
+  pullPolicy: Always
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: javelin-registry-secret
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 200m
+  limits:
+    memory: 1Gi
+    cpu: 1000m
+
+volumes:
+  - name: auth-keys
+    secret:
+      secretName: highflame-auth-keys
+      optional: false
+
+volumeMounts:
+  - name: auth-keys
+    mountPath: "/app/config/jwt/jwt-public.pem"
+    readOnly: true
+    subPath: jwt-public.pem
