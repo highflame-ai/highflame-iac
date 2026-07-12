@@ -10,6 +10,26 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
+livenessProbe:
+  httpGet:
+    path: /livez
+    port: 8100
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 8100
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
 service:
   type: ClusterIP
   protocol: TCP
@@ -21,7 +41,7 @@ image:
   tag: ${IMAGE_TAG}
 
 imagePullSecrets:
-  - name: javelin-registry-secret
+  - name: highflame-registry-secret
 
 resources:
   requests:
@@ -31,14 +51,7 @@ resources:
     memory: 1Gi
     cpu: 1000m
 
-volumes:
-  - name: auth-keys
-    secret:
-      secretName: highflame-auth-keys
-      optional: false
-
-volumeMounts:
-  - name: auth-keys
-    mountPath: "/app/config/jwt/jwt-public.pem"
-    readOnly: true
-    subPath: jwt-public.pem
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
