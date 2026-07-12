@@ -138,8 +138,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `FORGE_AUTH_MODE` | Highflame forge service auth mode | `rs256` | -
 `FORGE_BACKEND` | Highflame forge service backend config | `local` | -
 `OTEL_SERVICE_NAME` | Highflame OTEL service name | `forge` | -
-`FORGE_JWT_PUBLIC_KEY_PATH` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
 `OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
+`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
 
 ### highflame-guard-*
 
