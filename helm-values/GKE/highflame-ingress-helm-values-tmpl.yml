@@ -38,6 +38,10 @@ ingress:
           pathType: Prefix
           serviceName: "highflame-admin"
           servicePort: 8040
+        - path: /scim/v2
+          pathType: Prefix
+          serviceName: "highflame-admin"
+          servicePort: 8040   
     - host: api.example.com
       paths:
         - path: /v1/cerberus
@@ -56,6 +60,10 @@ ingress:
           pathType: Prefix
           serviceName: "highflame-ramparts-server"
           servicePort: 8080
+        - path: /v1/forge
+          pathType: Prefix
+          serviceName: "highflame-forge"
+          servicePort: 8100
     - host: gateway.example.com
       paths:
         - path: /

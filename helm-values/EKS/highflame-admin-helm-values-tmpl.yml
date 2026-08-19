@@ -118,3 +118,5 @@ ingress:
           pathType: Prefix
         - path: /v2/admin
           pathType: Prefix
+        - path: /scim/v2
+          pathType: Prefix
