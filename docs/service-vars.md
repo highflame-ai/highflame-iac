@@ -36,6 +36,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `MARKETPLACE_JWT_SECRET` | Highflame Marketplace secret | nil | -
 `HIGHFLAME_APP_URL` | Endpoint for studio service | nil | -
+`CLERK_PROXY_URL` | Highflame clerk proxy url - match with `NEXT_PUBLIC_CLERK_PROXY_URL` | nil | -
 
 ### highflame-authn
 
@@ -54,6 +55,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_PASS` | Redis password | nil | -
 `REDIS_CACERT` | Redis cacert | `""` | -
 `OTEL_ENABLED` | Enable OTEL | `true` | -
+`HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
 `OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | -
@@ -63,6 +65,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
 `HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | -
 `HIGHFLAME_WIMSE_DOMAIN` | Whitelisting the domain | nil | -
+`HIGHFLAME_SECRETS_BACKEND` | Highflame secrets store | `kubernetes` | -
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_AUDIENCE` | authn assertion resolver | `highflame-authn` | -
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_TRUSTED_ISSUERS` | authn assertion resolver trusted issuers | `[{"issuer":"highflame-studio","jwks_url":"http://highflame-studio:3000/.well-known/jwks.json"}]` | -
 `HIGHFLAME_ALLOW_UNSAFE_DEV_STUB` | enable / disable the unsafe dev attestation stub | `false` | `true` or `false`
@@ -141,6 +144,17 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
+`FORGE_WORKSPACE_SECRET_REFS`| Modal Secret names | nil | -
+`MODAL_TOKEN_ID`| Modal token id | nil | -
+`MODAL_TOKEN_SECRET`| Modal token secret | nil | -
+`FORGE_MINT_CODEOID_KEY`| Codeoid key usage | nil | `true` or `false`
+`FORGE_CODEOID_EMBED_ALLOWED_ORIGINS`| Codeoid allowed origins | nil | -
+`HIGHFLAME_FIREHOG_URL`| Firehog endpoint | nil | -
+`FORGE_LLM_GATEWAY_MODE`| LLM gateway mode | nil | -
+`FORGE_MODAL_REGISTRY_SECRET`| Modal registry secretn name | nil | -
+`FORGE_CLAUDE_CODE_IMAGE`| Claude code image url | nil | -
+`FORGE_CODEOID_IMAGE`| Codeoid image url | nil | -
 
 ### highflame-guard-*
 
@@ -148,6 +162,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
 `HF_HUB_ENABLE_HF_TRANSFER` | Enable huggingface transfer | `1` | -
+`WORKERS` | Number of workers | `2` |
+`MAX_BATCH_TOKENS` | Maximum batch tokens | `16384` | 
+`GPU_MEMORY_BUDGET_MB` | GPU memory allocation | `2100` |
 
 ### highflame-observatory
 
@@ -161,6 +178,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
 `HIGHFLAME_RECEIPT_AUTHN_JWKS_URL` | Highflame receipt authn JWKS URL | `http://highflame-authn:8051/v1/auth/.well-known/highflame-receipt-keys` | -
+`HIGHFLAME_RAMPARTS_URL` | Highflame ramparts server | `http://highflame-ramparts-server:8080` | -
 
 ### highflame-redteam
 
@@ -193,6 +211,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local`
 `OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
 `OTEL_SERVICE_NAME` | Highflame collector service | `redteam-scanner` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 
 ### highflame-redteam-lab1
 
@@ -265,6 +284,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_RECEIPT_SIGNING_AUTHN_BASE_URL`| Highflame signin authn base url | `http://highflame-authn:8051` | -
 `HIGHFLAME_RECEIPT_SIGNING_ENABLED`| Highflame signing enabled | nil | `true` or `false`
 `HIGHFLAME_AUTHN_BASE_URL`| Highflame authn url | `http://highflame-authn:8051` | -
+`HIGHFLAME_ENABLE_POLICY_SLICING`| Enable policy slicing | nil | `true` or `false`
 
 ### highflame-studio
 
@@ -297,12 +317,13 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_AUTHN_URL` | highflame authn endpoint | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
 `HIGHFLAME_OAUTH_SIGNING_KEY_ID` | Highflame oauth signing key ID | nil | -
-`HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Highflame oauth signing key | `/app/keys/oauth/oauth-signing-key.pem` | -
 `HIGHFLAME_OAUTH_ASSERTION_AUDIENCE` | Highflame oauth assertion | `highflame-authn` | -
 `HIGHFLAME_OAUTH_AUTHORIZE_URL` | Highflame oauth authorize url | `http://highflame-authn:8051/oauth2/authorize` | -
 `HIGHFLAME_RAMPARTS_URL` | Highflame ramparts server | `http://highflame-ramparts-server:8080` | -
 `NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS` | Highflame clerk redirect origins | nil | -
+`NEXT_PUBLIC_CLERK_PROXY_URL` | Highflame clerk proxy url - match with `CLERK_PROXY_URL` | nil | -
 `NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
+`NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | Pass the ARN principle for accessing the AWS bedrock connector | nil | -
 
 ### highflame-ramparts-server
 

@@ -75,6 +75,16 @@ volumeMounts:
   #   readOnly: true
   #   subPath: redis-ca.pem
 
+serviceAccount:
+  create: true
+  automount: true
+  role:
+    create: true
+    rules:
+      - apiGroups: [ "" ]
+        resources: [ "secrets" ]
+        verbs: [ "get", "list", "create", "update", "patch", "delete" ]
+
 ingress:
   enabled: true
   className: "alb"

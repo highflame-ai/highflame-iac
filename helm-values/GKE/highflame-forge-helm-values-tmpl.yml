@@ -31,9 +31,29 @@ readinessProbe:
   failureThreshold: 2
 
 service:
-  type: ClusterIP
+  annotations:
+    cloud.google.com/backend-config: '{ "default" : "highflame-forge-default" }'
+  type: NodePort
   protocol: TCP
   port: 8100
+
+gceIngress:
+  backendConfigs:
+    enabled: true
+    items:
+    - name: default
+      timeoutSec: 300
+      healthCheck:
+        checkIntervalSec: 15
+        timeoutSec: 5
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        type: HTTP
+        requestPath: "/healthz"
+        port: 8070
+      securityPolicy:
+        enabled: true
+        name: "highflame-cloud-security-policy"
 
 image:
   repository: "${DOCKER_IMAGE}"
