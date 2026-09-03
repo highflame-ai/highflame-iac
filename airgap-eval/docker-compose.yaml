@@ -467,7 +467,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      HIGHFLAME_AUTH_JWT_PUBLIC_KEY: "/app/keys/jwt-public.pem"
+      HIGHFLAME_AUTH_JWT_PUBLIC_KEY: "/app/keys/public.key"
       HIGHFLAME_ADMIN_URL: http://highflame-admin:8040
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       HIGHFLAME_SHIELD_URL: "http://highflame-shield:8070/v1/shield"
@@ -476,8 +476,8 @@ services:
       OTEL_ENABLED: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://highflame-collector:4317"
     volumes:
-      - ./configs/cerberus/config.yaml:/app/config.yaml
-      - ./secrets/authz-keys/jwt-public.pem:/app/keys/jwt-public.pem:ro
+      - ./config/cerberus/config.yaml:/app/config.yaml
+      - ./secrets/authz-keys/public.key:/app/keys/public.key:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/healthz"]
       interval: 5s
