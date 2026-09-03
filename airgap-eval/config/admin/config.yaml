@@ -1,0 +1,147 @@
+# Port where highflame Admin will listen (default: 8040)
+server:
+  port: 8040
+  default_gateway_id: sanjose
+  default_account_id: 12345678
+  default_namespace: localhost-namespace
+  model_spec_path: /app/modelspec/providers
+
+store:
+  type: "postgres"
+  postgres:
+    dsn: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@highflame-db:5432/javelin_data?sslmode=disable"
+    timeout: 30
+    max_conns: 8
+  redteam_db:
+    dsn: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@highflame-db:5432/javelin_redteam?sslmode=disable"
+    timeout: 30
+    max_conns: 8
+  guardian_db:
+    dsn: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@highflame-db:5432/highflame_guardian?sslmode=disable"
+    timeout: 30
+    max_conns: 8
+  palisade_db:
+    dsn: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@highflame-db:5432/javelin_redteam?sslmode=disable"
+    timeout: 30
+    max_conns: 8
+
+# Logging settings
+log:
+  level: "debug"
+  format: "json"  # json (default) | console — production should always be json
+
+# OTEL telemetry — exports traces + metrics to highflame-collector.
+# sampling_rate 1.0 keeps every trace; revisit only when query latency degrades.
+telemetry:
+  enabled: true
+  endpoint: "highflame-collector:4317"
+  insecure: true
+  sampling_rate: 1.0
+
+# Authentication settings
+# jwt_secret_key is read from HIGHFLAME_AUTH_JWT_SECRET_KEY env var (HS256 shared secret for auth codes)
+# jwt_private_key is read from HIGHFLAME_AUTH_JWT_PRIVATE_KEY env var (PEM RSA private key, signs RS256 access tokens)
+# jwt_public_key is read from HIGHFLAME_AUTH_JWT_PUBLIC_KEY env var (PEM RSA public key, verifies RS256 access tokens)
+auth:
+  required: true
+  jwt_secret_key: ""
+  jwt_private_key: ""
+  jwt_public_key: ""
+  providers:
+    # Generic OIDC (ADR 0033). There is deliberately NO clerk entry: Admin's
+    # newSessionVerifier picks a single provider and prefers clerk whenever it is
+    # present, so leaving one here — even with an empty secret — would mean this
+    # deployment silently tried to authenticate against a hosted identity
+    # provider it cannot reach. Its absence makes a misconfiguration fail closed.
+    #
+    # Named keycloak because that is what ships in this stack, but nothing here
+    # is Keycloak-specific: issuer plus audience plus discovery, so Entra, Okta
+    # and Ping work by changing these two values.
+    #
+    # audience is STUDIO'S client id, not something containing "admin". Keycloak
+    # puts the requesting client's id in the ID token's `aud`, and Studio sends
+    # the ID token as subject_token on the oidc_session grant.
+    keycloak:
+      type: oidc
+      config:
+        issuer: ${HIGHFLAME_OIDC_ISSUER}
+        audience: ${HIGHFLAME_OIDC_AUDIENCE}
+
+traces:
+  enabled: true
+  purge_after: 12 # Interval in hours to run the trace purging job.
+  older_than: 30 # Purge traces older than this many days.
+  # Change "kafka" to "redis" if you prefer Redis-based pubsub for traces
+  pubsub: "redis"
+
+feature_flag:
+  url: http://highflame-flag:1031/
+
+redteam:
+  backend_url: "http://highflame-redteam:8001/v1"
+
+authz:
+  base_url: "http://highflame-authz:8050"
+  timeout: 30
+
+shield:
+  base_url: "http://highflame-shield:8070/v1/shield"
+  timeout: 5
+
+authn:
+  base_url: ${HIGHFLAME_AUTHN_URL}
+  timeout: 30
+  # Shared internal-service secret. Admin attaches it as
+  # X-Internal-Service-Secret when proxying to authn's /api-keys,
+  # /downstream-tokens, etc. authn's InternalServiceAuth middleware
+  # rejects the call without it. Empty = dev mode (no check).
+  secret: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+
+# Multi-tenancy and tier management configuration
+tenancy:
+  # Default tier for new organizations
+  # Valid values: "free", "trial", "pro", "enterprise"
+  default_org_tier: "enterprise"
+
+  # Enable tier management API (set to true for local dev/SaaS, false for enterprise)
+  tier_management_enabled: true
+
+  # Bootstrap super-admins on startup. The value is the IdP SUBJECT — for
+  # Keycloak, the user's uuid, which this stack pins in the imported realm.
+  #
+  # Worth knowing what this does and does not do: it grants a row in
+  # user_global_roles, NOT a row in account_members. Admin's oidc_session grant
+  # authorizes the caller's account against account_members, so this alone does
+  # not let anyone log in on a fresh install. bootstrap/seed-tenant.sh creates
+  # the first membership; this only confers platform super-admin on top.
+  bootstrap_super_admins:
+    - "${HIGHFLAME_BOOTSTRAP_SUPER_ADMIN}"
+
+# LLM provider module
+llm_provider:
+  valid_provider_types:
+    - openai
+    - anthropic
+    - azure_openai
+    - aws_bedrock
+    - google
+    - groq
+    - mistral
+    - together
+    - ollama
+    - zai
+    - custom
+    # Canonical gateway names, accepted alongside the legacy spellings above.
+    # firehog matches a provider row by provider_type against the name the
+    # caller puts in `provider/model`, so a row written as `aws_bedrock` or
+    # `google` never matches the `bedrock` / `gemini` the gateway routes and is
+    # silently ignored. This list REPLACES the Go default map, so adding names
+    # in code alone has no effect.
+    - gemini
+    - azure
+    - bedrock
+    - deepseek
+    # x.ai (Grok) — served by the gateway's OpenAI-compatible fallback from the
+    # row's config.base_url (https://api.x.ai/v1). Listed here so rows created
+    # WITHOUT a base_url also validate once firehog ships a static default.
+    - xai

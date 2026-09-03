@@ -1,0 +1,51 @@
+# Highflame Authorization Service Configuration
+# Port where highflame-authz will listen (default: 8050)
+port: 8050
+
+# Environment (development, staging, production)
+env: development
+
+# Logging level (debug, info, warn, error)
+log_level: debug
+
+# Log output format — "json" (default, production) | "console" (local dev pretty-print)
+log_format: json
+
+# OTEL telemetry — exports traces + metrics to highflame-collector.
+# sampling_rate 1.0 keeps every trace; revisit when query latency degrades.
+telemetry:
+  enabled: true
+  endpoint: highflame-collector:4317
+  insecure: true
+  sampling_rate: 1.0
+
+# Database configuration
+# The Go app constructs database_url from individual env vars (no envsubst needed):
+# DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, AUTHZ_DB_NAME, DB_SSL_MODE
+
+# Connection pool settings
+max_open_conns: 25
+max_idle_conns: 5
+
+# ED25519 signing keys for audit proof
+private_key_path: /app/keys/private.key
+public_key_path: /app/keys/public.key
+
+# Cedar policies directory
+policies_dir: /app/policies
+
+# Default schema path
+default_schema_path: /app/config/default-schema.yaml
+
+# Graceful shutdown timeout in seconds
+shutdown_timeout_seconds: 30
+
+# Internal Service Authentication
+# Shared secret for verifying service-to-service calls from highflame-admin
+# Set via HIGHFLAME_INTERNAL_SERVICE_SECRET env var
+# In local dev, leave empty to skip verification (insecure, acceptable for development)
+
+# MCP (Model Context Protocol) Configuration
+mcp_enabled: true
+mcp_path_prefix: /mcp
+mcp_enable_graph_tools: false

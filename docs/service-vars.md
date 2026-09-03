@@ -11,12 +11,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_NAME` | Postgres database | `javelin_data` | -
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`REDIS_HOST` | Redis host | nil | -
-`REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
-`REDIS_USER` | Redis username | nil | -
-`REDIS_PASS` | Redis password | nil | -
-`REDIS_CACERT` | Redis cacert | `""` | -
 `AWS_KMS_KEY` | AWS KMS Key for secret manager enc | nil | optional
 `AWS_SECRET_REPLICATION_REGION` | AWS replication region | nil | optional
 `AWS_REPLICATION_KMS_KEY` | AWS KMS Key for secret manager enc in replication region | nil | optional
@@ -37,6 +31,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `MARKETPLACE_JWT_SECRET` | Highflame Marketplace secret | nil | -
 `HIGHFLAME_APP_URL` | Endpoint for studio service | nil | -
 `CLERK_PROXY_URL` | Highflame clerk proxy url - match with `NEXT_PUBLIC_CLERK_PROXY_URL` | nil | -
+`HIGHFLAME_SCIM_EXTERNAL_BASE_URL` | Next public scim url - must match with `NEXT_PUBLIC_SCIM_BASE_URL` from studio | nil | -
 
 ### highflame-authn
 
@@ -69,6 +64,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_AUDIENCE` | authn assertion resolver | `highflame-authn` | -
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_TRUSTED_ISSUERS` | authn assertion resolver trusted issuers | `[{"issuer":"highflame-studio","jwks_url":"http://highflame-studio:3000/.well-known/jwks.json"}]` | -
 `HIGHFLAME_ALLOW_UNSAFE_DEV_STUB` | enable / disable the unsafe dev attestation stub | `false` | `true` or `false`
+`HIGHFLAME_DEVICE_AUTH_VERIFICATION_URI` | Studio's /device consent screen | nil | -
 
 ### highflame-authz
 
@@ -324,6 +320,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_CLERK_PROXY_URL` | Highflame clerk proxy url - match with `CLERK_PROXY_URL` | nil | -
 `NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
 `NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | Pass the ARN principle for accessing the AWS bedrock connector | nil | -
+`NEXT_PUBLIC_SCIM_BASE_URL` | Next public scim url - must match with `HIGHFLAME_SCIM_EXTERNAL_BASE_URL` from admin | nil | -
 
 ### highflame-ramparts-server
 

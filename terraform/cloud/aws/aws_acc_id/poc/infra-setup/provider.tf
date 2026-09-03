@@ -3,31 +3,31 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.9.0"
+      version = "6.55.0"
     }
     time = {
       source  = "hashicorp/time"
-      version = "0.13.1"
+      version = "0.14.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.7.2"
+      version = "3.9.0"
     }
     null = {
       source  = "hashicorp/null"
-      version = "3.2.4"
+      version = "3.3.0"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "4.1.0"
+      version = "4.3.0"
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"
-      version = "2.3.7"
+      version = "2.4.0"
     }
     http = {
       source  = "hashicorp/http"
-      version = "3.5.0"
+      version = "3.6.0"
     }
   }
 

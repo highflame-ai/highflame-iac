@@ -1,0 +1,95 @@
+# Highflame OTEL Collector — Local Development Configuration
+# Receives OTLP traces → writes to local ClickHouse → Observatory reads.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        # Match app-config: grpc-go's 4 MiB default refuses a large Overwatch
+        # skill inventory outright (cerberus#133). Keep local parity so the
+        # failure cannot reproduce only in a deployed environment.
+        max_recv_msg_size_mib: 8
+        include_metadata: true
+      http:
+        endpoint: 0.0.0.0:4318
+        include_metadata: true
+        cors:
+          allowed_origins:
+            - "*"
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 2000
+    send_batch_max_size: 3000
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 256
+    spike_limit_mib: 64
+
+  resourcedetection:
+    detectors: [env, system]
+    timeout: 5s
+
+exporters:
+  clickhouse:
+    # Credentials are REQUIRED here. This config originally had none, which works
+    # only against a ClickHouse whose `default` user has no password — the state
+    # the local dev stack happens to leave it in. This stack sets a real user, so
+    # a credential-less exporter fails with
+    #   "default: Authentication failed: password is incorrect, or there is no
+    #    user with such name"
+    # and the collector crash-loops. An air-gapped deployment should not be
+    # relying on an unsecured database to make its telemetry work.
+    #
+    # ${env:...} is the OTel collector's own env syntax; compose supplies all
+    # three.
+    endpoint: ${env:CLICKHOUSE_ENDPOINT}
+    username: ${env:CLICKHOUSE_USER}
+    password: ${env:CLICKHOUSE_PASSWORD}
+    database: ${env:CLICKHOUSE_DATABASE}
+    traces_table_name: otel_traces_raw
+    create_schema: true
+    compress: lz4
+    timeout: 10s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 10s
+      max_elapsed_time: 60s
+    sending_queue:
+      enabled: true
+      num_consumers: 2
+      queue_size: 1000
+
+  debug:
+    verbosity: detailed
+    sampling_initial: 10
+    sampling_thereafter: 100
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [clickhouse]
+      # For debugging: exporters: [clickhouse, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [clickhouse]
+
+  telemetry:
+    logs:
+      level: debug
+    metrics:
+      level: detailed

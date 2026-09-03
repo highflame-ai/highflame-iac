@@ -1,0 +1,68 @@
+{
+  "realm": "highflame",
+  "enabled": true,
+  "displayName": "Highflame (evaluation)",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 3600,
+  "ssoSessionMaxLifespan": 36000,
+  "clients": [
+    {
+      "clientId": "highflame-studio",
+      "name": "Highflame Studio",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "REPLACE_ME_OIDC_CLIENT_SECRET",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "/*"
+      ],
+      "webOrigins": [
+        "REPLACE_ME_EXTERNAL_URL"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "/*"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "rootUrl": "REPLACE_ME_EXTERNAL_URL",
+      "baseUrl": "REPLACE_ME_EXTERNAL_URL",
+      "adminUrl": "REPLACE_ME_EXTERNAL_URL"
+    }
+  ],
+  "users": [
+    {
+      "id": "0f5d0c7e-26bd-437e-93d2-6ea988f1292e",
+      "username": "evaluator",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "evaluator@highflame.local",
+      "firstName": "Highflame",
+      "lastName": "Evaluator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "REPLACE_ME_EVALUATOR_PASSWORD",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-highflame"
+      ]
+    }
+  ]
+}

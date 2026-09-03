@@ -1,0 +1,55 @@
+# Firehog MCP Proxy - Docker local-deploy configuration
+shield:
+  enabled: true
+  url: "${HIGHFLAME_SHIELD_URL}"
+  # Refuse traffic Shield could not scan, rather than forwarding it.
+  #
+  # firehog defaults this to FALSE — a deliberate availability choice for the
+  # hosted product, where a Shield outage degrading to passthrough beats taking
+  # the customer's workload down. That default is wrong for this bundle, and it
+  # was observed being wrong: with an empty policy set Shield answered 500 and
+  # the gateway forwarded every prompt to the LLM unscanned, logging one WARN.
+  # A security proxy that silently becomes transparent is worse than one that
+  # is visibly down.
+  #
+  # This only works because the stack now seeds policies (see
+  # bootstrap/seed-policies.sh). Setting it without them would deny every
+  # request instead, since Cedar is default-deny.
+  fail_closed: true
+  timeout_seconds: 5
+  internal_secret: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+  service_name: highflame-firehog
+# OAuth JWT authentication for MCP clients (RFC 9728 / MCP spec 2025-06-18)
+# resource_url and authorization_server must be reachable from the MCP client (host machine).
+# jwks_url must be reachable from inside Docker (firehog validates JWTs internally).
+# jwks_url points at AuthN — admin no longer serves its own JWKS after
+# highflame-admin#1110. AuthN owns the shared RSA keypair (same files
+# mounted at /app/keys/jwt-{private,public}.pem) and serves the public
+# key at /.well-known/jwks.json (served at the auth host root after
+# highflame-architecture#117 Option B — AuthN dropped the /v1/auth prefix).
+oauth:
+  enabled: true
+  resource_url: "http://localhost:8090"
+  # EMA / ID-JAG (ADR 0010): the Authorization Server is ZeroID (AuthN) — that
+  # is where the client redeems an Okta ID-JAG for a Highflame token, and where
+  # the id-jag grant profile is advertised. Was http://localhost:3013 (Studio).
+  authorization_server: "http://localhost:8051"
+  jwks_url: "http://highflame-authn:8051/.well-known/jwks.json"
+  jwks_refresh_seconds: 300
+  # AuthN is the only token issuer (studio#1425 retired Studio's MCP mint).
+  jwt_issuer: "http://localhost:8051"
+
+# MCP server routing
+# Note: MCP servers running on the host (outside Docker) use host.docker.internal
+mcpServers:
+  local-everything:
+    url: http://host.docker.internal:3001
+    description: Local MCP Everything reference server
+  highflame-platform:
+    url: http://highflame-mcp:8110
+    description: Highflame platform debugging tools (k8s, Shield, Observatory)
+    # First-party, in-cluster MCP server — opt the full tool surface into
+    # passthrough. Without this field firehog's fail-closed filter drops
+    # every tool and clients only see the `highflame_gateway_info`
+    # placeholder. See highflame-firehog/src/config.rs::McpServerConfig::allowed_tools.
+    allowed_tools: ["*"]

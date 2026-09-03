@@ -1,0 +1,63 @@
+send_traces:
+  variations:
+    enabled: true
+  defaultRule:
+    variation: enabled
+
+profiler:
+  variations:
+    enabled: false
+  defaultRule:
+    variation: enabled
+
+send_traces_as_events:
+  variations:
+    enabled: true
+  defaultRule:
+    variation: enabled
+
+red_team_scan:
+  variations:
+    enabled: true
+  defaultRule:
+    variation: enabled
+
+guardian:
+  variations:
+    enabled: true
+  defaultRule:
+    variation: enabled
+
+palisade:
+  variations:
+    enabled: true
+  defaultRule:
+    variation: enabled
+
+internal_user:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Javelin Internal User
+      query: (flag_name in ["policy_template","file_attachment_policy","code_agents"])
+      variation: enabled
+  defaultRule:
+    variation: disabled
+
+whitelisted_hosts:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Javelin Host name
+      query: hostname in ["localhost"]
+      variation: enabled
+  defaultRule:
+    variation: disabled
+
+sandbox:
+  variations:
+    enabled: false
+  defaultRule:
+    variation: enabled

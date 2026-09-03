@@ -3,15 +3,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.9.0"
+      version = "6.55.0"
     }
     null = {
       source  = "hashicorp/null"
-      version = "3.2.4"
+      version = "3.3.0"
     }
     postgresql = {
       source  = "cyrilgdn/postgresql"
-      version = "1.25.0"
+      version = "1.27.0"
     }
   }
 
