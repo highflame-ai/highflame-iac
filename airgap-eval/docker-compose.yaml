@@ -141,14 +141,14 @@ services:
       # KC_HTTP_RELATIVE_PATH to the URLs it advertises. Setting the hostname
       # without /auth produced:
       #
-      #   advertised issuer: http://${HIGHFLAME_HOST_IP}/realms/highflame
-      #   issuer Admin pins: http://${HIGHFLAME_HOST_IP}/auth/realms/highflame
+      #   advertised issuer: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}/realms/highflame
+      #   issuer Admin pins: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}/auth/realms/highflame
       #
       # The server still SERVES under /auth (relative path handles routing), so
       # discovery fetches fine and everything looks healthy — but every login
       # fails issuer validation, which is the hardest version of this bug to
       # diagnose from the outside.
-      KC_HOSTNAME: http://${HIGHFLAME_HOST_IP}/auth
+      KC_HOSTNAME: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}/auth
       KC_HOSTNAME_STRICT: 'false'
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY_HEADERS: xforwarded
@@ -165,7 +165,8 @@ services:
       # invalid_client.
       - ./secrets/keycloak/highflame-realm.json:/opt/keycloak/data/import/highflame-realm.json:ro
     depends_on:
-      highflame-db: { condition: service_healthy }
+      highflame-db:
+        condition: service_healthy
     networks:
       - highflame-network
 
@@ -180,6 +181,8 @@ services:
       - "80:80"
     volumes:
       - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # - ./config/nginx/nginx-ssl.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl
     healthcheck:
       # 127.0.0.1, NOT localhost. Inside the container `localhost` resolves to
       # ::1 first, and nginx listens on IPv4 only where the host has IPv6
@@ -192,8 +195,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    networks:
-      highflame-network:
     depends_on:
       highflame-studio:
         condition: service_healthy
@@ -205,6 +206,8 @@ services:
         condition: service_healthy
       highflame-firehog:
         condition: service_healthy
+    networks:
+      highflame-network:
 
   highflame-flag:
     <<: *svc
@@ -347,7 +350,7 @@ services:
       # The audience is Studio's Keycloak CLIENT ID, not a name containing
       # "admin": Keycloak puts the requesting client's id in the ID token's
       # `aud`, and Studio sends the ID token as subject_token.
-      HIGHFLAME_OIDC_ISSUER: http://${HIGHFLAME_HOST_IP}/auth/realms/highflame
+      HIGHFLAME_OIDC_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}/auth/realms/highflame
       HIGHFLAME_OIDC_AUDIENCE: highflame-studio
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       HIGHFLAME_OBSERVATORY_URL: http://highflame-observatory:8090
@@ -649,19 +652,19 @@ services:
       # the image tag, so this file says which IdP the stack uses — and so the
       # image below is an ordinary Studio image rather than a special build.
       HIGHFLAME_AUTH_PROVIDER: oidc
-      OIDC_ISSUER: http://${HIGHFLAME_HOST_IP}/auth/realms/highflame
+      OIDC_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}/auth/realms/highflame
       OIDC_CLIENT_ID: highflame-studio
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?set OIDC_CLIENT_SECRET in .env (must match the realm)}
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
-      AUTH_URL: http://${HIGHFLAME_HOST_IP}
+      AUTH_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}
       AUTH_TRUST_HOST: 'true'
       # Matches ssoSessionMaxLifespan in config/keycloak/highflame-realm.json.
       # Studio's own default is longer, which would leave a browser holding a
       # session after Keycloak had already ended it — the id_token refresh is
       # what would quietly start failing. Change both together or neither.
       OIDC_SESSION_MAX_AGE_SECONDS: '36000'
-      NEXT_PUBLIC_APP_URL: http://${HIGHFLAME_HOST_IP}
-      NEXT_PUBLIC_FIREHOG_URL: http://${HIGHFLAME_HOST_IP}/gateway
+      NEXT_PUBLIC_APP_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}
+      NEXT_PUBLIC_FIREHOG_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}/gateway
       # Empty means SAME-ORIGIN: the browser issues relative /v1/admin/...
       # requests against Studio's own host and nginx routes them to Admin.
       # This is the value dev1 and prod ship (k8s-deploy/*/highflame-studio),
