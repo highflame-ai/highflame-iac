@@ -479,7 +479,7 @@ services:
       - ./config/cerberus/config.yaml:/app/config.yaml
       - ./secrets/keys/rsa-public.pem:/app/keys/rsa-public.pem:ro
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/healthz"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/livez"]
       interval: 5s
       timeout: 10s
       retries: 3
