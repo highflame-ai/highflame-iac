@@ -661,6 +661,7 @@ services:
       # what would quietly start failing. Change both together or neither.
       OIDC_SESSION_MAX_AGE_SECONDS: '36000'
       NEXT_PUBLIC_APP_URL: http://${HIGHFLAME_HOST_IP}
+      NEXT_PUBLIC_FIREHOG_URL: http://${HIGHFLAME_HOST_IP}/gateway
       # Empty means SAME-ORIGIN: the browser issues relative /v1/admin/...
       # requests against Studio's own host and nginx routes them to Admin.
       # This is the value dev1 and prod ship (k8s-deploy/*/highflame-studio),
