@@ -338,6 +338,7 @@ services:
       HIGHFLAME_OIDC_ISSUER: http://${HIGHFLAME_HOST_IP}/auth/realms/highflame
       HIGHFLAME_OIDC_AUDIENCE: highflame-studio
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
+      HIGHFLAME_OBSERVATORY_URL: http://highflame-observatory:8090
       # Platform super-admin, by IdP subject. This is the uuid pinned for the
       # evaluator in the imported realm — the same one seed-tenant.sh uses.
       #
