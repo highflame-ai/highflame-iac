@@ -1,0 +1,36 @@
+server:
+  port: 8082
+  read_timeout: 30s
+  write_timeout: 60s
+  shutdown_timeout: 15s
+
+auth:
+  jwt_public_key: /app/keys/jwt-public.pem
+
+authn:
+  url: http://highflame-authn:8051
+
+# Upstream Shield. The `internal_secret` blank below is overridden at
+# runtime from HIGHFLAME_INTERNAL_SERVICE_SECRET (same secret Admin uses).
+shield:
+  url: http://highflame-shield:8070/v1/shield
+  internal_secret: ""
+  service_name: highflame-cerberus
+  timeout: 30s
+  retries: 3
+
+admin:
+  url: http://highflame-admin:8040
+  timeout: 5s
+  token_cache_ttl: 14m
+
+logging:
+  level: debug
+  format: json
+
+telemetry:
+  enabled: true
+  sampling_rate: 1.0
+
+hook:
+  eval_timeout: 3s

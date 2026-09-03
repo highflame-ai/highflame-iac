@@ -445,6 +445,45 @@ services:
     networks:
       - highflame-network
 
+  # --------------------------------------------------------------------------
+  # Cerberus
+  # --------------------------------------------------------------------------
+  highflame-cerberus:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-cerberus:${HIGHFLAME_CERBERUS_VERSION:-latest}
+    container_name: highflame-cerberus
+    ports:
+      - "8082:8082"
+    environment:
+      HIGHFLAME_AUTH_JWT_PUBLIC_KEY: "/app/keys/jwt-public.pem"
+      HIGHFLAME_ADMIN_URL: http://highflame-admin:8040
+      HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
+      HIGHFLAME_SHIELD_URL: "http://highflame-shield:8070/v1/shield"
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: "${HIGHFLAME_INTERNAL_SERVICE_SECRET}"
+      HIGHFLAME_SHIELD_SERVICE_NAME: "highflame-cerberus"
+      OTEL_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://highflame-collector:4317"
+    volumes:
+      - ./configs/cerberus/config.yaml:/app/config.yaml
+      - ./secrets/authz-keys/jwt-public.pem:/app/keys/jwt-public.pem:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/healthz"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      highflame-admin:
+        condition: service_healthy
+      highflame-authn:
+        condition: service_healthy
+      highflame-shield:
+        condition: service_healthy
+      highflame-collector:
+        condition: service_started
+    networks:
+      - highflame-network
+
   highflame-observatory:
     <<: *svc
     image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-observatory:${HIGHFLAME_OBS_VERSION:-latest}
