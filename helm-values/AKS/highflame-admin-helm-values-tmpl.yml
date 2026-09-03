@@ -61,19 +61,11 @@ volumes:
     secret:
       secretName: highflame-license
       optional: false
-  # - name: redis-cert-volume
-  #   secret:
-  #     secretName: highflame-redis-cert
-  #     optional: false
 
 volumeMounts:
   - name: license-volume
     mountPath: "/app/license"
     readOnly: true
-  # - name: redis-cert-volume
-  #   mountPath: "/app/certs/redis-ca.pem"
-  #   readOnly: true
-  #   subPath: redis-ca.pem
 
 serviceAccount:
   create: true

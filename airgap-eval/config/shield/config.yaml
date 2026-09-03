@@ -1,0 +1,259 @@
+deployment:
+  type: dev  # can be 'dev' or 'prod'
+
+# Port where highflame-shield will listen (default: 8070)
+server:
+  port: 8070
+  readHeaderTimeout: 5
+
+  transport:
+    maxIdleConns: 1000
+    maxIdleConnsPerHost: 1000
+    maxConnsPerHost: 1000
+    idleConnTimeout: 300
+    dialTimeout: 50
+    keepAlive: 50
+
+admin:
+  url: http://highflame-admin:8040
+
+authz:
+  url: http://highflame-authz:8050
+  policy_sync_interval_seconds: 30
+  enable_policy_cache: true
+
+eval:
+  url: http://highflame-eval:8009
+
+feature_flag:
+  url: http://highflame-flag:1031
+
+scheduler:
+  tier_timeout:
+    fast: 500ms
+    standard: 10s
+    slow: 15s
+
+detectors:
+  builtin:
+    # Temporarily off: fires on 115 of 1,227 benign developer payloads and its
+    # score does not separate attacks from normal work. Re-enable once the
+    # pattern breadth is fixed. See highflame-shield#386.
+    command_injection:
+      enabled: false
+  ml:
+    injection:
+      # base_url: env var HIGHFLAME_GUARD_URL
+      api_path: "/v1/internal/guard/predict"
+      timeout: 10s
+      circuit_breaker:
+        max_failures: 5
+        timeout: 30s
+        half_open_max_requests: 3
+    toxicity:
+      # base_url: env var HIGHFLAME_GUARD_CM_URL
+      api_path: "/v1/internal/guard-cm/predict"
+      timeout: 10s
+      circuit_breaker:
+        max_failures: 5
+        timeout: 30s
+        half_open_max_requests: 3
+    # sentiment: service deprecated, removed.
+    deepcontext:
+      # base_url: env var HIGHFLAME_GUARD_DEEPCONTEXT_URL
+      api_path: "/v1/internal/guard-deepcontext/predict"
+      timeout: 30s
+      circuit_breaker:
+        max_failures: 5
+        timeout: 30s
+        half_open_max_requests: 3
+    pii_model:
+      # base_url: env var HIGHFLAME_GUARD_PII_URL
+      api_path: "/v1/internal/guard-pii/predict"
+      timeout: 3s
+      circuit_breaker:
+        max_failures: 5
+        timeout: 30s
+        half_open_max_requests: 3
+
+  cloud:
+    dlp:
+      endpoint: ""
+      api_key: ""
+      project_id: ""
+      timeout: 5s
+    content_safety:
+      endpoint: ""
+      api_key: ""
+      timeout: 5s
+    # Phishing pre-screen: DISABLED. Left enabled it tries to load a bloom filter
+    # from S3, which means an AWS instance-metadata call to 169.254.169.254 for
+    # credentials. Observed in this stack:
+    #
+    #   phish_db: Put "http://169.254.169.254/latest/api/token":
+    #             dial tcp 169.254.169.254:80: connect: network is unreachable
+    #
+    # Harmless here only because the internal network has no route. On any host
+    # with egress it would reach for AWS. Worth noting that verify/no-egress.sh
+    # does NOT catch this: 169.254.0.0/16 is link-local, which the check
+    # deliberately classifies as non-external.
+    phishing:
+      enabled: false
+      endpoint: ""
+      api_key: ""
+      timeout: 5s
+      bloom:
+        # Blanked deliberately. The SaaS config names a Google Cloud Storage
+        # bucket here, and a reviewer grepping this file for cloud references
+        # will find it — reasonably concluding the phishing detector fetches a
+        # bloom filter from GCS. The endpoint above is empty so it is inert, but
+        # "inert" is a weaker statement than "there is nothing to reach".
+        bucket_name: ""
+        object_name: ""
+
+refresh_secrets_on_401: true
+
+# Google Cloud Model Armor, disabled. Same reasoning as the bloom bucket: this
+# names a hosted GCP service and a region, which is exactly what an air-gap
+# review looks for. Left present-but-blank rather than deleted so the shape of
+# the config still matches the SaaS one it was derived from.
+model_armor:
+  location: ""
+  template: ""
+
+# Error reporting is OFF. An empty dsn makes the Sentry SDK inert; it is hard-coded
+# empty rather than left as ${SENTRY_DSN} so there is no environment variable that
+# could switch on egress to a third party. verify/no-egress.sh checks for
+# sentry.io in the resolved configuration.
+sentry:
+  dsn: ""
+  debug: false
+  environment: airgap-eval
+  enabled: false
+
+system:
+  default_guardrail_response_code: 200
+  default_embedding_response_code: 400
+  default_streaming_response_code: 200
+  model_spec_path: /app/modelspec/providers
+  yara_rules_path: /app/yara_rules
+  plugin_path: /app/plugins
+  bypass_guardrails_for_streaming: false
+  auto_provision_application: true
+
+cache:
+  type: redis
+  host: highflame-redis
+  port: 6379
+  tls: false
+  cacertpath: ""
+
+messaging:
+  provider: redis
+  config:
+    host: highflame-redis
+    port: 6379
+    dlqtopic: "_dlq"
+    maxsize: 10000
+
+archive:
+  host: http://archive
+  port: 8010
+
+llm-cache:
+  host: http://highflame-llmcache
+  port: 8100
+
+log:
+  level: "debug"
+
+profiler:
+  project_id: highflame-shield
+  service: highflame-shield
+  heap_profiling: true
+  alloc_profiling: true
+  goroutine_profiling: true
+  debug_logging: true
+
+gateway:
+  gateway_id: sanjose
+  account_id: 12345678
+  namespace: localhost-namespace
+  request_chain:
+    name: sys-preprod-reqchain
+    path: request_chain
+    version: 1.1.2
+    description: Pre-production request processor chain
+    workflow:
+      exec_mode: sequential
+      processors:
+        - exec_mode: parallel
+          processors:
+            - name: Rate Limiter
+              reference: ratelimit
+              will_block: true
+            - name: Sensitive Data Protection
+              reference: dlp_gcp
+              will_block: true
+            - name: Prompt Injection Detection
+              reference: promptinjectiondetection
+              will_block: true
+              inputs:
+                engine: javelin
+        - exec_mode: parallel
+          processors:
+            - name: Secrets
+              reference: secrets
+              will_block: true
+
+  response_chain:
+    name: sys-preprod-respchain
+    path: response_chain
+    version: 1.1.2
+    description: Pre-production response processor chain
+    workflow:
+      exec_mode: sequential
+      processors:
+        - name: Trust & Safety
+          reference: trustsafety
+          will_block: true
+          inputs:
+            engine: javelin
+        - name: Response Telemetry
+          reference: response
+          will_block: true
+
+traces:
+  enabled: true
+  publish: true
+
+telemetry:
+  enabled: true
+  endpoint: "highflame-collector:4317"
+  sampling_rate: 1.0
+  insecure: true
+
+redis:
+  addr: highflame-redis:6379
+  db: 0
+  pool_size: 20
+  session_ttl: 24h
+
+auth:
+  # No unkey_root_key / unkey_api_id here. Those keys exist in the SaaS config and
+  # name a HOSTED api-key service, but nothing in highflame-shield reads them —
+  # confirmed by grepping the repo for the field names, which returns no Go
+  # references. They are dropped rather than blanked, because a reviewer reading
+  # `unkey_root_key` in an air-gapped config reasonably concludes this deployment
+  # calls out to a third party. API keys and JWTs are both validated locally,
+  # against AuthN's JWKS below.
+  jwks_url: http://highflame-authn:8051/.well-known/jwks.json
+  jwt_issuer: ${HIGHFLAME_AUTH_JWT_ISSUER}
+  internal_secret: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+  models_secret: ${HIGHFLAME_MODELS_SECRET}
+  allowed_services:
+    - highflame-firehog
+    - highflame-mcp
+    - highflame-studio
+    - highflame-admin
+    - highflame-cerberus

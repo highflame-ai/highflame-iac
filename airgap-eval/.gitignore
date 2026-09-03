@@ -1,0 +1,18 @@
+# Everything bootstrap.sh generates. None of this belongs in git.
+#
+# .env holds every secret for the stack; secrets/ holds the rendered Keycloak
+# realm (which embeds the client secret and the evaluator password) and the AuthN
+# RS256 keypair.
+.env
+secrets/
+
+# Output of verify/no-egress.sh. Meant to be handed to a security reviewer, not
+# committed — it records hostnames and container names for a specific run.
+egress-report.txt
+*.report.txt
+
+# Offline image bundles produced by bundle/save-images.sh.
+*.tar
+*.tar.zst
+*.tar.gz
+*.sha256

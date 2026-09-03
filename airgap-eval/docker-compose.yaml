@@ -1,0 +1,635 @@
+# Highflame air-gapped evaluation stack.
+# One dependency: Docker with Compose v2.
+
+name: highflame-airgap-eval
+
+x-svc: &svc
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: '20m'
+      max-file: '5'
+
+networks:
+  highflame-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  clickhouse-data:
+  redis-data:
+  authn-secrets:
+
+services:
+  # --------------------------------------------------------------------------
+  # Data tier
+  # --------------------------------------------------------------------------
+  highflame-db:
+    <<: *svc
+    image: pgvector/pgvector:pg17
+    container_name: highflame-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-highflame}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-javelin_data}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Creates the per-service databases and seeds the evaluator's
+      # account_members row, so the first login authorizes with no manual SQL.
+      - ./config/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-U", "${POSTGRES_USER:-highflame}", "-d", "${POSTGRES_DB:-highflame}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - highflame-network
+
+  highflame-redis:
+    <<: *svc
+    image: redis:7.2
+    container_name: highflame-redis
+    ports:
+      - "6379:6379"
+    restart: on-failure
+    networks:
+      - highflame-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  highflame-clickhouse:
+    <<: *svc
+    image: clickhouse/clickhouse-server:25.10.2
+    container_name: highflame-clickhouse
+    ports:
+      - "8123:8123"   # HTTP interface
+      - "9000:9000"   # Native protocol
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-highflame}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?set CLICKHOUSE_PASSWORD in .env}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-highflame}
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      # Bind to IPv4. The image's default binds the IPv6 wildcard, which fails
+      # every listener on a host with IPv6 disabled — see the file for the full
+      # symptom, which presents as "the whole stack is broken".
+      - ./config/clickhouse/listen.xml:/etc/clickhouse-server/config.d/listen.xml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --query 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - highflame-network
+
+  # --------------------------------------------------------------------------
+  # Identity. Keycloak replaces Clerk entirely — nothing here reaches a hosted
+  # identity provider (ADR 0033).
+  # --------------------------------------------------------------------------
+  highflame-keycloak:
+    <<: *svc
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: highflame-keycloak
+    ports:
+      - "8080:8080"
+    command: ['start-dev', '--import-realm']
+    # Two services wait on this with `condition: service_healthy`, and the
+    # service defined no healthcheck — which docker rejects outright with
+    # "has no healthcheck configured", so the stack could not start at all.
+    #
+    # This image ships neither curl nor wget, and the management port (9000)
+    # is closed because KC_HEALTH_ENABLED is not set. It does ship bash, so the
+    # check is a bare HTTP request over /dev/tcp.
+    #
+    # It asks for the realm's discovery document rather than just probing the
+    # port: a Keycloak that is listening but whose realm import failed is not
+    # useful to anything downstream, and that is exactly the state the
+    # dependents must not start into.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080 &&
+          printf 'GET /auth/realms/highflame/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          head -1 <&3 | grep -q '200'
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_HTTP_ENABLED: 'true'
+      # Pins the issuer and every browser-facing URL to the single external
+      # origin. Without this Keycloak derives them from the request host, so the
+      # `iss` claim changes depending on who asked — which Admin rejects.
+      # The path MUST be part of KC_HOSTNAME. When KC_HOSTNAME is a full URL,
+      # Keycloak 26 takes its path from that URL and does NOT append
+      # KC_HTTP_RELATIVE_PATH to the URLs it advertises. Setting the hostname
+      # without /auth produced:
+      #
+      #   advertised issuer: http://${HIGHFLAME_HOST_IP}/realms/highflame
+      #   issuer Admin pins: http://${HIGHFLAME_HOST_IP}/auth/realms/highflame
+      #
+      # The server still SERVES under /auth (relative path handles routing), so
+      # discovery fetches fine and everything looks healthy — but every login
+      # fails issuer validation, which is the hardest version of this bug to
+      # diagnose from the outside.
+      KC_HOSTNAME: http://${HIGHFLAME_HOST_IP}/auth
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY_HEADERS: xforwarded
+      KC_DB: postgres
+      KC_DB_URL_HOST: highflame-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-highflame}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # The RENDERED realm, not the template under config/. bootstrap.sh writes
+      # this from the same generated values it puts in .env, so the client secret
+      # here and the one Studio sends cannot drift. Mounting the template would
+      # import literal REPLACE_ME_ placeholders and fail much later as
+      # invalid_client.
+      - ./secrets/keycloak/highflame-realm.json:/opt/keycloak/data/import/highflame-realm.json:ro
+    depends_on:
+      highflame-db: { condition: service_healthy }
+    networks:
+      - highflame-network
+
+  # --------------------------------------------------------------------------
+  # Ingress. The only way in, and one of only two services with a route out.
+  # --------------------------------------------------------------------------
+  highflame-nginx:
+    <<: *svc
+    image: nginx:1.27.0-alpine
+    container_name: highflame-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      # 127.0.0.1, NOT localhost. Inside the container `localhost` resolves to
+      # ::1 first, and nginx listens on IPv4 only where the host has IPv6
+      # disabled — so this probed IPv6 against an IPv4 listener and reported
+      # unhealthy forever while nginx served every request fine. Same trap as
+      # ClickHouse's healthcheck, on the one service an evaluator actually looks
+      # at, where "unhealthy" reads as a broken product.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:80/healthz"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      highflame-network:
+    depends_on:
+      highflame-studio:
+        condition: service_healthy
+      highflame-keycloak:
+        condition: service_healthy
+      highflame-admin:
+        condition: service_healthy
+      highflame-observatory:
+        condition: service_healthy
+      highflame-firehog:
+        condition: service_healthy
+
+  highflame-flag:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-flag:${HIGHFLAME_FLAG_VERSION:-latest}
+    container_name: highflame-flag
+    restart: on-failure
+    environment:
+      GOFF_SWAGGER_ENABLE: "true"
+    ports:
+      - "1031:1031"
+    volumes:
+      - ./config/flag/goff.yaml:/goff/config/goff.yaml
+    healthcheck:
+      # curl, not wget: this image ships curl and no wget, so the wget form
+      # could never pass. The service was healthy the whole time while Docker
+      # reported it unhealthy forever — which blocks everything that
+      # depends_on it with service_healthy, i.e. Admin and Studio.
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:1031/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - highflame-network
+
+  highflame-authn:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-authn:${HIGHFLAME_AUTHN_VERSION:-latest}
+    container_name: highflame-authn
+    ports:
+      - "8051:8051"
+    environment:
+      DB_HOST: highflame-db
+      DB_USERNAME: ${POSTGRES_USER:-highflame}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: highflame-redis
+      HIGHFLAME_AUTH_JWT_SECRET_KEY: ${HIGHFLAME_AUTH_JWT_SECRET_KEY:?set HIGHFLAME_AUTH_JWT_SECRET_KEY in .env}
+      HIGHFLAME_TOKEN_ENCRYPTION_KEY: ${HIGHFLAME_TOKEN_ENCRYPTION_KEY:?set HIGHFLAME_TOKEN_ENCRYPTION_KEY in .env}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?set HIGHFLAME_INTERNAL_SERVICE_SECRET in .env}
+      HIGHFLAME_RSA_PRIVATE_KEY_PATH: /app/keys/rsa-private.pem
+      HIGHFLAME_RSA_PUBLIC_KEY_PATH: /app/keys/rsa-public.pem
+      HIGHFLAME_RSA_KEY_ID: v1
+      HIGHFLAME_SECRETS_BACKEND: file
+      HIGHFLAME_SECRETS_FILE_PATH: /var/lib/highflame-authn/secrets
+      HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS: 'true'
+    volumes:
+      - ./config/authn/config.yaml:/app/config.yaml:ro
+      - ./secrets/keys:/app/keys:ro
+      # AuthN's managed secret store. It runs as uid 10000 and cannot create a
+      # directory at the container root, so without this volume it dies with
+      # "secretstore: create file store dir: mkdir /var/lib/highflame-authn:
+      # permission denied" — after completing its migrations, which makes it look
+      # like a late runtime fault rather than a missing mount.
+      - authn-secrets:/var/lib/highflame-authn/secrets
+    depends_on:
+      highflame-db:
+        condition: service_healthy
+    networks:
+      - highflame-network
+
+  # --------------------------------------------------------------------------
+  # Policy. Shield pulls its Cedar policies from here every 30s; without it
+  # Shield starts with an empty policy set and enforces nothing, while logging
+  # only a warning ("policy sync failed, keeping cached policies") that is easy
+  # to miss. Omitting this service was the difference between demonstrating a
+  # policy engine and demonstrating a proxy.
+  # --------------------------------------------------------------------------
+  highflame-authz:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-authz:${HIGHFLAME_AUTHZ_VERSION:-latest}
+    container_name: highflame-authz
+    ports:
+      - "8050:8050"
+    environment:
+      DB_HOST: highflame-db
+      DB_USERNAME: ${POSTGRES_USER:-highflame}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      AUTHZ_DB_NAME: ${POSTGRES_DB:-javelin_data}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+    volumes:
+      - ./config/authz/config.yaml:/app/config.yaml:ro
+      # ED25519 keys for signing policy audit proofs, generated by bootstrap.sh.
+      - ./secrets/authz-keys:/app/keys:ro
+    depends_on:
+      highflame-db:
+        condition: service_healthy
+      highflame-flag:
+        condition: service_healthy
+    networks:
+      - highflame-network
+
+  # --------------------------------------------------------------------------
+  # Control plane
+  # --------------------------------------------------------------------------
+  highflame-admin:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-admin:${HIGHFLAME_ADMIN_VERSION:-latest}
+    container_name: highflame-admin
+    # 127.0.0.1, not localhost: several of these images resolve localhost
+    # to ::1 first while the server binds IPv4 only, which reports a
+    # perfectly healthy service as unhealthy forever.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8040/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    ports:
+      - "8040:8040"
+    environment:
+      POSTGRES_HOST: highflame-db
+      POSTGRES_USER: ${POSTGRES_USER:-highflame}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      HIGHFLAME_AUTH_JWT_SECRET_KEY: ${HIGHFLAME_AUTH_JWT_SECRET_KEY}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+      # No JWT key paths here, deliberately. I added them after seeing Admin
+      # answer 401 {"error":"Invalid token"} and concluded it could not verify
+      # the RS256 tokens it mints. That diagnosis was wrong: Admin expects the
+      # IDENTITY PROVIDER's session token on its own API (verified against the
+      # OIDC provider's JWKS), while the RS256 token it mints is for downstream
+      # services — Shield, Observatory, firehog. I had simply sent the wrong
+      # credential. Removing the mount changed nothing, which is how it was
+      # confirmed. Recorded so nobody re-adds it chasing the same 401.
+      # ADR 0033: Admin selects the `oidc` verifier from config.yaml's
+      # auth.providers. There is no Clerk entry, so there is nothing to fall back
+      # to — a misconfiguration fails closed rather than reaching Clerk.
+      #
+      # The audience is Studio's Keycloak CLIENT ID, not a name containing
+      # "admin": Keycloak puts the requesting client's id in the ID token's
+      # `aud`, and Studio sends the ID token as subject_token.
+      HIGHFLAME_OIDC_ISSUER: http://${HIGHFLAME_HOST_IP}/auth/realms/highflame
+      HIGHFLAME_OIDC_AUDIENCE: highflame-studio
+      HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
+      # Platform super-admin, by IdP subject. This is the uuid pinned for the
+      # evaluator in the imported realm — the same one seed-tenant.sh uses.
+      #
+      # It grants a user_global_roles row, NOT an account_members row, so it does
+      # not by itself make login work: Admin's oidc_session grant authorizes
+      # against account_members. seed-tenant.sh handles that half.
+      HIGHFLAME_BOOTSTRAP_SUPER_ADMIN: ${HIGHFLAME_EVALUATOR_SUB:-0f5d0c7e-26bd-437e-93d2-6ea988f1292e}
+    volumes:
+      - ./config/admin/config.yaml:/app/config.yaml.template:ro
+    depends_on:
+      highflame-db: 
+        condition: service_healthy
+      highflame-flag: 
+        condition: service_healthy
+    networks:
+      - highflame-network
+
+  highflame-shield:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-shield:${HIGHFLAME_SHIELD_VERSION:-latest}
+    container_name: highflame-shield
+    # 127.0.0.1, not localhost: several of these images resolve localhost
+    # to ::1 first while the server binds IPv4 only, which reports a
+    # perfectly healthy service as unhealthy forever.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8070/livez"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    ports:
+      - "8070:8070"
+    environment:
+      POSTGRES_HOST: highflame-db
+      POSTGRES_USER: ${POSTGRES_USER:-highflame}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: highflame-redis
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+      # Issuer Shield expects on the RS256 tokens Admin mints. Must match what
+      # AuthN actually stamps, or every authenticated request to Shield fails
+      # issuer validation — the same class of mismatch as the Keycloak `iss`
+      # problem, one layer in.
+      HIGHFLAME_AUTH_JWT_ISSUER: ${HIGHFLAME_AUTH_JWT_ISSUER:-http://highflame-authn:8051}
+      # Shared secret for the Shield -> detector-model calls. Local-only here,
+      # since the models run in this stack.
+      HIGHFLAME_MODELS_SECRET: ${HIGHFLAME_MODELS_SECRET}
+      # ML detector endpoints, pointed at in-stack names that DO NOT EXIST in
+      # this deployment. That is deliberate, and the reasoning matters more than
+      # it looks.
+      #
+      # This stack ships without the four model servers (guard, guard-cm,
+      # guard-pii, guard-deepcontext) — they are large, GPU-shaped, and not
+      # required to evaluate the platform. Shield therefore runs with its ML
+      # detectors unavailable. Its heuristic detectors and Cedar policy
+      # enforcement are unaffected; see the README for exactly what that leaves.
+      #
+      # They are set rather than UNSET on purpose. Shield takes these base URLs
+      # only from the environment — there is no hosted default in config.yaml —
+      # but an empty base_url has unverified behaviour, whereas a name that
+      # cannot resolve is guaranteed never to reach anything. Failure-closed by
+      # construction: no value here could ever send prompt content off the box.
+      #
+      # Shield's circuit breakers (5 failures, 30s) short these out quickly, so
+      # the cost is log noise, not a per-request stall.
+      HIGHFLAME_GUARD_URL: ${HIGHFLAME_GUARD_URL:-http://highflame-guard.disabled.invalid:8013}
+      HIGHFLAME_GUARD_CM_URL: ${HIGHFLAME_GUARD_CM_URL:-http://highflame-guard-cm.disabled.invalid:8014}
+      HIGHFLAME_GUARD_PII_URL: ${HIGHFLAME_GUARD_PII_URL:-http://highflame-guard-pii.disabled.invalid:8018}
+      HIGHFLAME_GUARD_DEEPCONTEXT_URL: ${HIGHFLAME_GUARD_DEEPCONTEXT_URL:-http://highflame-guard-deepcontext.disabled.invalid:8022}
+    volumes:
+      - ./config/shield/config.yaml:/app/config.yaml:ro
+    depends_on:
+      highflame-db:
+        condition: service_healthy
+      highflame-redis: 
+        condition: service_healthy
+    networks:
+      - highflame-network
+
+  # --------------------------------------------------------------------------
+  # Telemetry
+  # --------------------------------------------------------------------------
+  highflame-collector:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-collector:${HIGHFLAME_COLLECTOR_VERSION:-latest}
+    container_name: highflame-collector
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "13133:13133" # Health check
+    environment:
+      # The image's baked-in default config points at a KUBERNETES service name
+      # (clickhouse-javelin-ch.clickhouse.svc.cluster.local). With no config
+      # mounted the collector resolves that, fails, and exits — so the mount below
+      # is required, not optional. These two are what the config reads.
+      CLICKHOUSE_ENDPOINT: tcp://highflame-clickhouse:9000
+      CLICKHOUSE_DATABASE: ${CLICKHOUSE_DB:-highflame}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-highflame}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    volumes:
+      - ./config/collector/config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on:
+      highflame-clickhouse:
+        condition: service_healthy
+    networks:
+      - highflame-network
+
+  highflame-observatory:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-observatory:${HIGHFLAME_OBS_VERSION:-latest}
+    container_name: highflame-observatory
+    # 127.0.0.1, not localhost: several of these images resolve localhost
+    # to ::1 first while the server binds IPv4 only, which reports a
+    # perfectly healthy service as unhealthy forever.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8090/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    ports:
+      - "8091:8090"
+    environment:
+      CLICKHOUSE_HOST: highflame-clickhouse
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-highflame}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+    volumes:
+      - ./config/observatory/config.yaml:/app/config.yaml:ro
+    depends_on:
+      highflame-clickhouse:
+        condition: service_healthy
+    networks:
+      - highflame-network
+
+  # --------------------------------------------------------------------------
+  # Data plane. The ONLY service besides nginx with a route off this box, because
+  # it has to reach the LLM you point it at. Set HIGHFLAME_LLM_BASE_URL to your
+  # own internal endpoint (vLLM, TGI, Bedrock-in-VPC, Azure OpenAI, …) — the
+  # evaluation never needs a public LLM.
+  # --------------------------------------------------------------------------
+  highflame-firehog:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-firehog:${HIGHFLAME_FIREHOG_VERSION:-latest}
+    container_name: highflame-firehog
+    # 127.0.0.1, not localhost: several of these images resolve localhost
+    # to ::1 first while the server binds IPv4 only, which reports a
+    # perfectly healthy service as unhealthy forever.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    ports:
+      - "8090:8080"
+    environment:
+      HIGHFLAME_SHIELD_URL: http://highflame-shield:8070/v1/shield
+      HIGHFLAME_ADMIN_URL: http://highflame-admin:8040
+      HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
+      ADMIN_API_URL: http://highflame-admin:8040
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
+      # Where the gateway sends traffic, and the single most important block in
+      # this file for an air-gapped evaluation.
+      #
+      # firehog carries a COMPILED-IN provider table, and every entry defaults to
+      # a public endpoint — api.openai.com, api.anthropic.com,
+      # generativelanguage.googleapis.com, api.groq.com, api.mistral.ai,
+      # api.together.xyz, api.deepseek.com, api.x.ai, open.bigmodel.cn. Each is
+      # overridable by its own env var (the binary calls this base_url_env), and
+      # unset means the default applies.
+      #
+      # Two consequences worth being blunt about:
+      #
+      #   - Those defaults live in the binary, so they appear in NO config file
+      #     and verify/no-egress.sh cannot see them. A check that reads
+      #     configuration will report a clean run on a stack whose gateway is one
+      #     `openai/gpt-4` request away from posting a prompt to OpenAI.
+      #   - firehog is deliberately the one service with a route out, so unlike
+      #     the rest of the stack these attempts are not stopped by the network.
+      #
+      # So every provider is pinned here rather than left to default. The one you
+      # actually use points at your endpoint; the other thirteen point at a name
+      # that cannot resolve, which is failure-closed by construction rather than
+      # by remembering not to use them.
+      #
+      # HIGHFLAME_LLM_BASE_URL feeds the OpenAI-compatible entry, because that is
+      # what vLLM, TGI, Ollama's compat endpoint and most self-hosted servers
+      # speak. Override any individual one if you need a different shape.
+      OPENAI_BASE_URL: ${HIGHFLAME_OPENAI_BASE_URL:-${HIGHFLAME_LLM_BASE_URL:?set HIGHFLAME_LLM_BASE_URL to your internal LLM endpoint}}
+      OLLAMA_BASE_URL: ${HIGHFLAME_OLLAMA_BASE_URL:-${HIGHFLAME_LLM_BASE_URL}}
+      ANTHROPIC_BASE_URL: ${HIGHFLAME_ANTHROPIC_BASE_URL:-http://anthropic.disabled.invalid/v1}
+      GEMINI_BASE_URL: ${HIGHFLAME_GEMINI_BASE_URL:-http://gemini.disabled.invalid/v1}
+      VERTEX_BASE_URL: ${HIGHFLAME_VERTEX_BASE_URL:-http://vertex.disabled.invalid/v1}
+      GROQ_BASE_URL: ${HIGHFLAME_GROQ_BASE_URL:-http://groq.disabled.invalid/v1}
+      MISTRAL_BASE_URL: ${HIGHFLAME_MISTRAL_BASE_URL:-http://mistral.disabled.invalid/v1}
+      TOGETHER_BASE_URL: ${HIGHFLAME_TOGETHER_BASE_URL:-http://together.disabled.invalid/v1}
+      DEEPSEEK_BASE_URL: ${HIGHFLAME_DEEPSEEK_BASE_URL:-http://deepseek.disabled.invalid/v1}
+      XAI_BASE_URL: ${HIGHFLAME_XAI_BASE_URL:-http://xai.disabled.invalid/v1}
+      ZAI_BASE_URL: ${HIGHFLAME_ZAI_BASE_URL:-http://zai.disabled.invalid/v1}
+      OPENAI_CHATGPT_BASE_URL: ${HIGHFLAME_OPENAI_CHATGPT_BASE_URL:-http://chatgpt.disabled.invalid/v1}
+      AZURE_OPENAI_ENDPOINT: ${HIGHFLAME_AZURE_OPENAI_ENDPOINT:-http://azure.disabled.invalid}
+      BEDROCK_ENDPOINT: ${HIGHFLAME_BEDROCK_ENDPOINT:-http://bedrock.disabled.invalid}
+      HIGHFLAME_LLM_API_KEY: ${HIGHFLAME_LLM_API_KEY:-}
+    volumes:
+      # The RENDERED config, from secrets/. Firehog does NOT expand ${VAR} in its
+      # config file — the release build takes the literal string and panics with
+      # "invalid Shield URL: ${HIGHFLAME_SHIELD_URL}". Env-var expansion turns out
+      # to be per-service and inconsistent across this platform (Admin renders a
+      # .template, Shield expands, Firehog does neither), so bootstrap.sh renders
+      # this one rather than depending on a feature this image may not have.
+      - ./secrets/firehog/config.yaml:/app/config.yaml:ro
+    depends_on:
+      highflame-shield:
+        condition: service_healthy
+      highflame-admin:
+        condition: service_healthy
+    # The only service besides nginx with a route off this box, because it has
+    # to reach the LLM you point it at. Everything else is on `app`, which has
+    # no gateway.
+    networks:
+      - highflame-network
+
+  # --------------------------------------------------------------------------
+  # UI. The ORDINARY Studio image — the same one SaaS runs.
+  #
+  # The auth provider is chosen at runtime from HIGHFLAME_AUTH_PROVIDER (set
+  # below), so there is no OIDC-specific build any more. That removes a whole
+  # class of mistake: the bundle used to pull `release-highflame-studio-oidc`,
+  # an image produced by a separate workflow, and if that workflow had not run
+  # for the release you pinned there was simply nothing to pull.
+  #
+  # REQUIRES a Studio image containing highflame-studio#1503. Earlier images do
+  # not read this variable at all — they were built with the provider compiled
+  # in — so an older tag here silently serves the Clerk login UI against this
+  # Keycloak-only stack. bootstrap/generate.sh already warns when versions are
+  # left on `latest`; this is one more reason to pin.
+  #
+  # See activeAuthProvider() in highflame-studio's packages/auth.
+  # --------------------------------------------------------------------------
+  highflame-studio:
+    <<: *svc
+    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-studio:${HIGHFLAME_STUDIO_VERSION:-latest}
+    container_name: highflame-studio
+    # 127.0.0.1, not localhost: several of these images resolve localhost
+    # to ::1 first while the server binds IPv4 only, which reports a
+    # perfectly healthy service as unhealthy forever.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/auth/csrf"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    ports:
+      - "3000:3000"
+    environment:
+      # What actually selects the provider. Set here rather than inferred from
+      # the image tag, so this file says which IdP the stack uses — and so the
+      # image below is an ordinary Studio image rather than a special build.
+      HIGHFLAME_AUTH_PROVIDER: oidc
+      OIDC_ISSUER: http://${HIGHFLAME_HOST_IP}/auth/realms/highflame
+      OIDC_CLIENT_ID: highflame-studio
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?set OIDC_CLIENT_SECRET in .env (must match the realm)}
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      AUTH_URL: http://${HIGHFLAME_HOST_IP}
+      AUTH_TRUST_HOST: 'true'
+      # Matches ssoSessionMaxLifespan in config/keycloak/highflame-realm.json.
+      # Studio's own default is longer, which would leave a browser holding a
+      # session after Keycloak had already ended it — the id_token refresh is
+      # what would quietly start failing. Change both together or neither.
+      OIDC_SESSION_MAX_AGE_SECONDS: '36000'
+      NEXT_PUBLIC_APP_URL: http://${HIGHFLAME_HOST_IP}
+      # Empty means SAME-ORIGIN: the browser issues relative /v1/admin/...
+      # requests against Studio's own host and nginx routes them to Admin.
+      # This is the value dev1 and prod ship (k8s-deploy/*/highflame-studio),
+      # and packages/api/src/config/admin-base.ts documents '' as a
+      # first-class value rather than "unset".
+      #
+      # An absolute cross-origin URL here is what corporate proxies break on:
+      # a different port is a different origin, so every client call becomes
+      # a CORS preflight. It also double-prefixed, because the hooks append
+      # /v1/admin themselves.
+      NEXT_PUBLIC_ADMIN_API_URL: ''
+      HIGHFLAME_ADMIN_URL: http://highflame-admin:8040
+      HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
+      # Product analytics deliberately empty. PostHog is wired into Studio's root
+      # layout; an unset key keeps it inert, and the egress check would catch it
+      # if it were not.
+      NEXT_PUBLIC_POSTHOG_KEY: ''
+    depends_on:
+      highflame-admin:
+        condition: service_healthy
+      highflame-keycloak:
+        condition: service_healthy
+    networks:
+      - highflame-network

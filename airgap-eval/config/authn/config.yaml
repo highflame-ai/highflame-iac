@@ -1,0 +1,223 @@
+# Highflame AuthN Service Configuration (Local Development)
+# Environment variables take precedence via Koanf env overlay.
+
+# Server configuration
+server:
+  port: 8051
+  env: development
+  read_timeout: 15s
+  write_timeout: 15s
+  idle_timeout: 60s
+  shutdown_timeout_seconds: 30
+
+# Database configuration
+# Individual env vars are passed from docker-compose:
+# DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, AUTHN_DB_NAME, DB_SSL_MODE
+database:
+  max_open_conns: 25
+  max_idle_conns: 5
+
+# ECDSA P-256 signing keys (mounted via docker-compose volume)
+keys:
+  private_key_path: /app/keys/private.pem
+  public_key_path: /app/keys/public.pem
+  key_id: authn-key-1
+
+# Token issuance settings
+token:
+  # MUST match Shield's HIGHFLAME_AUTH_JWT_ISSUER in docker-compose.yaml. This is
+  # the issuer stamped into every RS256 token AuthN mints, and Shield pins it.
+  # The upstream default is http://localhost:8051, which is correct for a laptop
+  # and wrong here: Shield resolves AuthN by service name, so a localhost issuer
+  # means Shield rejects every token it is handed. Same failure mode as the
+  # Keycloak issuer mismatch, one layer further in.
+  issuer: http://highflame-authn:8051
+  base_url: http://localhost:8051
+  default_ttl: 3600
+  max_ttl: 7776000  # 90 days — CLI authorization_code tokens need long TTL
+
+# Internal Service Authentication
+# In local dev, leave empty to skip verification (insecure, acceptable for development)
+auth:
+  internal_service_secret: ""
+  authz_base_url: http://highflame-authz:8050
+  # LOCAL DEV ONLY — do NOT mirror this block into app-config/ or k8s-deploy/.
+  # trusted_issuers has no allowed_accounts equivalent (jwt_assertion_resolver.go
+  # takes account_id/project_id/sub verbatim from the assertion), and the JWKS URL
+  # is plaintext http, which is only safe inside the compose network.
+  #
+  # RFC 7523 JWT-bearer principal resolver. Without trusted_issuers the resolver
+  # is not registered and /oauth2/authorize accepts only the api_key principal,
+  # so Studio's CLI-auth assertion is rejected and every `overwatch login`
+  # against the local stack dies at the token exchange with "invalid
+  # authorization code". Studio stamps iss=highflame-studio (packages/auth
+  # cli-auth assertion.ts) and serves its public JWK at /.well-known/jwks.json.
+  assertion_resolver:
+    audience: highflame-authn
+    jwks_refresh_interval: 1m
+    trusted_issuers:
+      - issuer: highflame-studio
+        jwks_url: http://highflame-studio:3000/.well-known/jwks.json
+
+# Backchannel: CIBA cross-replica fan-out via Redis Pub/Sub.
+# Same host/port/user/pass shape Shield/Admin/Observatory consume from
+# the gitops-shared-highflame-redis secret in production. Empty host
+# disables the Redis path (AuthN falls back to in-process Bus only —
+# acceptable for single-replica local dev). Locally, REDIS_HOST is set
+# directly on the AuthN container in docker-compose.yaml.
+backchannel:
+  redis:
+    host: ""    # Env var REDIS_HOST overrides
+    port: 6379  # Env var REDIS_PORT overrides
+    user: ""    # Env var REDIS_USER overrides
+    pass: ""    # Env var REDIS_PASS overrides
+    tls: false  # Env var REDIS_TLS overrides
+    cacertpath: ""  # Env var REDIS_CACERT overrides
+
+# OAuth clients to seed on startup (idempotent).
+# Public PKCE clients used by Studio's authorization_code flow.
+oauth_clients:
+  # Shield's CIBA client_id — AuthN's /oauth2/bc-authorize hard-fails
+  # on unknown client_id (zeroid invalid_client). Mirror of the
+  # production seed in app-config/highflame-authn/config.yaml so the
+  # AARM STEP_UP path works against `make up-authn` without runtime
+  # registration. Wire auth Shield→AuthN is the internal-service
+  # header pair, not OAuth client_credentials.
+  - client_id: shield
+    name: Highflame Shield
+    account_id: "12345678"
+    project_id: "5667d2b0-1816-41d6-9e0a-58d1ab211433"
+    grant_types: [urn:openid:params:grant-type:ciba]
+    scopes: [openid]
+
+  - client_id: overwatch-cli
+    name: Overwatch CLI
+    account_id: "12345678"
+    project_id: "5667d2b0-1816-41d6-9e0a-58d1ab211433"
+    grant_types: [authorization_code, refresh_token]
+    access_token_ttl: 7776000   # 90 days
+    refresh_token_ttl: 7776000  # 90 days
+    scopes: [account:read, gateway:read, overwatch:connect, overwatch:events]
+    redirect_uris:
+      - http://127.0.0.1:17580/oauth/callback
+      - http://127.0.0.1:17581/oauth/callback
+      - http://127.0.0.1:17582/oauth/callback
+      - http://127.0.0.1:17583/oauth/callback
+      - http://127.0.0.1:17584/oauth/callback
+      - http://localhost:17580/oauth/callback
+      - http://localhost:17581/oauth/callback
+      - http://localhost:17582/oauth/callback
+      - http://localhost:17583/oauth/callback
+      - http://localhost:17584/oauth/callback
+
+  # Forge CLI (forge#54 / forge#62). Without this seed AuthN's
+  # GetClientByClientID returns invalid_client and `forge login` cannot
+  # complete — Studio's own CLI_CLIENTS registry gates the consent page, but
+  # AuthN is the one that actually mints, and it only knows the clients seeded
+  # here.
+  #
+  # SCOPES ARE LOAD-BEARING: zeroid intersects the requested scopes with this
+  # registered surface (internal/service/oauth.go, intersectScopes) and DROPS
+  # the rest SILENTLY. A sandbox scope missing here does not error — it just
+  # never reaches the token. The assertion cannot widen this either: AuthN
+  # deliberately ignores scopes in the JWT assertion
+  # (jwt_assertion_resolver.go: "scopes would let a trusted intermediary widen
+  # authority"), so this list is the only source.
+  #
+  # Split read/launch/terminate rather than one sandbox:* so a future CI
+  # credential can list without being able to spend money launching (forge#65).
+  #
+  # redirect_uris: ONE loopback entry is enough. zeroid's redirectURIAllowed
+  # implements RFC 8252 loopback flexibility — for a loopback candidate it
+  # matches scheme + path + query and ignores the PORT — so the CLI's ephemeral
+  # port binds fine. (overwatch-cli enumerates fixed ports because its daemon
+  # uses a known range, not because the port must be registered.) Both hostname
+  # spellings are listed because the match is per-registered-entry and the CLI
+  # may bind either.
+  - client_id: forge-cli
+    name: Forge CLI
+    account_id: "12345678"
+    project_id: "5667d2b0-1816-41d6-9e0a-58d1ab211433"
+    grant_types: [authorization_code, refresh_token]
+    access_token_ttl: 3600      # 1 hour — short; the CLI silently refreshes
+    refresh_token_ttl: 2592000  # 30 days
+    scopes: [account:read, sandbox:read, sandbox:launch, sandbox:terminate]
+    redirect_uris:
+      - http://127.0.0.1:0/oauth/callback
+      - http://localhost:0/oauth/callback
+
+  # ID-JAG confidential client (ADR 0010 D2b). The MCP client app that Okta
+  # Cross-App-Access (XAA) issues the ID-JAG to redeems it at /oauth2/token
+  # with client_id + client_secret; the authenticated client_id MUST equal the
+  # ID-JAG's client_id claim. So the client_id below must match your Okta XAA
+  # requesting-app client_id. ZeroID generates the secret at registration —
+  # retrieve it (see the EMA demo runbook) and configure it on the redeemer.
+  - client_id: id-jag-mcp-client    # TODO: match your Okta XAA app client_id
+    name: ID-JAG MCP Client (EMA demo)
+    account_id: "12345678"
+    project_id: "5667d2b0-1816-41d6-9e0a-58d1ab211433"
+    grant_types: [urn:ietf:params:oauth:grant-type:jwt-bearer]
+    scopes: [openid, profile, email]
+
+# ── MCP Enterprise-Managed Authorization (EMA / ID-JAG) ────────────────────
+# External OIDC issuers ZeroID accepts an ID-JAG from (typ: oauth-id-jag+jwt)
+# at /oauth2/token via grant_type=jwt-bearer, then mints an audience-restricted
+# Highflame token (ADR 0010 / CAP-IDN-014). Passed straight through to ZeroID;
+# Studio's Connections screen renders these read-only via /ema/external-issuers.
+#
+# Shaped for a real Okta XAA org. Until you create the Okta org + XAA resource
+# app (see the EMA demo runbook), the issuer/jwks_uri below are PLACEHOLDERS:
+# AuthN boots fine (the URLs are syntactically valid) and the Connections UI
+# shows the configured trust, but a live ID-JAG exchange only succeeds once
+# these point at your real org. Replace the two highflame-demo.okta.com URLs
+# (and the audience if your resource app differs), then `make restart-authn`.
+external_issuers:
+  - issuer: https://highflame-demo.okta.com/oauth2/default            # TODO: your Okta org issuer
+    jwks_uri: https://highflame-demo.okta.com/oauth2/default/v1/keys  # TODO: <issuer>/v1/keys
+    # aud the Okta XAA resource app stamps on the ID-JAG for ZeroID-the-AS.
+    # Must equal this deployment's token.issuer (http://localhost:8051 locally).
+    audience: http://localhost:8051
+    algorithms: [RS256]
+    # Okta clamps refresh; 1h keeps placeholder JWKS-fetch noise low pre-activation.
+    jwks_cache_ttl: 1h
+    claim_mapping:
+      user_id: sub      # stable Okta user id
+      email: email
+      name: name
+    # Tenants permitted to redeem this IdP's ID-JAGs — the local dev account.
+    allowed_accounts:
+      - "12345678"
+    # auth_time/acr/amr carried through only if Okta sets them (RFC 9068).
+    propagate_claims:
+      - auth_time
+      - acr
+
+# OpenTelemetry observability
+telemetry:
+  enabled: true
+  endpoint: "highflame-collector:4317"
+  insecure: true
+  service_name: highflame-authn
+  sampling_rate: 1.0
+
+# WIMSE/SPIFFE trust domain for agent identity URIs
+wimse_domain: "highflame.dev"  # Local dev trust domain
+
+# Workload-attested signing credentials (AARM R5 receipts / AuthZ audit).
+# Highflame deployer surface over ZeroID's product-agnostic primitive —
+# pinned explicitly so key-lifetime posture is visible, not an implicit
+# library default. Two decoupled clocks: max_ttl_seconds = signing window
+# (short, ephemeral, rotated); audit_retention_days = verification window
+# (>> TTL, so historical receipts verify long after rotation).
+signing_credentials:
+  max_ttl_seconds: 3600        # 1h
+  audit_retention_days: 400    # ~13mo audit window
+  allowed_purposes:
+    - receipt                  # Shield guard-decision receipts
+    - authz_audit              # AuthZ authorization-audit entries
+  jwks_purpose: receipt
+  well_known_jwks_name: highflame-receipt-keys  # /.well-known/<name>
+
+# Logging
+logging:
+  level: debug

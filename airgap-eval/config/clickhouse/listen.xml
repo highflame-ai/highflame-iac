@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  Bind ClickHouse to IPv4 explicitly.
+
+  The official image ships docker_related_config.xml with <listen_host>::</listen_host>,
+  which binds the IPv6 wildcard and relies on it also accepting IPv4. On a host
+  with IPv6 disabled that fails for EVERY listener:
+
+    Application: Listen [::]:8123 failed: DNS error: EAI: Address family for
+    hostname not supported
+
+  ClickHouse then starts but serves nothing, the entrypoint's own init step times
+  out ("ClickHouse init process timeout"), and the healthcheck reports unhealthy —
+  which in turn blocks the collector, Observatory and nginx behind it. The failure
+  is loud in ClickHouse's err.log and invisible everywhere else, so it reads as
+  "the stack is broken" rather than "IPv6 is off on this box".
+
+  Found on a host with IPv6 disabled. Hard-coding IPv4 is the portable choice: an
+  air-gapped network is at least as likely to have IPv6 turned off as on, and
+  nothing in this stack needs IPv6.
+-->
+<clickhouse>
+    <!-- replace="replace" is required. ClickHouse MERGES config.d files, so a
+         plain <listen_host> APPENDS to the image default (::) rather than
+         overriding it. The server then attempts two binds and the second
+         fails with "Address already in use: 0.0.0.0:8123" — after which it
+         keeps running with no HTTP listener at all, so the container looks
+         alive while refusing every connection. -->
+    <listen_host replace="replace">0.0.0.0</listen_host>
+</clickhouse>
