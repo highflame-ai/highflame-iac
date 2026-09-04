@@ -252,6 +252,34 @@ services:
       HIGHFLAME_RSA_KEY_ID: v1
       HIGHFLAME_SECRETS_BACKEND: file
       HIGHFLAME_SECRETS_FILE_PATH: /var/lib/highflame-authn/secrets
+      # Asserts that the path above survives container replacement — which it
+      # does: it is the `authn-secrets` named volume mounted below, not the
+      # container's own filesystem.
+      #
+      # AuthN refuses the file backend under env: production because the DEFAULT
+      # vault is ephemeral, so replacement destroys every brokered credential
+      # while the rows referencing them keep dangling refs (the dev1 custody
+      # incident, highflame-cloud#2246/#2247). True for a bare pod, false here.
+      # Without this flag the only way to boot was env: development, which
+      # disabled eight other production guards to buy relief from this one.
+      #
+      # REQUIRES an AuthN image containing highflame-authn#192. On an older tag
+      # the variable is simply unread and the service refuses to boot with
+      # 'secrets.backend="file" is not allowed in production' — a loud failure
+      # rather than a silent downgrade, which is the right direction to fail.
+      HIGHFLAME_SECRETS_FILE_DURABLE: 'true'
+      # CIMD lets an OAuth client onboard with no pre-registration by publishing
+      # a metadata document at its client_id URL, which means an outbound fetch
+      # to a caller-named host. That is a feature for a public ecosystem and
+      # meaningless on a box with no egress: nothing to fetch, nothing able to
+      # publish.
+      #
+      # Set explicitly rather than left default because it defaults ON with an
+      # empty allowed_domains, and under env: production AuthN refuses to boot
+      # on that pair rather than infer an open posture — it requires openness to
+      # be declared deliberately. Off is both the correct posture here and the
+      # honest answer to that guard.
+      HIGHFLAME_CIMD_ENABLED: 'false'
       HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS: 'true'
     volumes:
       - ./config/authn/config.yaml:/app/config.yaml:ro
