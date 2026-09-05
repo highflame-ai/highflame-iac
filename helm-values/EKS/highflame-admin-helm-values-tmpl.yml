@@ -60,7 +60,11 @@ volumes:
   - name: license-volume
     secret:
       secretName: highflame-license
-      optional: false
+      # optional until something actually reads /app/license. No service does
+      # today (highflame-cloud#2364), so `false` only meant a cluster missing
+      # the secret held Admin in ContainerCreating for a file nothing opens.
+      # Flip back to false in the same change that adds a consumer.
+      optional: true
 
 volumeMounts:
   - name: license-volume
