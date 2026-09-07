@@ -8,7 +8,7 @@ no internet at runtime.
 
 [Read the Deployment docs here](https://docs.highflame.ai/docs/deployment/poc)
 
-## Prove it cannot phone home
+## Prove it does not phone home
 
 This is the part worth doing yourself rather than taking on trust.
 
@@ -16,24 +16,42 @@ This is the part worth doing yourself rather than taking on trust.
 ./verify/no-egress.sh --report egress-report.txt
 ```
 
-It checks, and prints raw evidence for, each of:
+**Read this first, because it bounds what follows.** The stack runs on an
+ordinary Docker bridge network, which has a gateway — so nothing in it
+*structurally* prevents a container from opening an outbound connection. That is
+a deliberate trade, not an oversight: an isolated network removes the route by
+which Admin and Studio fetch OpenID metadata from the issuer URL, and making
+that work would force every deployment to use a resolvable hostname instead of
+an IP. Plenty of organisations cannot edit `/etc/hosts` on a developer laptop,
+and a bundle that will not run is worse than one whose isolation you add
+yourself.
 
-1. The application network is `internal` — no gateway, structurally
-2. Only nginx and the AI gateway are attached to an externally-routable network
-3. A container on the app network **cannot** open an outbound connection (tried,
-   not assumed)
+So what the script proves is that **nothing here is configured to phone home and
+nothing is doing so** — not that it could not. It checks, and prints raw
+evidence for, each of:
+
+1. The network posture, stated plainly, including whether egress is possible
+2. Which containers publish a host port — only nginx should, so it is the single
+   entry point from your network
+3. What a container on the app network can actually reach (tried, not assumed),
+   reported either way
 4. No running container holds a connection to a Highflame-operated or analytics
    endpoint
 5. No Highflame-operated host appears anywhere in the resolved configuration —
    including the detector model endpoints
-6. The one permitted egress points at _your_ LLM, and it prints the value so you
+6. The one intended egress points at _your_ LLM, and it prints the value so you
    can confirm it
+7. Every LLM provider endpoint is explicitly pinned, none left to a public
+   default
 
 A check it cannot complete is reported as **WARN / unproven**, never as a pass.
 The report is plain text, meant to be attached to your own review.
 
-To go further: run it with the host's uplink physically removed, or with
-`iptables` logging on. The stack is designed to behave identically.
+**To make isolation structural**, do it outside the stack where a config change
+cannot undo it: run the host with its uplink removed, or block egress for this
+bridge at the host firewall. The stack is designed to behave identically either
+way, and `no-egress.sh` will then report check 3 as a pass rather than a
+warning.
 
 ---
 
