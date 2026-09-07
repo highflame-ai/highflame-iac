@@ -79,22 +79,33 @@ feature_flag:
 
 # Which platform surfaces this deployment serves (ADR 0036, CAP-TEN-008).
 #
-# `eval` is the profile for this stack, and it is a statement of fact rather
-# than an entitlement decision: docker-compose.yaml here runs neither redteam
-# nor palisade, and no HIGHFLAME_DISCOVERY_URL is set, so those three surfaces
-# have no backend to reach. Studio previously rendered all three tiles and a
-# click resolved a container that does not exist — a DNS failure, not an answer.
+# One entry per service this compose file actually runs:
+#   cap_ai_gateway   -> highflame-firehog
+#   cap_code_agents  -> highflame-cerberus
+#   cap_web_ai       -> highflame-shield
+#   cap_observatory  -> highflame-observatory + collector + clickhouse
 #
-# The distinction matters for what is safe to configure today: withholding a
-# surface because the deployment does not run it is safe at any point, because
-# there is nothing behind it. Withholding one for commercial reasons is not, and
-# must wait for Admin's enforcement middleware — until that lands, a withheld
-# capability changes what Studio renders and nothing about what the API serves.
+# Everything else is withheld because there is nothing here to reach. This file
+# runs neither redteam nor palisade, and sets no HIGHFLAME_DISCOVERY_URL, yet
+# Studio rendered all three tiles and a click resolved a container that does not
+# exist — a DNS failure, not an answer.
 #
-# Omitting this whole block would offer every capability, which is the default
-# that keeps deployments predating the key working.
+# That distinction is what makes this safe to configure today. Withholding a
+# surface because the deployment does not run it is safe at any point; there is
+# nothing behind it. Withholding one for COMMERCIAL reasons is not, and waits on
+# Admin's enforcement middleware — until that lands a withheld capability
+# changes what Studio renders and nothing about what the API serves.
+#
+# Keep this list in step with the services above when either changes. Admin
+# rejects an unknown key at startup, so a typo fails the boot rather than
+# silently offering something. Omitting the whole block offers every capability,
+# which is the default that keeps deployments predating this key working.
 capabilities:
-  profile: eval
+  enabled:
+    - cap_ai_gateway
+    - cap_code_agents
+    - cap_web_ai
+    - cap_observatory
 
 redteam:
   # Read only on the paths red_team_scan gates (see config/flag/goff.yaml, where
