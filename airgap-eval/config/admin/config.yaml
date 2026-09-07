@@ -77,7 +77,40 @@ traces:
 feature_flag:
   url: http://highflame-flag:1031/
 
+# Which platform surfaces this deployment serves (ADR 0036, CAP-TEN-008).
+#
+# One entry per service this compose file actually runs:
+#   cap_ai_gateway       -> highflame-firehog
+#   cap_code_agents      -> highflame-cerberus
+#   cap_browser_security -> highflame-shield
+#   cap_observatory      -> highflame-observatory + collector + clickhouse
+#
+# Everything else is withheld because there is nothing here to reach. This file
+# runs neither redteam nor palisade, and sets no HIGHFLAME_DISCOVERY_URL, yet
+# Studio rendered all three tiles and a click resolved a container that does not
+# exist — a DNS failure, not an answer.
+#
+# That distinction is what makes this safe to configure today. Withholding a
+# surface because the deployment does not run it is safe at any point; there is
+# nothing behind it. Withholding one for COMMERCIAL reasons is not, and waits on
+# Admin's enforcement middleware — until that lands a withheld capability
+# changes what Studio renders and nothing about what the API serves.
+#
+# Keep this list in step with the services above when either changes. Admin
+# rejects an unknown key at startup, so a typo fails the boot rather than
+# silently offering something. Omitting the whole block offers every capability,
+# which is the default that keeps deployments predating this key working.
+capabilities:
+  enabled:
+    - cap_ai_gateway
+    - cap_code_agents
+    - cap_browser_security
+    - cap_observatory
+
 redteam:
+  # Read only on the paths red_team_scan gates (see config/flag/goff.yaml, where
+  # it is off). Kept rather than deleted so flipping that flag back is a
+  # one-line change instead of also needing this restored.
   backend_url: "http://highflame-redteam:8001/v1"
 
 authz:

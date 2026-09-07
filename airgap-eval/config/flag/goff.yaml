@@ -16,11 +16,25 @@ send_traces_as_events:
   defaultRule:
     variation: enabled
 
+# red_team_scan and palisade are OFF because this stack does not run either
+# backend — docker-compose.yaml has no highflame-redteam service, and palisade's
+# workers live there too.
+#
+# These are not cosmetic. Admin reads both at startup (internal/admin/server/
+# server.go) and only then sets up their databases and registers their modules,
+# so `false` here means no connection pool, no CREATE TABLE, and no routes.
+# While they were `true`, Admin opened javelin_redteam and highflame_guardian on
+# every boot purely to satisfy config for products that were not present — which
+# is why config/postgres/init/01-databases.sql has to create them.
+#
+# Those two databases are still created, deliberately. They cost nothing empty,
+# and dropping them would make flipping these flags back a boot failure on any
+# existing volume, since initdb only runs once.
 red_team_scan:
   variations:
-    enabled: true
+    disabled: false
   defaultRule:
-    variation: enabled
+    variation: disabled
 
 guardian:
   variations:
@@ -30,9 +44,9 @@ guardian:
 
 palisade:
   variations:
-    enabled: true
+    disabled: false
   defaultRule:
-    variation: enabled
+    variation: disabled
 
 internal_user:
   variations:
