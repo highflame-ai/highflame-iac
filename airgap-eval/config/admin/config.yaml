@@ -77,7 +77,29 @@ traces:
 feature_flag:
   url: http://highflame-flag:1031/
 
+# Which platform surfaces this deployment serves (ADR 0036, CAP-TEN-008).
+#
+# `eval` is the profile for this stack, and it is a statement of fact rather
+# than an entitlement decision: docker-compose.yaml here runs neither redteam
+# nor palisade, and no HIGHFLAME_DISCOVERY_URL is set, so those three surfaces
+# have no backend to reach. Studio previously rendered all three tiles and a
+# click resolved a container that does not exist — a DNS failure, not an answer.
+#
+# The distinction matters for what is safe to configure today: withholding a
+# surface because the deployment does not run it is safe at any point, because
+# there is nothing behind it. Withholding one for commercial reasons is not, and
+# must wait for Admin's enforcement middleware — until that lands, a withheld
+# capability changes what Studio renders and nothing about what the API serves.
+#
+# Omitting this whole block would offer every capability, which is the default
+# that keeps deployments predating the key working.
+capabilities:
+  profile: eval
+
 redteam:
+  # Read only on the paths red_team_scan gates (see config/flag/goff.yaml, where
+  # it is off). Kept rather than deleted so flipping that flag back is a
+  # one-line change instead of also needing this restored.
   backend_url: "http://highflame-redteam:8001/v1"
 
 authz:
