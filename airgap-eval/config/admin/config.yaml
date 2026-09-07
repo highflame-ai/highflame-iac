@@ -80,10 +80,10 @@ feature_flag:
 # Which platform surfaces this deployment serves (ADR 0036, CAP-TEN-008).
 #
 # One entry per service this compose file actually runs:
-#   cap_ai_gateway   -> highflame-firehog
-#   cap_code_agents  -> highflame-cerberus
-#   cap_web_ai       -> highflame-shield
-#   cap_observatory  -> highflame-observatory + collector + clickhouse
+#   cap_ai_gateway       -> highflame-firehog
+#   cap_code_agents      -> highflame-cerberus
+#   cap_browser_security -> highflame-shield
+#   cap_observatory      -> highflame-observatory + collector + clickhouse
 #
 # Everything else is withheld because there is nothing here to reach. This file
 # runs neither redteam nor palisade, and sets no HIGHFLAME_DISCOVERY_URL, yet
@@ -104,7 +104,7 @@ capabilities:
   enabled:
     - cap_ai_gateway
     - cap_code_agents
-    - cap_web_ai
+    - cap_browser_security
     - cap_observatory
 
 redteam:
