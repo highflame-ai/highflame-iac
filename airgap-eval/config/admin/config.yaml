@@ -66,19 +66,6 @@ auth:
       config:
         issuer: ${HIGHFLAME_OIDC_ISSUER}
         audience: ${HIGHFLAME_OIDC_AUDIENCE}
-        # Signing keys are fetched from Keycloak DIRECTLY, in-network, rather
-        # than discovered from the issuer URL.
-        #
-        # `issuer` must stay the external address because it is compared against
-        # the `iss` claim in every token. But Admin also FETCHES from it when no
-        # jwks_uri is set, and on the internal app network the external address
-        # only resolves via the nginx alias — one more hop that can break, for a
-        # document whose contents we already know.
-        #
-        # Getting this wrong is expensive to diagnose: the token's iss, aud, sub
-        # and exp are all correct, only the signature cannot be checked, and the
-        # response is a bare 401 {"error":"Invalid token"} that names nothing.
-        jwks_uri: http://highflame-keycloak:8080/auth/realms/highflame/protocol/openid-connect/certs
 
 traces:
   enabled: true

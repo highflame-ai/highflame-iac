@@ -221,11 +221,20 @@ services:
       highflame-firehog:
         condition: service_healthy
     networks:
-      # Reachable in-network under the external address, which is what lets
-      # Studio and Admin fetch OIDC metadata from the issuer URL without the
-      # app network needing a route off the box. This is why the host address
-      # must be a HOSTNAME rather than a bare IP — an IP cannot be a network
-      # alias. See HIGHFLAME_HOST_IP in .env.example.
+      # Load-bearing, not convenience. nginx answers to the EXTERNAL address
+      # from inside the app network, which is the only reason Studio and Admin
+      # can fetch OIDC metadata from the issuer URL on a network with no route
+      # off the box.
+      #
+      # This is why the host address must be a HOSTNAME rather than a bare IP:
+      # an IP cannot be a network alias. See HIGHFLAME_HOST_IP in .env.example.
+      #
+      # The alternative — pointing Admin at an in-cluster jwks_uri — was tried
+      # and rejected. It works, but it names a specific IdP container, which
+      # breaks the ADR 0033 property that any OIDC provider is reachable by
+      # changing issuer and audience alone; and an explicit jwks_uri makes
+      # Admin skip discovery, which is where it checks that the document claims
+      # the issuer we asked for. Keeping discovery keeps that check.
       app:
         aliases:
           - ${HIGHFLAME_HOST_IP}
