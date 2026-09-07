@@ -297,6 +297,66 @@ for number, line in enumerate(sys.stdin, 1):
     ok "no Highflame-operated or analytics host in any configured value"
   fi
 
+  # The service config files, which `docker compose config` does NOT cover.
+  #
+  # This sub-check exists because of a real miss: config/authn/config.yaml
+  # shipped an external_issuers block pointing at a placeholder public Okta org,
+  # so AuthN fetched JWKS from the internet at every start and on each cache
+  # expiry. Check 5 passed throughout, because it only ever read compose-level
+  # values and only ever looked for Highflame-operated hosts — and Okta is
+  # neither. highflame-authn#199.
+  #
+  # So the rule here is the stricter one: in an air-gapped bundle, ANY host that
+  # is not in this stack is a finding, whoever operates it. In-stack names,
+  # loopback, private ranges and the deliberately-unresolvable .invalid
+  # placeholders are allowed; everything else is reported.
+  cfg_hits=$(python3 - <<'PYEOF' || true
+import ipaddress, pathlib, re
+
+# host.docker.internal is this machine, by definition — Docker's name for the
+# host, never routable off it. Used for things the operator runs outside Docker
+# (their own MCP server, their own LLM), which are theirs and in scope for an
+# evaluation. What those endpoints point AT is verified by checks 6 and 7.
+allowed = re.compile(
+    r"^(highflame-[a-z-]+|localhost|host\.docker\.internal"
+    r"|127\.0\.0\.1|0\.0\.0\.0"
+    r"|[a-z0-9-]+\.disabled\.invalid|.*\.invalid)$", re.IGNORECASE)
+
+def in_stack(host: str) -> bool:
+    # A single-label name cannot be a public host — it needs a dot to be
+    # resolvable on the internet. This covers container names and, importantly,
+    # nginx upstream names: `proxy_pass http://observatory/` refers to an
+    # `upstream` block in the same file, not to DNS.
+    if "." not in host:
+        return True
+    if allowed.match(host):
+        return True
+    try:
+        # A literal private address is this machine or its network, not ours to
+        # judge; a public one is.
+        return ipaddress.ip_address(host).is_private
+    except ValueError:
+        return False
+
+url = re.compile(r"https?://([A-Za-z0-9._-]+)")
+for path in sorted(pathlib.Path("config").rglob("*")):
+    if not path.is_file() or path.suffix not in {".yaml", ".yml", ".json", ".conf", ".template"}:
+        continue
+    for number, line in enumerate(path.read_text(errors="replace").splitlines(), 1):
+        if line.lstrip().startswith(("#", "//")):
+            continue
+        for host in url.findall(line):
+            if not in_stack(host):
+                print(f"  {path}:{number}: {host}")
+PYEOF
+)
+  if [ -n "$cfg_hits" ]; then
+    say "$cfg_hits"
+    bad "a mounted config file names a host outside this stack"
+  else
+    ok "no config file under config/ names a host outside this stack"
+  fi
+
   # Detector models must resolve to in-stack services.
   guards=$(printf '%s\n' "$CFG" | grep -iE 'HIGHFLAME_GUARD[A-Z_]*_URL' || true)
   say "  detector endpoints:"
