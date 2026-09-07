@@ -61,6 +61,28 @@ for _ in $(seq 1 60); do
   sleep 5
 done
 
+# The loop above can exhaust its attempts. Falling through to the inserts is
+# what made this script report success while doing nothing: `docker compose
+# exec` against a service it cannot see prints a message and exits 0, `set -e`
+# sees a clean status, and the heredoc below is simply skipped.
+#
+# The symptom appeared two steps later as `403 access_denied` from the notebook
+# — the exact failure the header comment of this script exists to explain — with
+# nothing pointing back here.
+if ! docker compose exec -T highflame-db \
+    psql -U "$PGUSER_" -d "$PGDB" -tAc \
+    "SELECT to_regclass('public.account_members') IS NOT NULL" 2>/dev/null | grep -q '^t$'; then
+  echo
+  echo "FAILED: could not reach the database, so nothing was seeded."
+  echo
+  echo "  Is the stack up?          docker compose ps"
+  echo "  Same project name?        COMPOSE_PROJECT_NAME in .env must match how"
+  echo "                            you brought it up (this script calls docker"
+  echo "                            compose without -p)"
+  echo "  Admin still migrating?    docker compose logs highflame-admin"
+  exit 1
+fi
+
 docker compose exec -T highflame-db psql -U "$PGUSER_" -d "$PGDB" -v ON_ERROR_STOP=1 <<SQL
 \set ON_ERROR_STOP on
 
@@ -101,6 +123,23 @@ SELECT tenant_type, account_id, slug, auth_provider, is_default
 SELECT account_id, user_id, org_role, source, is_active
   FROM account_members WHERE user_id = '${EVALUATOR_SUB}';
 SQL
+
+# Verify rather than assume. The inserts above run inside `docker compose exec`,
+# whose exit status does not reliably reflect what happened inside — which is
+# how this script used to report success having inserted nothing.
+MEMBERS=$(docker compose exec -T highflame-db \
+  psql -U "$PGUSER_" -d "$PGDB" -tAc \
+  "SELECT count(*) FROM account_members
+    WHERE account_id = '${ACCOUNT_ID}' AND user_id = '${EVALUATOR_SUB}' AND is_active" \
+  2>/dev/null | tr -d '[:space:]')
+
+if [ "${MEMBERS:-0}" -lt 1 ]; then
+  echo
+  echo "FAILED: the membership row is not present after seeding."
+  echo "Nothing below would work, so this is an error rather than a warning."
+  echo "  docker compose logs highflame-db | tail -40"
+  exit 1
+fi
 
 cat <<EOF
 

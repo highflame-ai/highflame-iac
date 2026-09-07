@@ -12,7 +12,21 @@ x-svc: &svc
       max-file: '5'
 
 networks:
-  highflame-network:
+  # The application network. `internal: true` is the load-bearing line in this
+  # file: Docker creates the bridge with no gateway, so a container on it has
+  # nowhere to send a packet that is not addressed to a sibling. That is a
+  # property of how the network was created, not a firewall rule someone can
+  # flush, which is why verify/no-egress.sh asserts it structurally.
+  app:
+    driver: bridge
+    internal: true
+
+  # The only externally-routable network, and deliberately almost empty.
+  # nginx is here so a browser on your network can reach the UI. firehog is here
+  # because a gateway that inspects LLM traffic has to reach the LLM you
+  # configured. Anything else appearing here is a finding — see check 2 of
+  # verify/no-egress.sh, which pins the membership to exactly these two.
+  edge:
     driver: bridge
 
 volumes:
@@ -46,7 +60,7 @@ services:
       timeout: 5s
       retries: 20
     networks:
-      - highflame-network
+      - app
 
   highflame-redis:
     <<: *svc
@@ -56,7 +70,7 @@ services:
       - "6379:6379"
     restart: on-failure
     networks:
-      - highflame-network
+      - app
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -93,7 +107,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - highflame-network
+      - app
 
   # --------------------------------------------------------------------------
   # Identity. Keycloak replaces Clerk entirely — nothing here reaches a hosted
@@ -168,7 +182,7 @@ services:
       highflame-db:
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
 
   # --------------------------------------------------------------------------
   # Ingress. The only way in, and one of only two services with a route out.
@@ -207,7 +221,15 @@ services:
       highflame-firehog:
         condition: service_healthy
     networks:
-      highflame-network:
+      # Reachable in-network under the external address, which is what lets
+      # Studio and Admin fetch OIDC metadata from the issuer URL without the
+      # app network needing a route off the box. This is why the host address
+      # must be a HOSTNAME rather than a bare IP — an IP cannot be a network
+      # alias. See HIGHFLAME_HOST_IP in .env.example.
+      app:
+        aliases:
+          - ${HIGHFLAME_HOST_IP}
+      edge:
 
   highflame-flag:
     <<: *svc
@@ -231,7 +253,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - highflame-network
+      - app
 
   highflame-authn:
     <<: *svc
@@ -272,7 +294,7 @@ services:
       highflame-db:
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
 
   # --------------------------------------------------------------------------
   # Policy. Shield pulls its Cedar policies from here every 30s; without it
@@ -309,7 +331,7 @@ services:
       highflame-flag:
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
 
   # --------------------------------------------------------------------------
   # Control plane
@@ -369,7 +391,7 @@ services:
       highflame-flag: 
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
 
   highflame-shield:
     <<: *svc
@@ -430,7 +452,7 @@ services:
       highflame-redis: 
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
 
   # --------------------------------------------------------------------------
   # Telemetry
@@ -458,7 +480,7 @@ services:
       highflame-clickhouse:
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
 
   # --------------------------------------------------------------------------
   # Cerberus
@@ -497,7 +519,7 @@ services:
       highflame-collector:
         condition: service_started
     networks:
-      - highflame-network
+      - app
 
   highflame-observatory:
     <<: *svc
@@ -525,7 +547,7 @@ services:
       highflame-clickhouse:
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
 
   # --------------------------------------------------------------------------
   # Data plane. The ONLY service besides nginx with a route off this box, because
@@ -613,7 +635,12 @@ services:
     # to reach the LLM you point it at. Everything else is on `app`, which has
     # no gateway.
     networks:
-      - highflame-network
+      - app
+      # The one service besides nginx that legitimately needs to reach off
+      # the box: a gateway that inspects LLM traffic has to reach the LLM.
+      # This is also the only egress path the stack has, which is what makes
+      # HIGHFLAME_LLM_BASE_URL the single auditable exception.
+      - edge
 
   # --------------------------------------------------------------------------
   # UI. The ORDINARY Studio image — the same one SaaS runs.
@@ -688,4 +715,4 @@ services:
       highflame-keycloak:
         condition: service_healthy
     networks:
-      - highflame-network
+      - app
