@@ -24,6 +24,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
 `HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
 `HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070/v1/shield` | -
+`HIGHFLAME_CERBERUS_URL` | highflame cerberus url | `http://highflame-cerberus:8082/v1/cerberus` | -
+`HIGHFLAME_DISCOVERY_URL` | highflame discovery url | `http://highflame-discovery:8095` | -
 `HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
 `HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Tenancy default enabled | `true` | `true` or `false`
 `HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | -
@@ -65,6 +67,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_TRUSTED_ISSUERS` | authn assertion resolver trusted issuers | `[{"issuer":"highflame-studio","jwks_url":"http://highflame-studio:3000/.well-known/jwks.json"}]` | -
 `HIGHFLAME_ALLOW_UNSAFE_DEV_STUB` | enable / disable the unsafe dev attestation stub | `false` | `true` or `false`
 `HIGHFLAME_DEVICE_AUTH_VERIFICATION_URI` | Studio's /device consent screen | nil | -
+`HIGHFLAME_CIMD_ENABLED` | Regression suite's CIMD coverage | nil | `true` or `false`
 
 ### highflame-authz
 
@@ -115,6 +118,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_SYNC_TICK_SECONDS` | Highflame sync tick interval | `86400` | -
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_SECRETS_BACKEND`| Highflame secrets store | `kubernetes` | -
+`HIGHFLAME_ADMIN_BASE_URL`| Highflame admin base url | `http://highflame-admin:8040` | -
 
 ### highflame-firehog
 
@@ -127,6 +131,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_FIREHOG_URL` | highflame firehog url | nil | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 `OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | -
+`FIREHOG_SHIELD_SCAN_SCOPE` | LLM ingress scan scope | nil | -
+`OAUTH_CIMD_SUPPORTED` | CIMD disabled or enabled | nil | `true` or `false`
+`QUOTA_ENABLED` | Quota RPM/TPM enforcement | `true` | `true` or `false`
 
 ### highflame-forge
 
@@ -158,9 +165,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | -
 `HF_HUB_ENABLE_HF_TRANSFER` | Enable huggingface transfer | `1` | -
-`WORKERS` | Number of workers | `2` |
-`MAX_BATCH_TOKENS` | Maximum batch tokens | `16384` | 
-`GPU_MEMORY_BUDGET_MB` | GPU memory allocation | `2100` |
+`WORKERS` | Number of workers | `2` | -
+`MAX_BATCH_TOKENS` | Maximum batch tokens | `16384` | -
+`GPU_MEMORY_BUDGET_MB` | GPU memory allocation | `2100` | -
 
 ### highflame-observatory
 
@@ -321,6 +328,9 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
 `NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | Pass the ARN principle for accessing the AWS bedrock connector | nil | -
 `NEXT_PUBLIC_SCIM_BASE_URL` | Next public scim url - must match with `HIGHFLAME_SCIM_EXTERNAL_BASE_URL` from admin | nil | -
+`HIGHFLAME_FORGE_URL` | Highflame firehog url | `http://highflame-forge:8100` | -
+`HIGHFLAME_AUTH_PROVIDER` | Highflame auth provider | `clerk` | -
+`HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Highflame oauth signing key path | `/app/keys/oauth/oauth-signing-key.pem` | -
 
 ### highflame-ramparts-server
 
@@ -330,3 +340,16 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `LLM_MODEL` | Model name | nil | -
 `LLM_URL` | LLM complete URL | nil | -
 `LLM_API_KEY` | LLM API Key | nil | -
+
+### highflame-sandbox
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`HIGHFLAME_FORGE_URL` | Highflame firehog url | `http://highflame-forge:8100` | -
+`HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
+`NEXT_PUBLIC_CLERK_IS_SATELLITE` | Clerk is satellite or not | `false` | `true` or `false`
+`NEXT_PUBLIC_CLERK_DOMAIN` | Clerk domain name | nil | -
+`NEXT_PUBLIC_HIGHFLAME_ENV_LABEL` | Highflame deploy env | nil | -
+`NEXT_PUBLIC_STUDIO_URL` | Studio url | nil | -
+`CLERK_SECRET_KEY` | Clerk secret key | nil | -
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | -
