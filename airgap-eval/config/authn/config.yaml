@@ -1,10 +1,27 @@
-# Highflame AuthN Service Configuration (Local Development)
+# Highflame AuthN Service Configuration (air-gapped evaluation)
 # Environment variables take precedence via Koanf env overlay.
 
 # Server configuration
 server:
   port: 8051
-  env: development
+  # production, NOT development — read it as "DEPLOYED", which is how AuthN's
+  # own guard block reads it (internal/config/config.go: "app-config sets
+  # env: production and is shared by dev1 and the kind test deployment; only
+  # local-deploy runs env: development"). This IS a deployed environment: a
+  # customer runs it on their own hardware, with real credentials in it.
+  #
+  # It said development for exactly one reason: production refuses
+  # secrets.backend=file, and this stack has no Kubernetes secret store to
+  # point at. That bought relief from one guard by disabling eight — including
+  # the SSRF guard on CIMD's client-metadata fetch, which otherwise turns the
+  # public /oauth2/authorize endpoint into an unauthenticated probe of the
+  # internal network.
+  #
+  # HIGHFLAME_SECRETS_FILE_DURABLE (docker-compose.yaml) is what makes the
+  # honest posture possible: the vault here is a named volume and DOES survive
+  # container replacement, so the premise behind that one refusal is false in
+  # this topology. See highflame-authn#192.
+  env: production
   read_timeout: 15s
   write_timeout: 15s
   idle_timeout: 60s
@@ -37,7 +54,15 @@ token:
   max_ttl: 7776000  # 90 days — CLI authorization_code tokens need long TTL
 
 # Internal Service Authentication
-# In local dev, leave empty to skip verification (insecure, acceptable for development)
+#
+# Empty here is NOT "skip verification" in this stack — docker-compose.yaml
+# passes HIGHFLAME_INTERNAL_SERVICE_SECRET, and the koanf env overlay takes
+# precedence over this file, so the real secret is always present. Under
+# env: production an empty value would be a refused boot, not a silent
+# skip (auth.internal_service_secret is required).
+#
+# Left as "" deliberately rather than filled in: the value is generated per
+# deployment by bootstrap.sh and belongs in .env, never in a committed file.
 auth:
   internal_service_secret: ""
   authz_base_url: http://highflame-authz:8050
