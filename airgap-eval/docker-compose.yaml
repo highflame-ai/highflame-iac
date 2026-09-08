@@ -549,6 +549,17 @@ services:
     ports:
       - "8090:8080"
     environment:
+      # Telemetry. Without these firehog exports no spans at all, so the
+      # gateway's own request-level view — model, provider, operation, the
+      # resolved agent identity including hf.agent_wimse_uri, latency — is
+      # simply absent from Observatory. Shield's guard spans still arrive and
+      # carry a decision, which is what makes the gap easy to miss: traces
+      # exist, they just start one hop too late.
+      #
+      # Standard OTEL SDK variables; firehog reads them directly. Same
+      # collector and port every other service in this stack uses.
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://highflame-collector:4317
+      OTEL_SERVICE_NAME: highflame-firehog
       HIGHFLAME_SHIELD_URL: http://highflame-shield:8070/v1/shield
       HIGHFLAME_ADMIN_URL: http://highflame-admin:8040
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
