@@ -74,20 +74,16 @@ Mint the key with `POST /v1/admin/service-keys`, the way the notebook does.
 Studio's API key screen is part of the dashboard that does not render on an OIDC
 build.
 
-### Two limits, stated up front
+### One limit, stated up front
 
-**The ingress publishes AuthN's token endpoint and its agent-registry routes,
-and nothing else.** Those are the only identity routes that accept a bearer
-token, which is all an SDK caller holds. AuthN's remaining admin routes are
-gated on a secret that the services share over the internal network, so
-publishing them would add attack surface that no SDK caller could use. Agent
-registration, delegation and the guard path all work. The identity admin
-namespaces answer 404 through this ingress.
-
-**`tokens.verify()` does not work here.** The SDK builds its key-set URL from
-the identity URL, and on this single origin that path serves Studio's own keys.
-Delegation and every guard decision are unaffected; only the local
-signature check on a token this stack issued is unavailable.
+**The ingress publishes AuthN's token endpoint, its agent-registry routes and
+its key set, and nothing else.** Those are the only identity routes an SDK
+caller needs and the only ones that accept a bearer token, which is all it
+holds. AuthN's remaining admin routes are gated on a secret that the services
+share over the internal network, so publishing them would add attack surface
+that no SDK caller could use. Agent registration, delegation, token
+verification and the guard path all work. The identity admin namespaces answer
+404 through this ingress.
 
 ### The gateway
 
