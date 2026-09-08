@@ -40,7 +40,7 @@ To go further: run it with the host's uplink physically removed, or with
 ## Evaluate it end to end — via the notebook
 
 `notebook/` contains a Jupyter notebook that authenticates through Keycloak,
-points an agent at `http://highflame.local/gateway/v1`, and walks through the
+points an agent at this stack's gateway, and walks through the
 tenancy authorisation gate, gateway inspection, PII detection and the resulting
 telemetry — all against this stack, with no internet.
 
@@ -50,6 +50,50 @@ dashboard does not render on an OIDC build yet, so the API and gateway are what
 there is to evaluate. For a technical assessment of how the platform deploys,
 authorises and enforces, that is arguably the more useful surface anyway — but it
 is a limitation, not a design preference, and it is stated as one.
+
+---
+
+## Point the SDK at it
+
+The SDK reaches this stack over four values:
+
+```bash
+HIGHFLAME_BASE_URL=http://highflame.local      # Shield: guard and detect
+HIGHFLAME_IDENTITY_URL=http://highflame.local  # AuthN: agent registration
+HIGHFLAME_TOKEN_URL=http://highflame.local/oauth2/token
+HIGHFLAME_API_KEY=zid_sk_...                   # a service key, minted below
+```
+
+Set `HIGHFLAME_TOKEN_URL` yourself. The SDK defaults it to the hosted service,
+and an unset value is the one mistake here that fails with a confusing
+authentication error rather than a connection error.
+
+Mint the key with `POST /v1/admin/service-keys`, the way the notebook does.
+Studio's API key screen is part of the dashboard that does not render on an OIDC
+build.
+
+### Two limits, stated up front
+
+**The ingress publishes AuthN's token endpoint and its agent-registry routes,
+and nothing else.** Those are the only identity routes that accept a bearer
+token, which is all an SDK caller holds. AuthN's remaining admin routes are
+gated on a secret that the services share over the internal network, so
+publishing them would add attack surface that no SDK caller could use. Agent
+registration, delegation and the guard path all work. The identity admin
+namespaces answer 404 through this ingress.
+
+**`tokens.verify()` does not work here.** The SDK builds its key-set URL from
+the identity URL, and on this single origin that path serves Studio's own keys.
+Delegation and every guard decision are unaffected; only the local
+signature check on a token this stack issued is unavailable.
+
+### The gateway
+
+Separate base URL, and it keeps the `/llm` segment:
+
+```bash
+http://highflame.local/gateway/llm/v1
+```
 
 ---
 
