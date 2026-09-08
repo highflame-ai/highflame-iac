@@ -58,10 +58,12 @@ is a limitation, not a design preference, and it is stated as one.
 The SDK reaches this stack over four values:
 
 ```bash
-HIGHFLAME_BASE_URL=http://highflame.local      # Shield: guard and detect
-HIGHFLAME_IDENTITY_URL=http://highflame.local  # AuthN: agent registration
-HIGHFLAME_TOKEN_URL=http://highflame.local/oauth2/token
-HIGHFLAME_API_KEY=zid_sk_...                   # a service key, minted below
+# Use the address you set as HIGHFLAME_HOST_IP. Not a hostname, which needs DNS
+# this stack does not provide, and not 127.0.0.1.
+HIGHFLAME_BASE_URL=http://10.0.0.42      # Shield: guard and detect
+HIGHFLAME_IDENTITY_URL=http://10.0.0.42  # AuthN: agent registration
+HIGHFLAME_TOKEN_URL=http://10.0.0.42/oauth2/token
+HIGHFLAME_API_KEY=zid_sk_...             # a service key, minted below
 ```
 
 Set `HIGHFLAME_TOKEN_URL` yourself. The SDK defaults it to the hosted service,
@@ -92,7 +94,7 @@ signature check on a token this stack issued is unavailable.
 Separate base URL, and it keeps the `/llm` segment:
 
 ```bash
-http://highflame.local/gateway/llm/v1
+http://10.0.0.42/gateway/llm/v1
 ```
 
 ---
