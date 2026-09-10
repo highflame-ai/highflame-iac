@@ -171,27 +171,44 @@ oauth_clients:
 # shows the configured trust, but a live ID-JAG exchange only succeeds once
 # these point at your real org. Replace the two highflame-demo.okta.com URLs
 # (and the audience if your resource app differs), then `make restart-authn`.
-external_issuers:
-  - issuer: https://highflame-demo.okta.com/oauth2/default            # TODO: your Okta org issuer
-    jwks_uri: https://highflame-demo.okta.com/oauth2/default/v1/keys  # TODO: <issuer>/v1/keys
-    # aud the Okta XAA resource app stamps on the ID-JAG for ZeroID-the-AS.
-    # Must equal this deployment's token.issuer (http://localhost:8051 locally).
-    audience: http://localhost:8051
-    algorithms: [RS256]
-    # Okta clamps refresh; 1h keeps placeholder JWKS-fetch noise low pre-activation.
-    jwks_cache_ttl: 1h
-    claim_mapping:
-      user_id: sub      # stable Okta user id
-      email: email
-      name: name
-    # Tenants permitted to redeem this IdP's ID-JAGs — the local dev account.
-    allowed_accounts:
-      - "12345678"
-    # auth_time/acr/amr carried through only if Okta sets them (RFC 9068).
-    propagate_claims:
-      - auth_time
-      - acr
-
+# DISABLED in this bundle, deliberately — uncomment to use your own IdP.
+#
+# This block used to ship active, pointing at a PLACEHOLDER public Okta org.
+# On an air-gapped stack that meant AuthN opened an outbound HTTPS connection
+# to highflame-demo.okta.com (18.209.113.128/.130/.131) to fetch JWKS at every
+# start, and again on each jwks_cache_ttl expiry. The old comment below even
+# noted the "placeholder JWKS-fetch noise" — the fetch was known about, it just
+# was not recognised as egress from a bundle whose entire claim is that it has
+# none. See highflame-authn#199.
+#
+# It was inert in the sense that mattered least: the URLs are placeholders, so
+# no ID-JAG exchange could succeed until you replace them. It was NOT inert in
+# the sense that mattered most: it reached the public internet on boot.
+#
+# To enable, uncomment and replace both highflame-demo.okta.com URLs with your
+# own org, and set audience to this deployment's token.issuer. An air-gapped
+# deployment can only use an issuer it can actually reach.
+# external_issuers:
+#   - issuer: https://highflame-demo.okta.com/oauth2/default            # TODO: your Okta org issuer
+#     jwks_uri: https://highflame-demo.okta.com/oauth2/default/v1/keys  # TODO: <issuer>/v1/keys
+#     # aud the Okta XAA resource app stamps on the ID-JAG for ZeroID-the-AS.
+#     # Must equal this deployment's token.issuer (http://localhost:8051 locally).
+#     audience: http://localhost:8051
+#     algorithms: [RS256]
+#     # Okta clamps refresh; 1h keeps placeholder JWKS-fetch noise low pre-activation.
+#     jwks_cache_ttl: 1h
+#     claim_mapping:
+#       user_id: sub      # stable Okta user id
+#       email: email
+#       name: name
+#     # Tenants permitted to redeem this IdP's ID-JAGs — the local dev account.
+#     allowed_accounts:
+#       - "12345678"
+#     # auth_time/acr/amr carried through only if Okta sets them (RFC 9068).
+#     propagate_claims:
+#       - auth_time
+#       - acr
+#
 # OpenTelemetry observability
 telemetry:
   enabled: true

@@ -8,7 +8,7 @@ resource "postgresql_database" "dbs" {
 
 resource "postgresql_extension" "dbs" {
   depends_on                = [ postgresql_database.dbs ]
-  for_each                  = { for ext in var.pg_extensions : ext.name => ext }
+  for_each                  = { for ext in var.pg_extensions : "${ext.database}-${ext.name}" => ext }
 
   name                      = each.value.name
   database                  = each.value.database

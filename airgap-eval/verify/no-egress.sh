@@ -26,8 +26,15 @@ if [ -z "$PROJECT" ]; then
   PROJECT=$(docker compose config 2>/dev/null | sed -n 's/^name: *//p' | head -1)
 fi
 PROJECT="${PROJECT:-highflame-airgap}"
-APP_NET="${PROJECT}_app"
-EDGE_NET="${PROJECT}_edge"
+# Derive the network name too, for exactly the reason given above about the
+# project name. Hardcoding a suffix here was the same class of bug: the stack
+# defines `highflame-network`, this file looked for `_app`, and the result was a
+# FAIL reading "network does not exist — is the stack up?" against a stack that
+# was up and healthy. Checks 2-7 never ran, so the summary was one red line
+# about a network name rather than anything about egress.
+APP_NET=$(docker network ls --format '{{.Name}}' \
+  | grep -E "^${PROJECT}_" | head -1)
+APP_NET="${APP_NET:-${PROJECT}_highflame-network}"
 # A busybox-based image already present in the offline bundle, so this script
 # needs no network of its own to run.
 PROBE_IMAGE="${PROBE_IMAGE:-nginx:1.27-alpine}"
@@ -51,7 +58,11 @@ PASS=0 FAIL=0 WARN=0 UNEXPECTED_WARN=0
 # "Could not check" must not read as "checked and fine". A genuinely unprovable
 # check belongs here, named, so adding one is a decision somebody makes on
 # purpose rather than a check silently going quiet.
-EXPECTED_WARNINGS='no shell available'
+# 'routable bridge' and 'reached ' are here because the stack deliberately runs
+# on an ordinary bridge (see check 1 for why), so those two are the expected
+# posture rather than a check going quiet. They are named individually so that
+# adding them stays visible in this file's history.
+EXPECTED_WARNINGS='no shell available|routable bridge|reached .* from |external DNS resolved'
 
 say() { printf '%s\n' "$*"; [ -n "$REPORT" ] && printf '%s\n' "$*" >>"$REPORT"; }
 ok()   { PASS=$((PASS+1)); say "  PASS  $*"; }
@@ -76,10 +87,22 @@ say "date:    $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 say "host:    $(uname -srm)"
 
 # ---------------------------------------------------------------------------
-hdr "1. The application network has no route off this machine"
-# Docker's `internal: true` does not add a gateway to the bridge. This is a
-# property of how the network was created, not a firewall rule someone can
-# forget — which is why it is checked first and checked structurally.
+hdr "1. Network posture of the application network"
+# Stated rather than claimed. This stack runs on an ordinary bridge network,
+# which HAS a gateway — so nothing here structurally prevents a container from
+# opening an outbound connection.
+#
+# That is a deliberate choice, not an oversight. Docker's `internal: true` would
+# make isolation structural, but it also removes the route by which Admin and
+# Studio fetch OpenID metadata from the issuer URL, which is built from the
+# host's own address. Making that work would require every deployment to use a
+# resolvable hostname rather than an IP, and plenty of organisations cannot edit
+# /etc/hosts on a developer laptop. Runnability won.
+#
+# So this script does not prove that egress is impossible. It proves that
+# nothing in the stack is CONFIGURED to use it and that nothing is currently
+# using it — checks 4 through 7 — and it tells you plainly where the gap is.
+# If you need structural isolation, see the note this section prints.
 # ---------------------------------------------------------------------------
 if ! docker network inspect "$APP_NET" >/dev/null 2>&1; then
   bad "network $APP_NET does not exist — is the stack up? (docker compose up -d)"
@@ -93,50 +116,64 @@ say "  docker network inspect $APP_NET --format '{{.Internal}}' -> $INTERNAL"
 if [ "$INTERNAL" = "true" ]; then
   ok "$APP_NET is an internal network (no gateway, no NAT to the host's uplink)"
 else
-  bad "$APP_NET is NOT internal — containers on it can reach the internet"
+  warn "$APP_NET is a routable bridge — egress is possible at the network layer"
+  say "  This is the current design. To make isolation structural instead of"
+  say "  configurational, do it outside the stack, where it cannot be undone by"
+  say "  a config change:"
+  say "    - run the host with its uplink removed; the stack behaves identically"
+  say "    - or block egress for this bridge at the host firewall"
+  say "  Checks 4-7 below are what this script can prove without that."
 fi
 
 # ---------------------------------------------------------------------------
-hdr "2. Only the two intended services can reach outside"
-# nginx needs it so your browser can reach the UI. firehog needs it because a
-# gateway that inspects LLM traffic must reach the LLM you configured. Anything
-# else appearing here is a finding.
-# ---------------------------------------------------------------------------
-EXPECTED_EDGE="highflame-firehog highflame-nginx"
-if docker network inspect "$EDGE_NET" >/dev/null 2>&1; then
-  ACTUAL_EDGE=$(docker network inspect "$EDGE_NET" \
-    --format '{{range .Containers}}{{.Name}} {{end}}' | tr ' ' '\n' | grep -v '^$' | sort | tr '\n' ' ' | sed 's/ $//')
-  say "  on $EDGE_NET: ${ACTUAL_EDGE:-<none>}"
-  say "  expected:    $EXPECTED_EDGE"
-  if [ "$ACTUAL_EDGE" = "$EXPECTED_EDGE" ]; then
-    ok "exactly the two intended services are externally connected"
-  else
-    bad "unexpected membership of the externally-routable network"
-  fi
-else
-  warn "network $EDGE_NET not found — cannot confirm which services are externally connected"
-fi
-
-# ---------------------------------------------------------------------------
-hdr "3. Empirical: a container on the app network cannot open an outbound connection"
-# Checks 1 and 2 are structural. This one actually tries, from inside the same
-# network the Highflame services run on, and must fail.
+hdr "2. Only the intended service is reachable from outside the host"
+# The stack runs on one bridge, so "which services are externally connected" is
+# not answerable by network membership here. What IS answerable, and is the
+# thing an evaluator actually cares about, is which containers publish a port
+# on the host — that is the set reachable from your network.
 #
-# Note honestly what this does NOT prove: it demonstrates the network has no
-# route, not that any particular service refrained from trying. Check 5 covers
-# intent by inspecting configuration.
+# Only nginx should. Everything else is reached through it, which is what keeps
+# the browser talking to a single origin.
+# ---------------------------------------------------------------------------
+PUBLISHERS=$(docker compose ps --format '{{.Name}}\t{{.Publishers}}' 2>/dev/null \
+  | awk -F'\t' '$2 ~ /PublishedPort":[1-9]/ {print $1}' | sort | tr '\n' ' ' | sed 's/ $//')
+if [ -z "$PUBLISHERS" ]; then
+  PUBLISHERS=$(docker ps --filter "label=com.docker.compose.project=$PROJECT" \
+    --format '{{.Names}}\t{{.Ports}}' | awk -F'\t' '$2 ~ /->/ {print $1}' | sort | tr '\n' ' ' | sed 's/ $//')
+fi
+say "  publishing a host port: ${PUBLISHERS:-<none>}"
+say "  expected:               highflame-nginx"
+if [ "$PUBLISHERS" = "highflame-nginx" ]; then
+  ok "only nginx is reachable from outside the host"
+else
+  bad "unexpected services publish a host port — each one is an additional entry point"
+fi
+
+# ---------------------------------------------------------------------------
+hdr "3. Empirical: what a container on the app network can actually reach"
+# Tried, not assumed, from inside the same network the Highflame services run
+# on. The verdict depends on check 1: on an internal network these must fail,
+# and on the routable bridge this stack ships they will succeed — which is
+# reported, not hidden.
+#
+# What this does NOT prove either way: it says what the network permits, not
+# what any service attempted. Checks 4 and 5 cover intent by reading live
+# connections and configuration.
 # ---------------------------------------------------------------------------
 for target in 1.1.1.1:53 8.8.8.8:53; do
   host=${target%:*}; port=${target#*:}
   if docker run --rm --network "$APP_NET" "$PROBE_IMAGE" \
        timeout 5 nc -z "$host" "$port" >/dev/null 2>&1; then
-    bad "reached $target from $APP_NET — the network is NOT isolated"
+    if [ "$INTERNAL" = "true" ]; then
+      bad "reached $target from an internal network — isolation is broken"
+    else
+      warn "reached $target from $APP_NET — expected on a routable bridge, and why checks 4-7 matter"
+    fi
   else
-    ok "could not reach $target from $APP_NET (connection has nowhere to go)"
+    ok "could not reach $target from $APP_NET"
   fi
 done
 
-# DNS resolution of an external name should also fail on an internal network.
 if docker run --rm --network "$APP_NET" "$PROBE_IMAGE" \
      timeout 5 nslookup api.highflame.ai >/dev/null 2>&1; then
   warn "external DNS resolved from $APP_NET — resolution alone is not egress, but check your DNS setup"
@@ -258,6 +295,66 @@ for number, line in enumerate(sys.stdin, 1):
     bad "resolved configuration points at a Highflame-operated or analytics host"
   else
     ok "no Highflame-operated or analytics host in any configured value"
+  fi
+
+  # The service config files, which `docker compose config` does NOT cover.
+  #
+  # This sub-check exists because of a real miss: config/authn/config.yaml
+  # shipped an external_issuers block pointing at a placeholder public Okta org,
+  # so AuthN fetched JWKS from the internet at every start and on each cache
+  # expiry. Check 5 passed throughout, because it only ever read compose-level
+  # values and only ever looked for Highflame-operated hosts — and Okta is
+  # neither. highflame-authn#199.
+  #
+  # So the rule here is the stricter one: in an air-gapped bundle, ANY host that
+  # is not in this stack is a finding, whoever operates it. In-stack names,
+  # loopback, private ranges and the deliberately-unresolvable .invalid
+  # placeholders are allowed; everything else is reported.
+  cfg_hits=$(python3 - <<'PYEOF' || true
+import ipaddress, pathlib, re
+
+# host.docker.internal is this machine, by definition — Docker's name for the
+# host, never routable off it. Used for things the operator runs outside Docker
+# (their own MCP server, their own LLM), which are theirs and in scope for an
+# evaluation. What those endpoints point AT is verified by checks 6 and 7.
+allowed = re.compile(
+    r"^(highflame-[a-z-]+|localhost|host\.docker\.internal"
+    r"|127\.0\.0\.1|0\.0\.0\.0"
+    r"|[a-z0-9-]+\.disabled\.invalid|.*\.invalid)$", re.IGNORECASE)
+
+def in_stack(host: str) -> bool:
+    # A single-label name cannot be a public host — it needs a dot to be
+    # resolvable on the internet. This covers container names and, importantly,
+    # nginx upstream names: `proxy_pass http://observatory/` refers to an
+    # `upstream` block in the same file, not to DNS.
+    if "." not in host:
+        return True
+    if allowed.match(host):
+        return True
+    try:
+        # A literal private address is this machine or its network, not ours to
+        # judge; a public one is.
+        return ipaddress.ip_address(host).is_private
+    except ValueError:
+        return False
+
+url = re.compile(r"https?://([A-Za-z0-9._-]+)")
+for path in sorted(pathlib.Path("config").rglob("*")):
+    if not path.is_file() or path.suffix not in {".yaml", ".yml", ".json", ".conf", ".template"}:
+        continue
+    for number, line in enumerate(path.read_text(errors="replace").splitlines(), 1):
+        if line.lstrip().startswith(("#", "//")):
+            continue
+        for host in url.findall(line):
+            if not in_stack(host):
+                print(f"  {path}:{number}: {host}")
+PYEOF
+)
+  if [ -n "$cfg_hits" ]; then
+    say "$cfg_hits"
+    bad "a mounted config file names a host outside this stack"
+  else
+    ok "no config file under config/ names a host outside this stack"
   fi
 
   # Detector models must resolve to in-stack services.
