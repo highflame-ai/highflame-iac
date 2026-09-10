@@ -75,3 +75,17 @@ sandbox:
     enabled: false
   defaultRule:
     variation: enabled
+
+# Unified Control Fabric policy UI (highflame-studio#1476). Off means the legacy
+# per-product policy screens. Studio ships it defaulted OFF, so it has to be
+# turned on here rather than assumed -- an undefined flag resolves to the code
+# default, not to `enabled`.
+#
+# Also read by registry/identities/[id], so it changes the identity detail page
+# as well as the policy screens.
+studio_control_fabric_ui:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
