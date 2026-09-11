@@ -144,7 +144,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `FORGE_AUTH_MODE` | Highflame forge service auth mode | `rs256` | -
 `FORGE_BACKEND` | Highflame forge service backend config | `local` | -
 `OTEL_SERVICE_NAME` | Highflame OTEL service name | `forge` | -
-`OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `http://highflame-collector:4317` | Scheme is REQUIRED: the exporters read TLS from it, so a bare host:port attempts TLS against a plaintext collector and drops every span silently. Verify the image bakes this form rather than assuming it (see highflame-forge#181)
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | -
@@ -212,7 +212,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `GROK_MODEL` | Grok model name | `grok-2` | -
 `ATTACK_GEN_MODEL` | Xai model name | `xai/grok-3` | -
 `DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local`
-`OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `highflame-collector:4317` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `http://highflame-collector:4317` | Scheme is REQUIRED: the exporters read TLS from it, so a bare host:port attempts TLS against a plaintext collector and drops every span silently. Verify the image bakes this form rather than assuming it (see highflame-forge#181)
 `OTEL_SERVICE_NAME` | Highflame collector service | `redteam-scanner` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | -
 

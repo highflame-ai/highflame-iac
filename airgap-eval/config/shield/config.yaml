@@ -229,9 +229,7 @@ traces:
 
 telemetry:
   enabled: true
-  endpoint: "highflame-collector:4317"
   sampling_rate: 1.0
-  insecure: true
 
 redis:
   addr: highflame-redis:6379
