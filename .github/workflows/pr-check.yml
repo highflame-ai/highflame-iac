@@ -46,7 +46,7 @@ jobs:
         env:
           COMMIT_MESSAGE: "${{ steps.commit_message.outputs.message }}"
         run: |-
-          CLEAN_COMMIT_MESSAGE=$(echo '${{ env.COMMIT_MESSAGE }}' | sed "s|\"||g")
+          CLEAN_COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/}"
           if [[ "${CLEAN_COMMIT_MESSAGE}" =~ ^(${{ env.PR_CHECK_PREFIX }}) ]]; then
             echo "Commit message is valid....!"
           else
