@@ -54,7 +54,7 @@ spec:
     volumeClaimTemplates:
       - name: keeper
         spec:
-          # storageClassName: storage_classname
+          storageClassName: highflame-storageclass
           accessModes:
             - ReadWriteOnce
           resources:
@@ -174,7 +174,7 @@ spec:
     volumeClaimTemplates:
       - name: clickhouse-data
         spec:
-          # storageClassName: storage_classname
+          storageClassName: highflame-storageclass
           accessModes:
             - ReadWriteOnce
           resources:
@@ -182,7 +182,7 @@ spec:
               storage: 512Gi
       # - name: clickhouse-log
       #   spec:
-      #     storageClassName: storage_classname
+      #     storageClassName: highflame-storageclass
       #     accessModes:
       #       - ReadWriteOnce
       #     resources:

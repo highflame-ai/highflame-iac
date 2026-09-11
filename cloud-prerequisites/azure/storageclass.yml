@@ -1,0 +1,16 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+  name: highflame-storageclass
+parameters:
+  # skuname: Premium_LRS
+  # kind: Managed
+  # diskEncryptionSetID: <des_id>
+  # tags: Environment=prod
+  # cachingMode: None
+provisioner: disk.csi.azure.com
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
