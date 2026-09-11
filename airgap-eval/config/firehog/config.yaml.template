@@ -17,6 +17,19 @@ shield:
   # request instead, since Cedar is default-deny.
   fail_closed: true
   timeout_seconds: 5
+  # Send the model's reply to Shield as well as the prompt. firehog defaults
+  # this to FALSE (firehog#545): on the hosted product the request side is the
+  # enforcement point, and the reply is relayed as-is. For an evaluation that
+  # is the wrong default — an evaluator running an agent through the gateway
+  # expects the reply, and the tool calls the model asks for, to be inspected
+  # the same way the SDK middleware inspects them. Without this, tool calls in
+  # the reply are never seen by Shield, and "delete the order" reaches the
+  # agent's tool untouched.
+  #
+  # Non-streaming responses only (firehog#561): a streamed reply is relayed
+  # live and cannot be scanned at any setting. Agent frameworks that call the
+  # model without `stream=True` (LangChain's `invoke`/`ainvoke`) are covered.
+  scan_responses: true
   internal_secret: ${HIGHFLAME_INTERNAL_SERVICE_SECRET}
   service_name: highflame-firehog
 # OAuth JWT authentication for MCP clients (RFC 9728 / MCP spec 2025-06-18)
@@ -37,7 +50,24 @@ oauth:
   jwks_url: "http://highflame-authn:8051/.well-known/jwks.json"
   jwks_refresh_seconds: 300
   # AuthN is the only token issuer (studio#1425 retired Studio's MCP mint).
-  jwt_issuer: "http://localhost:8051"
+  # MUST match `issuer` in config/authn/config.yaml, which is the value AuthN
+  # stamps into every token it mints. Shield pins the same value through
+  # HIGHFLAME_AUTH_JWT_ISSUER in docker-compose.yaml. It was http://localhost:8051
+  # here, which is the upstream laptop default and wrong inside the compose
+  # network: every Highflame JWT presented to the gateway as a bearer failed
+  # issuer validation and was refused as "no Highflame credential", so a
+  # delegated agent credential could not be used through the gateway at all.
+  jwt_issuer: "http://highflame-authn:8051"
+  # Check that the identity behind a JWT is still active, not only that the
+  # signature and expiry are good. firehog defaults this to FALSE, so a
+  # specialist agent deactivated in Studio kept calling the model through the
+  # gateway for as long as its delegated credential lived; the SDK path refuses
+  # the same credential at once. An evaluator who switches an agent off expects
+  # it to stop. The lookup is cached per identity; the short TTL is so the
+  # effect is visible within a few seconds of the click, which is what a
+  # walkthrough needs and costs one Admin round-trip per identity per TTL.
+  identity_active_gate: true
+  identity_cache_ttl_seconds: 5
 
 # MCP server routing
 # Note: MCP servers running on the host (outside Docker) use host.docker.internal
