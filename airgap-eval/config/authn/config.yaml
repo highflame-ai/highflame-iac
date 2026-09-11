@@ -212,8 +212,6 @@ oauth_clients:
 # OpenTelemetry observability
 telemetry:
   enabled: true
-  endpoint: "highflame-collector:4317"
-  insecure: true
   service_name: highflame-authn
   sampling_rate: 1.0
 

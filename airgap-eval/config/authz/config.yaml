@@ -15,8 +15,6 @@ log_format: json
 # sampling_rate 1.0 keeps every trace; revisit when query latency degrades.
 telemetry:
   enabled: true
-  endpoint: highflame-collector:4317
-  insecure: true
   sampling_rate: 1.0
 
 # Database configuration
