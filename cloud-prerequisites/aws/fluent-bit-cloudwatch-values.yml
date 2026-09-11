@@ -1,0 +1,74 @@
+## Change it for each namespace
+logNamespace: prod
+projectName: highflame
+region: us-east-1
+logRetention: 365
+k8sCluster: highflame-prod-eks
+
+## Actual Helm chart Value file https://github.com/fluent/helm-charts/blob/main/charts/fluent-bit/values.yaml
+## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/configuration-file
+config:
+  service: |
+    [SERVICE]
+        Daemon            Off
+        Flush             {{ .Values.flush }}
+        Log_Level         {{ .Values.logLevel }}
+        Parsers_File      /fluent-bit/etc/parsers.conf
+        Parsers_File      /fluent-bit/etc/conf/custom_parsers.conf
+        HTTP_Server       On
+        HTTP_Listen       0.0.0.0
+        HTTP_Port         {{ .Values.metricsPort }}
+        Health_Check      On
+
+  ## https://docs.fluentbit.io/manual/pipeline/inputs
+  inputs: |
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*_{{ .Values.logNamespace }}*.log
+        Parser            docker
+        Tag               {{ .Values.projectName }}.*
+        multiline.parser  docker, cri
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+
+  ## https://docs.fluentbit.io/manual/pipeline/filters
+  filters: |
+    [FILTER]
+        Name                kubernetes
+        Match               {{ .Values.projectName }}.*
+        Kube_Tag_Prefix     {{ .Values.projectName }}.var.log.containers.
+        Merge_Log           On
+        Merge_Log_Key       log_processed
+        Keep_Log            Off
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude On
+
+    [FILTER]
+        Name                grep
+        Match               {{ .Values.projectName }}.*
+        Exclude             log /.*/health*./
+        Exclude             msg /.*/health*./
+
+  ## https://docs.fluentbit.io/manual/pipeline/outputs
+  outputs: |
+    [OUTPUT]
+        Name                cloudwatch_logs
+        Match               {{ .Values.projectName }}.*
+        region              {{ .Values.region }}
+        log_group_name      {{ .Values.k8sCluster }}-service-log
+        auto_create_group   On
+        log_retention_days  {{ .Values.logRetention }}
+        log_stream_name     {{ .Values.projectName }}
+
+  ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/upstream-servers
+  ## This configuration is deprecated, please use `extraFiles` instead.
+  upstream: {}
+
+  ## https://docs.fluentbit.io/manual/pipeline/parsers
+  customParsers: |
+    [PARSER]
+        Name docker_no_time
+        Format json
+        Time_Keep Off
+        Time_Key time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L

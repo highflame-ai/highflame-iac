@@ -1,0 +1,30 @@
+general:
+  remote_storage: azblob
+  disable_progress_bar: false
+  backups_to_keep_local: 1
+  backups_to_keep_remote: 10
+  log_level: info
+  allow_empty_backups: false
+clickhouse:
+  username: highflame_backup
+  password: ""
+  host: clickhouse-ch.clickhouse.svc.cluster.local
+  port: 9000
+  disk_mapping: {}
+  skip_tables:
+    - system.*
+  timeout: 5m
+  freeze_by_part: false
+  secure: false
+  skip_verify: false
+  sync_replicated_tables: true
+  log_sql_queries: false
+azblob:
+  endpoint_suffix: "core.windows.net"
+  account_name: "BLOB_STORE"
+  use_managed_identity: true
+  container: "BLOB_CONTAINER"
+  assume_container_exists: true
+  path: highflame-clickhouse
+  compression_format: tar
+  compression_level: 1

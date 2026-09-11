@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: ''
+  name: clickhouse-sa
+  namespace: clickhouse
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-cm
+  namespace: clickhouse
+data:
+  CLICKHOUSE_HOST: 'clickhouse-ch.clickhouse.svc.cluster.local'
+  BACKUP_KEEP: '60'
+  CREATE_DB_LIST: ''
+  BACKUP_DB_LIST: 'highflame'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: clickhouse-secrets
+  namespace: clickhouse
+type: Opaque
+stringData:
+  CH_ADMIN_USERNAME: 'highflame_admin'
+  CH_ADMIN_PASSWORD: ''
+  CH_READONLY_USERNAME: 'highflame_readonly'
+  CH_READONLY_PASSWORD: ''
+  CH_BACKUP_USERNAME: 'highflame_backup'
+  CH_BACKUP_PASSWORD: ''
