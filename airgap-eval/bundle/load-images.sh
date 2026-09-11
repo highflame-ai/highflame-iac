@@ -107,7 +107,6 @@ Next:
     cp .env.example .env      # set HIGHFLAME_HOSTNAME and HIGHFLAME_LLM_BASE_URL
     ./bootstrap/bootstrap.sh
     docker compose up -d
-    ./bootstrap/seed-tenant.sh
-    ./bootstrap/seed-policies.sh   # REQUIRED — without it Cedar denies everything
+    ./bootstrap/seed-tenant.sh    # provisions the tenant and its default policies
     ./verify/no-egress.sh --report egress-report.txt
 EOF
