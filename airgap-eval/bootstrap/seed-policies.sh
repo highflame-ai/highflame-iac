@@ -46,8 +46,8 @@
 # code path writes, and it hid the fact that this tenant never went through
 # project provisioning at all.
 #
-# Idempotent: authz returns early if the project already has project-wide
-# policies, so re-running is free.
+# Idempotent: authz creates only the defaults a project is missing, so
+# re-running is free and also repairs a project that lost one.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -199,37 +199,51 @@ for product in PRODUCTS:
     except ValueError:
         result = {}
 
+    # Report what the store holds, not what the response says.
+    #
+    # "created" means the same thing across authz versions, so it is safe to
+    # name. "existing" is not: it used to be every project-wide policy the
+    # project held, and since highflame-authz#160 it is the defaults that were
+    # already in place. Reading it would make this script's output quietly
+    # depend on which authz the bundle happens to ship.
+    #
+    # What the operator needs is one answer anyway — is an active baseline
+    # permit in place now? — and that is worth verifying rather than inferring,
+    # whether the call created one, found one, or failed to make one. Cedar
+    # denies anything no policy permits and names nothing while doing it, so
+    # catching it here beats discovering it at the first guarded request.
+    baseline_present = has_baseline(policies_for(token, product))
+
     created = result.get("created") or []
     if created:
         provisioned.append(product)
         names = ", ".join(p.get("policy_name", "?") for p in created)
         print(f"  {product:11} provisioned: {names}")
     else:
-        # The "existing" list is every project-wide policy, agent grants
-        # included, so counting it says more than naming it would.
-        count = len(result.get("existing") or [])
-        print(f"  {product:11} already provisioned ({count} project-wide policies)")
+        state = "baseline permit in place" if baseline_present else "NO baseline permit"
+        print(f"  {product:11} already provisioned — {state}")
 
-    # ensure-defaults returns early when the project already has ANY project-wide
-    # policy, so a project that lost only its baseline — or that had a detection
-    # policy deployed before defaults ever ran — is NOT repaired by the call
-    # above and reports "already present" while still missing the permit.
-    # Studio cannot fix that state either: the organization category is filtered
-    # out of the template catalogue, and the Default Behavior toggle is disabled
-    # when no baseline exists (highflame-studio#1607). So say so loudly here,
-    # where it is still cheap to fix.
-    if not has_baseline(policies_for(token, product)):
+    if not baseline_present:
         stranded.append(product)
 
 if stranded:
     print()
     print("PROBLEM: no active Baseline Permit for: " + ", ".join(stranded))
     print()
-    print("  The project already holds other policies, so ensure-defaults declined")
-    print("  to seed, and Cedar will deny anything no other policy permits — with")
-    print("  no policy named in the refusal.")
+    print("  Cedar denies anything no other policy permits, and names no policy in")
+    print("  the refusal, so requests will fail without saying why.")
     print()
-    print("  Studio cannot create it (highflame-studio#1607). Deploy it directly:")
+    print("  Two ways this happens:")
+    print()
+    print("    - authz could not create it. Check its logs for the template name;")
+    print("      seeding is best-effort and logs rather than failing the call.")
+    print("    - the deployment predates highflame-authz#160, where ensure-defaults")
+    print("      returned early once a project held ANY policy and so could not")
+    print("      restore a baseline a project had lost.")
+    print()
+    print("  Easiest fix, if Studio is reachable: open the product's Policies page")
+    print("  and turn Default Behavior on — the toggle deploys the baseline permit")
+    print("  (highflame-studio#1608). Otherwise deploy it directly:")
     print()
     print("      curl -X POST http://127.0.0.1:$PORT/v2/admin/policy \\")
     print("        -H 'Host: <HIGHFLAME_HOST_IP>' -H 'Authorization: Bearer <id_token>' \\")
