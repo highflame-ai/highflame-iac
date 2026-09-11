@@ -44,8 +44,16 @@ PGDB="${POSTGRES_DB:-javelin_data}"
 # Change one without the other and login fails with 403.
 EVALUATOR_SUB="0f5d0c7e-26bd-437e-93d2-6ea988f1292e"
 ACCOUNT_ID="100000000001"
-ORG_UUID="11111111-1111-4111-8111-111111111111"
-PROJECT_UUID="22222222-2222-4222-8222-222222222222"
+
+# The organization's identifier at the identity provider. Stable, so re-running
+# this script finds the tenant it made last time instead of making another.
+AUTH_ORG_ID="airgap-eval"
+
+# The organization and project UUIDs are NOT pinned here any more. They are
+# whatever provisioning assigns, and this script writes them into .env for the
+# notebook to read. Pinning them meant creating the rows by hand, which is how
+# this tenant used to skip everything else provisioning does.
+command -v python3 >/dev/null || { echo "python3 is required"; exit 1; }
 
 echo "waiting for Admin to finish its first-boot migrations..."
 # account_members is created by Admin's tenancy migration. Polling for the TABLE
@@ -83,30 +91,136 @@ if ! docker compose exec -T highflame-db \
   exit 1
 fi
 
+# ----------------------------------------------------------------------------
+# Provision the organization and its default project through the product.
+#
+# This used to be two INSERTs into `tenants`. Writing those rows by hand
+# produced a tenant that looked complete and was not: provisioning also gives a
+# new project its default policies, and Cedar is default-deny, so a project
+# created behind the product's back denies everything and names no policy while
+# doing it. Everything the product does on the way is now done.
+#
+# Only the membership below still needs direct database access.
+# ----------------------------------------------------------------------------
+echo "provisioning the organization and its default project..."
+
+PROVISION_OUT=$(
+  HIGHFLAME_ACCOUNT_ID="$ACCOUNT_ID" \
+  HIGHFLAME_AUTH_ORG_ID="$AUTH_ORG_ID" \
+  python3 - <<'PYTHON'
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+env = {}
+for line in open(".env"):
+    line = line.strip()
+    if line and not line.startswith("#") and "=" in line:
+        key, value = line.split("=", 1)
+        env[key] = value
+
+HOSTNAME = env.get("HIGHFLAME_HOST_IP", "highflame.local")
+PORT = env.get("HIGHFLAME_HTTP_PORT", "80")
+BASE = f"http://127.0.0.1:{PORT}"
+ACCOUNT_ID = os.environ["HIGHFLAME_ACCOUNT_ID"]
+AUTH_ORG_ID = os.environ["HIGHFLAME_AUTH_ORG_ID"]
+
+
+def request(method, path, body=None, token=None, form=False):
+    headers = {"Host": HOSTNAME}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    data = None
+    if body is not None:
+        if form:
+            data = urllib.parse.urlencode(body).encode()
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+        else:
+            data = json.dumps(body).encode()
+            headers["Content-Type"] = "application/json"
+
+    req = urllib.request.Request(BASE + path, data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.status, resp.read().decode()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read().decode()
+    except urllib.error.URLError as exc:
+        return 0, str(exc.reason)
+
+
+# The API has to be reachable, not merely migrated. Waiting here keeps the
+# failure legible: without it an unready Admin looks like a provisioning bug.
+for _ in range(60):
+    status, _ = request("GET", "/v1/admin/health")
+    if status and status < 500:
+        break
+    time.sleep(5)
+else:
+    sys.exit("  Admin never became reachable; is the stack up? docker compose ps")
+
+status, raw = request(
+    "POST",
+    "/auth/realms/highflame/protocol/openid-connect/token",
+    body={
+        "client_id": "highflame-studio",
+        "client_secret": env.get("OIDC_CLIENT_SECRET", ""),
+        "grant_type": "password",
+        "username": "evaluator",
+        "password": env.get("EVALUATOR_PASSWORD", ""),
+        "scope": "openid",
+    },
+    form=True,
+)
+if status != 200:
+    sys.exit(f"  keycloak returned {status}: {raw[:200]}")
+
+token = json.loads(raw).get("id_token")
+if not token:
+    sys.exit("  no id_token in the keycloak response")
+
+# account_id is pinned so the docs and the notebook can name it. The org and
+# project UUIDs are the product's to choose. auth_provider says who actually
+# authenticated the caller, rather than letting it default to Clerk.
+status, raw = request(
+    "POST",
+    "/v1/admin/tenancy/provision",
+    body={
+        "auth_org_id": AUTH_ORG_ID,
+        "auth_provider": "oidc",
+        "account_id": ACCOUNT_ID,
+        "org_name": "Evaluation",
+    },
+    token=token,
+)
+if status not in (200, 201):
+    sys.exit(f"  provisioning failed: {status} {raw[:300]}")
+
+body = json.loads(raw)
+org = body.get("organization") or {}
+project = body.get("default_project") or {}
+project_id = project.get("id") or body.get("default_project_id") or ""
+if not project_id:
+    sys.exit(f"  provisioning returned no default project: {raw[:300]}")
+
+# Consumed by the shell below.
+print(org.get("id", ""))
+print(project_id)
+PYTHON
+) || exit 1
+
+ORG_UUID=$(printf '%s\n' "$PROVISION_OUT" | sed -n '1p')
+PROJECT_UUID=$(printf '%s\n' "$PROVISION_OUT" | sed -n '2p')
+echo "  organization    ${ORG_UUID}"
+echo "  default project ${PROJECT_UUID}"
+
 docker compose exec -T highflame-db psql -U "$PGUSER_" -d "$PGDB" -v ON_ERROR_STOP=1 <<SQL
 \set ON_ERROR_STOP on
-
--- Organization. auth_provider='oidc' with a stable auth_org_id, so Admin's
--- Clerk-org lookup path is never involved. The UNIQUE key here is
--- (auth_provider, auth_org_id) as of ADR 0033, which is what lets an on-prem
--- 'oidc' org coexist with a 'clerk' org carrying the same identifier.
-INSERT INTO tenants (
-  id, parent_id, tenant_type, auth_provider, auth_org_id, account_id,
-  name, slug, tier, metadata, settings, is_active, is_default
-) VALUES (
-  '${ORG_UUID}', NULL, 'organization', 'oidc', 'airgap-eval', '${ACCOUNT_ID}',
-  'Evaluation', 'evaluation', 'enterprise', '{}'::jsonb, '{}'::jsonb, true, false
-) ON CONFLICT (account_id, slug) DO NOTHING;
-
--- Default project. Studio's oidc_session grant resolves this when the caller
--- names no project_id, so without it first login fails on project resolution.
-INSERT INTO tenants (
-  id, parent_id, tenant_type, auth_provider, auth_org_id, account_id,
-  name, slug, tier, metadata, settings, is_active, is_default
-) VALUES (
-  '${PROJECT_UUID}', '${ORG_UUID}', 'project', 'oidc', NULL, '${ACCOUNT_ID}',
-  'Default', 'default', 'enterprise', '{}'::jsonb, '{}'::jsonb, true, true
-) ON CONFLICT (account_id, slug) DO NOTHING;
 
 -- The membership that makes login possible. source='oidc' records provenance
 -- distinctly from clerk/scim/manual/mapping, so reconciliation can tell where
@@ -140,6 +254,31 @@ if [ "${MEMBERS:-0}" -lt 1 ]; then
   echo "  docker compose logs highflame-db | tail -40"
   exit 1
 fi
+
+# Record the ids provisioning chose, so the notebook reads them instead of
+# carrying literals that have to be kept in step with this script by hand.
+# Upsert rather than append: re-running must not leave two of each.
+HIGHFLAME_ACCOUNT_ID="$ACCOUNT_ID" HIGHFLAME_PROJECT_ID="$PROJECT_UUID" python3 - <<'PYTHON'
+import os
+import pathlib
+import re
+
+path = pathlib.Path(".env")
+text = path.read_text() if path.exists() else ""
+
+for key in ("HIGHFLAME_ACCOUNT_ID", "HIGHFLAME_PROJECT_ID"):
+    line = f"{key}={os.environ[key]}"
+    pattern = re.compile(rf"^{key}=.*$", re.M)
+    if pattern.search(text):
+        text = pattern.sub(line, text)
+    else:
+        if text and not text.endswith("\n"):
+            text += "\n"
+        text += line + "\n"
+
+path.write_text(text)
+PYTHON
+echo "  recorded HIGHFLAME_ACCOUNT_ID and HIGHFLAME_PROJECT_ID in .env"
 
 cat <<EOF
 

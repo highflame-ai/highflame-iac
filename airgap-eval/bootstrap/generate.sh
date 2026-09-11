@@ -332,10 +332,9 @@ cat <<EOF
 Bootstrap complete.
 
   next:   docker compose up -d
-  then:   ./bootstrap/seed-tenant.sh        # creates the first org + membership
-  then:   ./bootstrap/seed-policies.sh      # REQUIRED — provisions each product's
-                                            # baseline permit. Without it Cedar
-                                            # denies everything, naming no policy.
+  then:   ./bootstrap/seed-tenant.sh        # provisions the org, its default
+                                            # project and that project's default
+                                            # policies, then adds your membership
   prove:  ./verify/no-egress.sh --report egress-report.txt
 
 Sign in at ${EXTERNAL_URL} as 'evaluator'.
