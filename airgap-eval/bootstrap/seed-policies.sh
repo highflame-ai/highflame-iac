@@ -1,28 +1,53 @@
 #!/usr/bin/env bash
 #
-# Seed the evaluation account's Cedar policies from the shipped template
-# catalog.
+# Give the evaluation tenant the default policies every project gets, by asking
+# the product to provision them — not by writing policies of our own.
 #
-# This is not optional decoration, and it is not a demo fixture. Two things make
-# it load-bearing:
+# Why this script has to exist at all
+# -----------------------------------
+# Admin seeds a project's default policies when it CREATES the project
+# (highflame-admin, tenancy.Service.seedDefaultPolicies -> authz
+# /policies/ensure-defaults). This bundle does not create its project that way:
+# bootstrap/seed-tenant.sh writes the account, project and membership straight
+# into Postgres, because account_members has no API a fresh install can reach.
+# That bypasses the hook, so the tenant is born with no policies at all.
 #
-#   1. Cedar is DEFAULT-DENY. Without at least one permit policy, every request
-#      is denied no matter what the forbid rules say. So an empty policy set is
-#      not "no opinion" — combined with shield.fail_closed it is "deny
-#      everything".
+# Why that matters more than it sounds
+# ------------------------------------
+#   1. Cedar is DEFAULT-DENY. Without a permit policy every request is denied no
+#      matter what the forbid rules say, so an empty policy set is not "no
+#      opinion" — it is "deny everything".
 #
-#   2. firehog's config in this bundle sets shield.fail_closed = true, so a
-#      Shield that cannot evaluate refuses traffic rather than forwarding it
-#      unscanned. That is the posture an air-gapped deployment wants, and it is
-#      only usable once policies exist.
+#   2. firehog's config here sets shield.fail_closed = true, so a Shield that
+#      cannot evaluate refuses traffic rather than forwarding it unscanned. That
+#      is the posture an air-gapped deployment wants, and it is only usable once
+#      policies exist.
 #
-# Before this script existed the stack ran with zero policies, Shield answered
-# every guard call with 500 "no policies loaded", and the gateway forwarded
-# every prompt to the LLM completely unscanned while logging a single warning.
-# The product looked like it was working. It was a passthrough proxy.
+#   3. The denial is anonymous. A request that matches no policy comes back with
+#      an empty policy_reason and no determining policies, which the SDK prints
+#      as "Refused by Highflame: None". Nothing tells the operator what to fix.
 #
-# The policies come from the catalog the product ships, not from anything
-# written here, so what an evaluator sees is the real thing.
+# Before any of this existed the stack ran with zero policies, Shield answered
+# every guard call with 500 "no policies loaded", and the gateway forwarded every
+# prompt to the LLM completely unscanned while logging a single warning. The
+# product looked like it was working. It was a passthrough proxy.
+#
+# What it seeds, and what it deliberately does not
+# ------------------------------------------------
+# ensure-defaults provisions exactly one policy per product — Baseline Permit
+# (organization.permit-baseline), the permit everything else narrows. It seeds no
+# detection policies, by design: those are the evaluator's to deploy from
+# Studio's template catalogue, the same way a customer deploys them, so what gets
+# enforced is a decision someone made and can point at rather than something a
+# bootstrap script decided on their behalf.
+#
+# An earlier version of this script created a curated set of templates directly.
+# That produced policies no one had chosen, labelled with a marker no product
+# code path writes, and it hid the fact that this tenant never went through
+# project provisioning at all.
+#
+# Idempotent: authz returns early if the project already has project-wide
+# policies, so re-running is free.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -40,6 +65,7 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 # --- config -----------------------------------------------------------------
@@ -65,24 +91,16 @@ BASE = f"http://127.0.0.1:{PORT}"
 ACCOUNT_ID = "100000000001"
 PROJECT_ID = "22222222-2222-4222-8222-222222222222"
 
-# Product namespace Shield evaluates for LLM gateway traffic. Policies seeded
-# under any other product sync cleanly and are never consulted here — which is a
-# genuinely confusing failure, because "policy sync completed" still logs
-# success for the product you did populate.
-PRODUCT = "ai_gateway"
-
-# The three that make an honest demo without GPUs:
-#   permit-baseline          required, or Cedar denies everything
-#   privacy.defaults         PII, driven by pattern detectors
-#   data-protection.secrets  credentials, likewise
+# The two product namespaces this bundle actually evaluates:
+#   guardrails  agent and SDK traffic (Shield's /guard, the notebooks)
+#   ai_gateway  LLM traffic through firehog
 #
-# Deliberately NOT the *-model / advanced templates: those need the ML detector
-# services, which this bundle does not ship.
-TEMPLATES = [
-    "organization.permit-baseline",
-    "privacy.defaults",
-    "data-protection.secrets",
-]
+# Policies seeded under any other product sync cleanly and are never consulted —
+# a genuinely confusing failure, because "policy sync completed" still logs
+# success for the product you did populate.
+PRODUCTS = ["guardrails", "ai_gateway"]
+
+BASELINE_TEMPLATE_ID = "organization.permit-baseline"
 
 # --- helpers ----------------------------------------------------------------
 
@@ -117,14 +135,35 @@ def request(method, path, body=None, token=None, form=False):
         sys.exit(1)
 
 
-import urllib.parse  # noqa: E402  (after helpers, used by request)
+def policies_for(token, product):
+    """Every project-wide policy stored for a product."""
+    query = urllib.parse.urlencode({"limit": "200", "label": f"product:{product}"})
+    status, raw = request("GET", f"/v2/admin/policy?{query}", token=token)
+    if status != 200:
+        return None
+
+    try:
+        body = json.loads(raw)
+    except ValueError:
+        return None
+
+    items = body if isinstance(body, list) else body.get("policies", [])
+    return [p for p in items if not p.get("agent_id") and not p.get("application_id")]
+
+
+def has_baseline(policies):
+    for p in policies or []:
+        if (p.get("labels") or {}).get("template_id") == BASELINE_TEMPLATE_ID and p.get("is_active"):
+            return True
+    return False
+
 
 # --- 1. authenticate as the evaluator ---------------------------------------
 
 print("authenticating as evaluator")
 status, raw = request(
     "POST",
-    f"/auth/realms/highflame/protocol/openid-connect/token",
+    "/auth/realms/highflame/protocol/openid-connect/token",
     body={
         "client_id": "highflame-studio",
         "client_secret": CLIENT_SECRET,
@@ -142,85 +181,102 @@ token = json.loads(raw).get("id_token")
 if not token:
     sys.exit("  no id_token in the response")
 
-# --- 2. read the shipped catalog --------------------------------------------
+# --- 2. ask the product to provision its defaults ----------------------------
 
-print("reading the policy template catalog")
-status, raw = request("GET", "/v2/admin/policy/templates", token=token)
-if status != 200:
-    sys.exit(f"  admin returned {status}: {raw[:200]}")
+stranded = []
+provisioned = []
 
-catalog = json.loads(raw)
-by_id = {t["id"]: t for t in catalog if t.get("product") == PRODUCT}
-print(f"  {len(catalog)} templates, {len(by_id)} for product '{PRODUCT}'")
+for product in PRODUCTS:
+    query = urllib.parse.urlencode({"product": product})
+    status, raw = request(
+        "POST", f"/v2/admin/policy/ensure-defaults?{query}", body={}, token=token
+    )
+    if status not in (200, 201):
+        sys.exit(f"  FAILED   ensure-defaults for {product}: {status} {raw[:200]}")
 
-missing = [t for t in TEMPLATES if t not in by_id]
-if missing:
-    sys.exit(f"  catalog is missing: {', '.join(missing)}")
+    try:
+        result = json.loads(raw)
+    except ValueError:
+        result = {}
 
-# --- 3. create them ---------------------------------------------------------
-
-created = skipped = 0
-for template_id in TEMPLATES:
-    template = by_id[template_id]
-    body = {
-        "policy_name": template_id,
-        # product is resolved from labels["product"]. The top-level "product"
-        # field appears in the response model and is IGNORED on create — set it
-        # alone and the policy is stored unscoped, syncs to nothing, and
-        # nothing reports an error.
-        "labels": {
-            "product": PRODUCT,
-            "source": "airgap-eval",
-            "template_id": template_id,
-        },
-        "category": template.get("category", ""),
-        "content": template["cedar_text"],
-        "description": template.get("description", ""),
-        "mode": "enforce",
-        "is_active": True,
-    }
-
-    status, raw = request("POST", "/v2/admin/policy", body=body, token=token)
-    if status in (200, 201):
-        created += 1
-        print(f"  created  {template_id}")
-    elif status == 409:
-        skipped += 1
-        print(f"  keep     {template_id} (already present)")
+    created = result.get("created") or []
+    if created:
+        provisioned.append(product)
+        names = ", ".join(p.get("policy_name", "?") for p in created)
+        print(f"  {product:11} provisioned: {names}")
     else:
-        sys.exit(f"  FAILED   {template_id}: {status} {raw[:200]}")
+        # The "existing" list is every project-wide policy, agent grants
+        # included, so counting it says more than naming it would.
+        count = len(result.get("existing") or [])
+        print(f"  {product:11} already provisioned ({count} project-wide policies)")
 
-print(f"\n{created} created, {skipped} already present")
+    # ensure-defaults returns early when the project already has ANY project-wide
+    # policy, so a project that lost only its baseline — or that had a detection
+    # policy deployed before defaults ever ran — is NOT repaired by the call
+    # above and reports "already present" while still missing the permit.
+    # Studio cannot fix that state either: the organization category is filtered
+    # out of the template catalogue, and the Default Behavior toggle is disabled
+    # when no baseline exists (highflame-studio#1607). So say so loudly here,
+    # where it is still cheap to fix.
+    if not has_baseline(policies_for(token, product)):
+        stranded.append(product)
 
-# --- 4. confirm Shield actually loaded them ---------------------------------
+if stranded:
+    print()
+    print("PROBLEM: no active Baseline Permit for: " + ", ".join(stranded))
+    print()
+    print("  The project already holds other policies, so ensure-defaults declined")
+    print("  to seed, and Cedar will deny anything no other policy permits — with")
+    print("  no policy named in the refusal.")
+    print()
+    print("  Studio cannot create it (highflame-studio#1607). Deploy it directly:")
+    print()
+    print("      curl -X POST http://127.0.0.1:$PORT/v2/admin/policy \\")
+    print("        -H 'Host: <HIGHFLAME_HOST_IP>' -H 'Authorization: Bearer <id_token>' \\")
+    print("        -H 'x-javelin-accountid: 100000000001' \\")
+    print("        -H 'x-highflame-project-id: 22222222-2222-4222-8222-222222222222' \\")
+    print("        -H 'Content-Type: application/json' \\")
+    print("        -d '{\"policy_name\":\"Baseline Permit\",\"mode\":\"enforce\",\"is_active\":true,")
+    print("             \"labels\":{\"product\":\"<product>\",\"template_id\":\"organization.permit-baseline\"},")
+    print("             \"content\":\"<cedar_text from /v2/admin/policy/templates>\"}'")
+    sys.exit(1)
+
+# --- 3. confirm Shield actually loaded them ---------------------------------
 #
-# Creating a policy and having it enforced are different claims. Shield pulls
+# Provisioning a policy and having it enforced are different claims. Shield pulls
 # every 30s, so wait for the pull rather than assert success on the create.
 
-print("waiting for Shield to sync (polls every 30s)")
+print("\nwaiting for Shield to sync (polls every 30s)")
 deadline = time.time() + 90
 while time.time() < deadline:
-    status, raw = request("GET", "/v2/admin/policy", token=token)
-    if status == 200:
-        try:
-            policies = json.loads(raw)
-            active = [
-                p
-                for p in (policies if isinstance(policies, list) else policies.get("policies", []))
-                if p.get("product") == PRODUCT and p.get("is_active")
-            ]
-            if len(active) >= len(TEMPLATES):
-                print(f"  {len(active)} active {PRODUCT} policies in the store")
-                break
-        except (ValueError, AttributeError):
-            pass
+    counts = {p: len(policies_for(token, p) or []) for p in PRODUCTS}
+    if all(n > 0 for n in counts.values()):
+        print("  " + ", ".join(f"{p}: {n} project-wide" for p, n in counts.items()))
+        break
     time.sleep(5)
 
 print()
-print("Seeded. Verify enforcement actually happens — do not take it on trust:")
+if provisioned:
+    print("Baseline permit in place. Nothing is DETECTED yet — that is deliberate.")
+    print()
+    print("Deploy the detection policies you want from Studio, the way a customer")
+    print("would:  Guardrails -> Policies, and AI Gateway -> Policies.")
+    print()
+    print("  Structural PII      (privacy.defaults)          enforce")
+    print("  Secrets Detection   (data-protection.defaults)  monitor, or enforce")
+    print()
+    print("Both are pattern detectors, so they run without the ML detector services")
+    print("this bundle does not ship. The *-model and advanced templates need those,")
+    print("and will sit there matching nothing.")
+else:
+    print("Every product already had its defaults; nothing to do.")
+    print()
+    print("What is deployed is whatever you deployed from Studio. Check it under")
+    print("Guardrails -> Policies and AI Gateway -> Policies.")
+print()
+print("Then verify enforcement actually happens — do not take it on trust:")
 print()
 print("    docker compose logs highflame-shield | grep 'policy sync completed'")
-print(f"        expect policies:{len(TEMPLATES)} for product={PRODUCT}")
 print()
 print("    then send a prompt containing a fake credential through the gateway;")
 print("    the notebook's enforcement cell does exactly this.")

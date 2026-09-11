@@ -108,5 +108,6 @@ Next:
     ./bootstrap/bootstrap.sh
     docker compose up -d
     ./bootstrap/seed-tenant.sh
+    ./bootstrap/seed-policies.sh   # REQUIRED — without it Cedar denies everything
     ./verify/no-egress.sh --report egress-report.txt
 EOF
