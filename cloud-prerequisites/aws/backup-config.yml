@@ -1,0 +1,31 @@
+general:
+  remote_storage: s3
+  disable_progress_bar: false
+  backups_to_keep_local: 1
+  backups_to_keep_remote: 10
+  log_level: info
+  allow_empty_backups: false
+clickhouse:
+  username: highflame_backup
+  password: ""
+  host: clickhouse-ch.clickhouse.svc.cluster.local
+  port: 9000
+  disk_mapping: {}
+  skip_tables:
+    - system.*
+  timeout: 5m
+  freeze_by_part: false
+  secure: false
+  skip_verify: false
+  sync_replicated_tables: true
+  log_sql_queries: false
+s3:
+  bucket: "S3_BUCKET"
+  endpoint: "https://s3.S3_REGION.amazonaws.com"
+  region: S3_REGION
+  path: highflame-clickhouse
+  force_path_style: true
+  compression_level: 1
+  compression_format: tar
+  disable_cert_verification: false
+  storage_class: STANDARD

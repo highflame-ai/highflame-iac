@@ -1,0 +1,190 @@
+apiVersion: 'clickhouse-keeper.altinity.com/v1'
+kind: 'ClickHouseKeeperInstallation'
+
+metadata:
+  name: 'ch'
+  namespace: clickhouse
+
+spec:
+  configuration:
+    clusters:
+      - name: cluster
+        layout:
+          replicasCount: 1
+    settings:
+      keeper_server/tcp_port: '2181'
+      keeper_server/raft_port: '9444'
+
+  defaults:
+    templates:
+      podTemplate: keeper
+      volumeClaimTemplate: keeper
+
+  templates:
+    podTemplates:
+      - name: keeper
+        metadata:
+          labels:
+            app: clickhouse-keeper
+        spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: 'app'
+                        operator: In
+                        values:
+                          - clickhouse-keeper
+                  topologyKey: 'kubernetes.io/hostname'
+          containers:
+            - name: keeper
+              image: 'clickhouse/clickhouse-keeper:25.10.2'
+              command: ['/usr/bin/clickhouse-keeper', 'start']
+              resources:
+                requests:
+                  memory: '512Mi'
+                  cpu: '500m'
+                limits:
+                  memory: '1024Mi'
+                  cpu: '1000m'
+          securityContext:
+            fsGroup: 101
+
+    volumeClaimTemplates:
+      - name: keeper
+        spec:
+          storageClassName: highflame-storageclass
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+---
+apiVersion: 'clickhouse.altinity.com/v1'
+kind: 'ClickHouseInstallation'
+
+metadata:
+  name: 'ch'
+  namespace: clickhouse
+
+spec:
+  configuration:
+    zookeeper:
+      nodes:
+        - host: 'keeper-ch.clickhouse.svc.cluster.local'
+          port: 2181
+    clusters:
+      - name: cluster
+        layout:
+          shardsCount: 1
+          replicasCount: 1
+    users:
+      highflame_admin/password:
+        valueFrom:
+          secretKeyRef:
+            name: clickhouse-secrets
+            key: CH_ADMIN_PASSWORD
+      highflame_admin/networks/ip:
+        - '0.0.0.0/0'
+        - '::/0'
+      highflame_admin/profile: default
+      highflame_admin/quota: default
+      highflame_readonly/password:
+        valueFrom:
+          secretKeyRef:
+            name: clickhouse-secrets
+            key: CH_READONLY_PASSWORD
+      highflame_readonly/networks/ip:
+        - '0.0.0.0/0'
+        - '::/0'
+      highflame_readonly/profile: readonly
+      highflame_readonly/quota: readonly
+      highflame_backup/password:
+        valueFrom:
+          secretKeyRef:
+            name: clickhouse-secrets
+            key: CH_BACKUP_PASSWORD
+      highflame_backup/networks/ip:
+        - '0.0.0.0/0'
+        - '::/0'
+      highflame_backup/profile: backup
+      highflame_backup/quota: backup
+    profiles:
+      readonly/readonly: 2
+      readonly/max_execution_time: 120
+      readonly/max_memory_usage: 1000000000
+      readonly/max_rows_to_read: 100000000
+      readonly/max_result_rows: 10000
+      readonly/read_overflow_mode: throw
+      readonly/result_overflow_mode: throw
+      readonly/timeout_overflow_mode: throw
+      backup/readonly: 0
+    quotas:
+      readonly/interval/duration: 3600
+      backup/interval/duration: 3600
+
+  defaults:
+    templates:
+      podTemplate: clickhouse
+      dataVolumeClaimTemplate: clickhouse-data
+      # logVolumeClaimTemplate: clickhouse-log
+
+  templates:
+    podTemplates:
+      - name: clickhouse
+        spec:
+          serviceAccountName: clickhouse-sa
+          containers:
+            - name: clickhouse
+              image: clickhouse/clickhouse-server:25.10.2
+              resources:
+                requests:
+                  cpu: '4'
+                  memory: '12Gi'
+                limits:
+                  cpu: '4'
+                  memory: '12Gi'
+              volumeMounts:
+                - name: clickhouse-data
+                  mountPath: /var/lib/clickhouse
+                # - name: clickhouse-log
+                #   mountPath: /var/log/clickhouse-server
+            - name: clickhouse-backup
+              image: altinity/clickhouse-backup:2.6.39
+              command:
+                - /bin/bash
+                - -c
+                - '/bin/clickhouse-backup -c /opt/backup-config.yml server'
+              volumeMounts:
+                - name: clickhouse-data
+                  mountPath: /var/lib/clickhouse
+                - name: clickhouse-backup-config
+                  mountPath: /opt/backup-config.yml
+                  subPath: backup-config.yml
+                  readOnly: true
+          volumes:
+            - name: clickhouse-backup-config
+              secret:
+                secretName: clickhouse-backup-config
+                optional: false
+          # nodeSelector:
+          #   kube/nodegroup: "general"
+
+    volumeClaimTemplates:
+      - name: clickhouse-data
+        spec:
+          storageClassName: highflame-storageclass
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 512Gi
+      # - name: clickhouse-log
+      #   spec:
+      #     storageClassName: highflame-storageclass
+      #     accessModes:
+      #       - ReadWriteOnce
+      #     resources:
+      #       requests:
+      #         storage: 100Gi

@@ -1,0 +1,15 @@
+fullnameOverride: aws-cluster-autoscaler
+replicaCount: 3
+awsRegion: <region>
+
+autoDiscovery:
+  clusterName: <k8s_cluster_name>
+
+rbac:
+  serviceAccount:
+    name: cluster-autoscaler
+    annotations:
+      eks.amazonaws.com/role-arn: "<autoscaler_role_arn>"
+
+extraArgs:
+  scale-down-delay-after-add: "1m"
