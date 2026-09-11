@@ -1,0 +1,28 @@
+general:
+  remote_storage: gcs
+  disable_progress_bar: false
+  backups_to_keep_local: 1
+  backups_to_keep_remote: 10
+  log_level: info
+  allow_empty_backups: false
+clickhouse:
+  username: highflame_backup
+  password: ""
+  host: clickhouse-ch.clickhouse.svc.cluster.local
+  port: 9000
+  disk_mapping: {}
+  skip_tables:
+    - system.*
+  timeout: 5m
+  freeze_by_part: false
+  secure: false
+  skip_verify: false
+  sync_replicated_tables: true
+  log_sql_queries: false
+gcs:
+  sa_email: "SA_EMAIL"
+  bucket: "GCS_BUCKET"
+  path: highflame-clickhouse
+  compression_level: 1
+  compression_format: tar
+  storage_class: STANDARD

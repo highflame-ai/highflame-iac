@@ -1,0 +1,204 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clickhouse-backup
+  namespace: clickhouse
+spec:
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  schedule: '0 */12 * * *'
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 14400
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: clickhouse-sa
+          restartPolicy: Never
+          containers:
+            - name: clickhouse-backup
+              image: altinity/clickhouse-backup:2.6.39
+              envFrom:
+                - configMapRef:
+                    name: clickhouse-cm
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+                  BACKUP_CFG="/opt/backup-config.yml"
+                  BACKUP_TIME="$(date +%F-%H-%M-%S)"
+
+                  if [[ "$${BACKUP_DB_LIST}" != "" ]] ; then
+                    IFS=',' read -r -a DBS <<< "$${BACKUP_DB_LIST}"
+                    for db in "$${DBS[@]}" ; do
+                      BACKUP_NAME="$${db}--$${BACKUP_TIME}"
+                      echo "Creating backup $${BACKUP_NAME}"
+                      /bin/clickhouse-backup -c $${BACKUP_CFG} create_remote --tables="$${db}.*" $${BACKUP_NAME}
+
+                      echo "Deleting all local backups"
+                      rm -rf /var/lib/clickhouse/backup/$${BACKUP_NAME}
+
+                      echo "Rotating old remote backups - keeping last $${BACKUP_KEEP}"
+                      BACKUPS=$$(clickhouse-backup -c $${BACKUP_CFG} list remote | grep -i "$${db}--" | awk '{print $$1}')
+                      BKP_COUNT=$$(echo "$${BACKUPS}" | wc -l)
+
+                      if [[ "$${BKP_COUNT}" -le "$${BACKUP_KEEP}" ]] ; then
+                        echo "Nothing to delete...($${BKP_COUNT} backups, keep $${BACKUP_KEEP})"
+                      else
+                        DELETE_COUNT=$$((BKP_COUNT - BACKUP_KEEP))
+                        DELETE_LIST=$$(echo "$${BACKUPS}" | head -n $${DELETE_COUNT})
+
+                        for bkp in $${DELETE_LIST} ; do
+                          echo "Deleting remote backup: $${bkp}"
+                          clickhouse-backup -c $${BACKUP_CFG} delete remote "$${bkp}"
+                        done
+                      fi
+                      echo "Backup job completed for database $${db}"
+                    done
+                  else
+                    echo "Backup is disabled. Current BACKUP_DB_LIST is empty"
+                  fi
+              volumeMounts:
+                - name: clickhouse-data
+                  mountPath: /var/lib/clickhouse
+                - name: clickhouse-backup-config
+                  mountPath: /opt/backup-config.yml
+                  subPath: backup-config.yml
+                  readOnly: true
+          volumes:
+            - name: clickhouse-data
+              persistentVolumeClaim:
+                claimName: clickhouse-data
+            - name: clickhouse-backup-config
+              secret:
+                secretName: clickhouse-backup-config
+                optional: false
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: clickhouse.altinity.com/chi
+                        operator: In
+                        values:
+                          - ch
+                  topologyKey: 'kubernetes.io/hostname'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: clickhouse-setup
+  namespace: clickhouse
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait
+          image: curlimages/curl:8.17.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for ClickHouse to be ready..."
+
+              until curl -s "http://$${CLICKHOUSE_HOST}:8123/ping" | grep -q "Ok" ; do
+                echo "ClickHouse not ready yet. Waiting..."
+                sleep 5
+              done
+
+              echo "ClickHouse is ready!"
+          envFrom:
+            - configMapRef:
+                name: clickhouse-cm
+      containers:
+        - name: setup
+          image: clickhouse/clickhouse-server:25.10.2
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+
+              export SYS_DB_NAME="system"
+              export LOG_TABLES=($(clickhouse-client \
+                  --host="$${CLICKHOUSE_HOST}" \
+                  --user="$${CLICKHOUSE_USER}" \
+                  --password="$${CLICKHOUSE_PASSWORD}" \
+                  --query="SELECT name FROM $${SYS_DB_NAME}.tables WHERE database = '$${SYS_DB_NAME}' AND (engine LIKE '%Log' OR name LIKE '%_log')"))
+
+              if [[ "$${CREATE_DB_LIST}" != "" ]] ; then
+                IFS=',' read -r -a DBS <<< "$${CREATE_DB_LIST}"
+                for db in "$${DBS[@]}" ; do
+                  echo "Creating DB: $${db}"
+                  clickhouse-client \
+                    --host="$${CLICKHOUSE_HOST}" \
+                    --user="$${CLICKHOUSE_USER}" \
+                    --password="$${CLICKHOUSE_PASSWORD}" \
+                    --query="CREATE DATABASE IF NOT EXISTS $${db}"
+                done
+              else
+                echo "Database creation is disabled. Current CREATE_DB_LIST is empty"
+              fi
+
+              echo "DB creation is completed...!"
+
+              for log_tbl in $${LOG_TABLES[@]} ; do
+                echo "Applying $${SYS_DB_NAME} log TTL to $${log_tbl}"
+
+                table_name="$${log_tbl##*.}"
+
+                exists=$$(clickhouse-client \
+                          --host="$${CLICKHOUSE_HOST}" \
+                          --user="$${CLICKHOUSE_USER}" \
+                          --password="$${CLICKHOUSE_PASSWORD}" \
+                          --query="SELECT count() FROM $${SYS_DB_NAME}.tables WHERE database='$${SYS_DB_NAME}' AND name='$${table_name}'")
+
+                if [ "$${exists}" -eq 1 ]; then
+                  clickhouse-client \
+                    --host="$${CLICKHOUSE_HOST}" \
+                    --user="$${CLICKHOUSE_USER}" \
+                    --password="$${CLICKHOUSE_PASSWORD}" \
+                    --query "
+                              SET alter_sync = 0;
+                              ALTER TABLE $${SYS_DB_NAME}.$${log_tbl} MODIFY TTL event_date + INTERVAL 3 DAY;
+                              ALTER TABLE $${SYS_DB_NAME}.$${log_tbl} MATERIALIZE TTL;
+                            "
+                else
+                  echo "Table $${log_tbl} does not exist yet. Skipping."
+                fi
+              done
+
+              for log_tbl in $${LOG_TABLES[@]} ; do
+                echo "Validating the table size of the table $${log_tbl}"
+                table_name="$${log_tbl##*.}"
+
+                clickhouse-client \
+                  --host="$${CLICKHOUSE_HOST}" \
+                  --user="$${CLICKHOUSE_USER}" \
+                  --password="$${CLICKHOUSE_PASSWORD}" \
+                  --query "
+                            SELECT name, engine_full
+                            FROM $${SYS_DB_NAME}.tables
+                            WHERE database='$${SYS_DB_NAME}' AND name IN ('$${table_name}');
+                          "
+              done
+          envFrom:
+            - configMapRef:
+                name: clickhouse-cm
+          env:
+            - name: CLICKHOUSE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-secrets
+                  key: CH_ADMIN_USERNAME
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-secrets
+                  key: CH_ADMIN_PASSWORD
