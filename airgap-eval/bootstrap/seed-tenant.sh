@@ -130,10 +130,17 @@ ACCOUNT_ID = os.environ["HIGHFLAME_ACCOUNT_ID"]
 AUTH_ORG_ID = os.environ["HIGHFLAME_AUTH_ORG_ID"]
 
 
-def request(method, path, body=None, token=None, form=False):
+def request(method, path, body=None, token=None, form=False, tenant=None):
     headers = {"Host": HOSTNAME}
     if token:
         headers["Authorization"] = f"Bearer {token}"
+
+    # Provisioning runs before any tenant exists and must NOT carry these; the
+    # policy calls afterwards are scoped and must.
+    if tenant:
+        account_id, project_id = tenant
+        headers["x-javelin-accountid"] = account_id
+        headers["x-highflame-project-id"] = project_id
 
     data = None
     if body is not None:
@@ -207,6 +214,66 @@ project = body.get("default_project") or {}
 project_id = project.get("id") or body.get("default_project_id") or ""
 if not project_id:
     sys.exit(f"  provisioning returned no default project: {raw[:300]}")
+
+# Ask for the default policies explicitly, even though provisioning seeds them
+# when it CREATES a project.
+#
+# Provisioning is idempotent by returning early once the organization exists, so
+# a re-run against an existing tenant never reaches the seeding it performs on
+# the first pass. Without this, "safe to re-run" would be true of the tenant
+# rows and false of everything else: a tenant that lost its baseline permit, or
+# that predates the product seeding one, would stay broken however many times
+# this script was run. The call creates only what is missing.
+BASELINE_TEMPLATE_ID = "organization.permit-baseline"
+PRODUCTS = ["guardrails", "ai_gateway"]
+
+stranded = []
+
+for product in PRODUCTS:
+    query = urllib.parse.urlencode({"product": product})
+    status, raw = request(
+        "POST",
+        f"/v2/admin/policy/ensure-defaults?{query}",
+        body={},
+        token=token,
+        tenant=(ACCOUNT_ID, project_id),
+    )
+    if status not in (200, 201):
+        sys.exit(f"  could not ensure default policies for {product}: {status} {raw[:200]}")
+
+    # Verify rather than trust the response: what matters is whether an active
+    # baseline permit is in place now, not what the call reported doing.
+    query = urllib.parse.urlencode({"limit": "200", "label": f"product:{product}"})
+    status, raw = request(
+        "GET", f"/v2/admin/policy?{query}", token=token, tenant=(ACCOUNT_ID, project_id)
+    )
+    present = False
+    if status == 200:
+        try:
+            policies = json.loads(raw)
+            policies = policies if isinstance(policies, list) else policies.get("policies", [])
+        except ValueError:
+            policies = []
+
+        for p in policies:
+            labels = p.get("labels") or {}
+            if labels.get("template_id") == BASELINE_TEMPLATE_ID and p.get("is_active"):
+                present = True
+                break
+
+    print(f"  {product:11} default policies in place: {present}", file=sys.stderr)
+    if not present:
+        stranded.append(product)
+
+if stranded:
+    print("", file=sys.stderr)
+    print("  No active Baseline Permit for: " + ", ".join(stranded), file=sys.stderr)
+    print("  Without it, a request matching no other policy is denied and the", file=sys.stderr)
+    print("  refusal names no policy, so traffic fails without saying why.", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("  Fix it in Studio: open that product's Policies page and turn", file=sys.stderr)
+    print("  Default Behavior on. The toggle deploys the baseline permit.", file=sys.stderr)
+    sys.exit(1)
 
 # Consumed by the shell below.
 print(org.get("id", ""))
