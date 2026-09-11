@@ -5,12 +5,12 @@
 #
 # Why this script has to exist at all
 # -----------------------------------
-# Admin seeds a project's default policies when it CREATES the project
-# (highflame-admin, tenancy.Service.seedDefaultPolicies -> authz
-# /policies/ensure-defaults). This bundle does not create its project that way:
-# bootstrap/seed-tenant.sh writes the account, project and membership straight
-# into Postgres, because account_members has no API a fresh install can reach.
-# That bypasses the hook, so the tenant is born with no policies at all.
+# The platform provisions a project's default policies when it creates the
+# project. This bundle does not create its project that way: seed-tenant.sh
+# writes the account, project and membership straight into Postgres, because
+# the first membership on a fresh install cannot be created through the API.
+# Provisioning is skipped along with it, so the tenant is born with no
+# policies at all, and this script asks for them explicitly.
 #
 # Why that matters more than it sounds
 # ------------------------------------
@@ -25,29 +25,22 @@
 #
 #   3. The denial is anonymous. A request that matches no policy comes back with
 #      an empty policy_reason and no determining policies, which the SDK prints
-#      as "Refused by Highflame: None". Nothing tells the operator what to fix.
+#      as "Refused by Highflame: None". Nothing tells the operator what to fix,
+#      which is why this script verifies the result rather than trusting it.
 #
-# Before any of this existed the stack ran with zero policies, Shield answered
-# every guard call with 500 "no policies loaded", and the gateway forwarded every
-# prompt to the LLM completely unscanned while logging a single warning. The
-# product looked like it was working. It was a passthrough proxy.
+# What it provisions, and what it deliberately does not
+# -----------------------------------------------------
+# Exactly one policy per product — the Baseline Permit, the permit everything
+# else narrows. No detection policies, by design: those are yours to deploy
+# from Studio's template catalogue, so what gets enforced is a decision someone
+# made and can point at rather than something a bootstrap script chose.
 #
-# What it seeds, and what it deliberately does not
-# ------------------------------------------------
-# ensure-defaults provisions exactly one policy per product — Baseline Permit
-# (organization.permit-baseline), the permit everything else narrows. It seeds no
-# detection policies, by design: those are the evaluator's to deploy from
-# Studio's template catalogue, the same way a customer deploys them, so what gets
-# enforced is a decision someone made and can point at rather than something a
-# bootstrap script decided on their behalf.
+# An earlier version of this script created a curated set of templates
+# directly. That produced policies nobody had chosen, and it hid the fact that
+# this tenant had skipped project provisioning altogether.
 #
-# An earlier version of this script created a curated set of templates directly.
-# That produced policies no one had chosen, labelled with a marker no product
-# code path writes, and it hid the fact that this tenant never went through
-# project provisioning at all.
-#
-# Idempotent: authz creates only the defaults a project is missing, so
-# re-running is free and also repairs a project that lost one.
+# Idempotent, and safe to re-run: provisioning creates only the defaults a
+# project is missing.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -201,17 +194,15 @@ for product in PRODUCTS:
 
     # Report what the store holds, not what the response says.
     #
-    # "created" means the same thing across authz versions, so it is safe to
-    # name. "existing" is not: it used to be every project-wide policy the
-    # project held, and since highflame-authz#160 it is the defaults that were
-    # already in place. Reading it would make this script's output quietly
-    # depend on which authz the bundle happens to ship.
+    # "created" has a stable meaning and is safe to name. "existing" does not:
+    # its contents have varied across releases, so reporting it would make this
+    # script's output depend on which version the bundle ships.
     #
-    # What the operator needs is one answer anyway — is an active baseline
-    # permit in place now? — and that is worth verifying rather than inferring,
-    # whether the call created one, found one, or failed to make one. Cedar
-    # denies anything no policy permits and names nothing while doing it, so
-    # catching it here beats discovering it at the first guarded request.
+    # The operator needs one answer anyway — is an active baseline permit in
+    # place now? — and it is worth verifying rather than inferring, whether the
+    # call created one, found one, or failed to make one. A request that
+    # matches no policy is denied without naming one, so catching it here beats
+    # discovering it at the first guarded request.
     baseline_present = has_baseline(policies_for(token, product))
 
     created = result.get("created") or []
@@ -230,20 +221,13 @@ if stranded:
     print()
     print("PROBLEM: no active Baseline Permit for: " + ", ".join(stranded))
     print()
-    print("  Cedar denies anything no other policy permits, and names no policy in")
-    print("  the refusal, so requests will fail without saying why.")
+    print("  Without it, a request that matches no other policy is denied, and the")
+    print("  refusal names no policy — so traffic fails without saying why.")
     print()
-    print("  Two ways this happens:")
+    print("  Fix it in Studio: open that product's Policies page and turn Default")
+    print("  Behavior on. The toggle deploys the baseline permit for you.")
     print()
-    print("    - authz could not create it. Check its logs for the template name;")
-    print("      seeding is best-effort and logs rather than failing the call.")
-    print("    - the deployment predates highflame-authz#160, where ensure-defaults")
-    print("      returned early once a project held ANY policy and so could not")
-    print("      restore a baseline a project had lost.")
-    print()
-    print("  Easiest fix, if Studio is reachable: open the product's Policies page")
-    print("  and turn Default Behavior on — the toggle deploys the baseline permit")
-    print("  (highflame-studio#1608). Otherwise deploy it directly:")
+    print("  If Studio is not reachable, deploy it through the API instead:")
     print()
     print("      curl -X POST http://127.0.0.1:$PORT/v2/admin/policy \\")
     print("        -H 'Host: <HIGHFLAME_HOST_IP>' -H 'Authorization: Bearer <id_token>' \\")
