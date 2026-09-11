@@ -34,8 +34,6 @@ log:
 # sampling_rate 1.0 keeps every trace; revisit only when query latency degrades.
 telemetry:
   enabled: true
-  endpoint: "highflame-collector:4317"
-  insecure: true
   sampling_rate: 1.0
 
 # Authentication settings
