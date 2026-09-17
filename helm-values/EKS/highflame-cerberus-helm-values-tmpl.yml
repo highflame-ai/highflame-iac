@@ -39,7 +39,7 @@ service:
   port: 8082
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-cerberus"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

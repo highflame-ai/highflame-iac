@@ -36,7 +36,7 @@ service:
   port: 8070
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-shield"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 
@@ -79,8 +79,8 @@ volumeMounts:
 serviceAccount:
   create: true
   automount: true
-  annotations:
-    azure.workload.identity/client-id: "${SVC_CLIENT_ID}"
+  # annotations:
+  #   azure.workload.identity/client-id: "${SVC_CLIENT_ID}"
 
 ingress:
   enabled: true

@@ -21,7 +21,7 @@ readinessProbe:
   failureThreshold: 2
 
 nodeSelector:
-  kube/nodegroup: "general"
+  kube/nodegroup: "gpu"
 
 autoscaling:
   enabled: true
@@ -36,7 +36,7 @@ service:
   port: 8018
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-guard-pii"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

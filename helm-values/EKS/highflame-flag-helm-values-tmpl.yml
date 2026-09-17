@@ -39,7 +39,7 @@ service:
   port: 1031
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-flag"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

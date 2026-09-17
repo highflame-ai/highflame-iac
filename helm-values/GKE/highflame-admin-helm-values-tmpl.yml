@@ -56,7 +56,7 @@ gceIngress:
         name: "highflame-cloud-security-policy"
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-admin"
   pullPolicy: IfNotPresent
   tag: ${IMAGE_TAG}
 

@@ -36,7 +36,7 @@ service:
   port: 8070
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-shield"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

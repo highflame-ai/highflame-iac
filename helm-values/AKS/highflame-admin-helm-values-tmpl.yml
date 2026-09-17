@@ -36,7 +36,7 @@ service:
   port: 8040
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-admin"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

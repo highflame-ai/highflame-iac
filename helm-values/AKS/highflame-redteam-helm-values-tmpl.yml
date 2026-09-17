@@ -11,7 +11,7 @@ service:
   port: 8001
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-redteam"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

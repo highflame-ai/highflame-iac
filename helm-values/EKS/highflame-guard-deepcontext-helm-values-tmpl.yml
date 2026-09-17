@@ -36,7 +36,7 @@ service:
   port: 8022
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-guard-deepcontext"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 
