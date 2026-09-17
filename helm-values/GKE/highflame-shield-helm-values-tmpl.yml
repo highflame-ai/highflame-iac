@@ -56,7 +56,7 @@ gceIngress:
         name: "highflame-cloud-security-policy"
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-shield"
   pullPolicy: IfNotPresent
   tag: ${IMAGE_TAG}
 
@@ -94,8 +94,8 @@ volumeMounts:
 serviceAccount:
   create: true
   automount: true
-  annotations:
-    iam.gke.io/gcp-service-account: "${SVC_SA_EMAIL_ID}"
+  # annotations:
+  #   iam.gke.io/gcp-service-account: "${SVC_SA_EMAIL_ID}"
 
 secrets:
   enabled: true

@@ -43,7 +43,7 @@ service:
       port: 13133
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-collector"
   pullPolicy: IfNotPresent
   tag: ${IMAGE_TAG}
 

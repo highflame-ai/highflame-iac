@@ -36,7 +36,7 @@ service:
   port: 8090
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-observatory"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

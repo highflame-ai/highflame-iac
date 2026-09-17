@@ -26,7 +26,7 @@ readinessProbe:
   failureThreshold: 2
 
 image:
-  repository: "${DOCKER_IMAGE}"
+  repository: "ghcr.io/highflame-ai/release-highflame-redteam-lab1"
   pullPolicy: IfNotPresent
   tag: ${IMAGE_TAG}
 
