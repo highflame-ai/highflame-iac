@@ -128,8 +128,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
 `HIGHFLAME_FIREHOG_URL` | highflame firehog url | nil | `https://<<gateway_domain_name>>`
 `OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | `https://<<studio_domain_name>>`
-`FIREHOG_SHIELD_SCAN_SCOPE` | LLM ingress scan scope | nil | -
-`OAUTH_CIMD_SUPPORTED` | CIMD disabled or enabled | nil | `true` or `false`
+`FIREHOG_SHIELD_SCAN_SCOPE` | LLM ingress scan scope | `full` | -
+`OAUTH_CIMD_SUPPORTED` | CIMD disabled or enabled | `false` | `true` or `false`
 `QUOTA_ENABLED` | Quota RPM/TPM enforcement | `true` | `true` or `false`
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
 
