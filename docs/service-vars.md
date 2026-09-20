@@ -55,7 +55,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
 `OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
 `HIGHFLAME_ISSUER` | Highflame issuer | nil | `https://<<auth_domain_name>>`
-`HIGHFLAME_WIMSE_DOMAIN` | Root every agent/workload identity issued in the environment, no domain setup required. | nil | `<<root_domain_name>>`
+`HIGHFLAME_WIMSE_DOMAIN` | Root every agent/workload identity issued in the environment, no domain setup required. | nil | `<<root_domain_name>> or <<unique_name-root_domain_name>>`
 `HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
 `HIGHFLAME_SECRETS_BACKEND` | Highflame secrets store | `kubernetes` | -
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_AUDIENCE` | authn assertion resolver | `highflame-authn` | -
