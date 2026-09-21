@@ -161,8 +161,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`REDTEAM_SEEDER_DATASET` | Redteam seeder dataset name | nil | -
-`REDTEAM_SEEDER_DATASET_VER` | Redteam seeder dataset version | nil | -
+`REDTEAM_SEEDER_DATASET` | Redteam seeder dataset name | nil | `highflame/highflame-red5-with-embeddings`
+`REDTEAM_SEEDER_DATASET_VER` | Redteam seeder dataset version | nil | `hf_v1`
 `REDTEAM_SEEDER_ARGS` | Redteam seeder command args | nil | `--force`
 `DB_USERNAME` | Postgres username | nil | -
 `DB_PASSWORD` | Postgres password | nil | -
