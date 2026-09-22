@@ -92,7 +92,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | `tcp://clickhouse-javelin-ch.clickhouse.svc.cluster.local:9000` | -
+`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | `tcp://clickhouse-ch.clickhouse.svc.cluster.local:9000` | -
 `CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
 `CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
@@ -147,7 +147,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CLICKHOUSE_HOST` | Clickhouse Host | `clickhouse-javelin-ch.clickhouse.svc.cluster.local` | -
+`CLICKHOUSE_HOST` | Clickhouse Host | `clickhouse-ch.clickhouse.svc.cluster.local` | -
 `CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
 `CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
 `CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
@@ -243,6 +243,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-prod-bloom-filter` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
 `HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `s3` | `s3`
+`HIGHFLAME_CHECKPHISH_STORAGE_REGION` | highflame checkphish storage region | nil | `for s3`
 `REFRESH_SECRETS_ON_401` | Refresh secrets on 401 | `true` | `true` or `false`
 `BYPASS_GUARDRAILS` | Bypass guardrails for streaming | `true` | `true` or `false`
 `AUTO_PROVISION_APPLICATION` | Auto provision the application | `true` | `true` or `false`
