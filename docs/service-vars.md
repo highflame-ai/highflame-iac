@@ -7,14 +7,14 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_USERNAME` | Postgres username | nil | -
 `DB_PASSWORD` | Postgres password | nil | -
 `DB_HOST` | Postgres host | nil | -
-`DB_NAME` | Postgres database | `javelin_data` | -
+`DB_NAME` | Postgres database | `highflame_data` | -
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `AWS_KMS_KEY` | AWS KMS Key for secret manager enc | nil | optional
 `AWS_SECRET_REPLICATION_REGION` | AWS replication region | nil | optional
 `AWS_REPLICATION_KMS_KEY` | AWS KMS Key for secret manager enc in replication region | nil | optional
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | -
-`REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
+`REDTEAM_DB_NAME` | Postgres database | `highflame_redteam` | -
 `GUARDIAN_DB_NAME` | Guardian database | `highflame_guardian` | -
 `HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
@@ -76,7 +76,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_HOST` | Postgres host | nil | -
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`AUTHZ_DB_NAME` | Postgres database | `javelin_data` | -
+`AUTHZ_DB_NAME` | Postgres database | `highflame_data` | -
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
 
 ### highflame-cerberus
@@ -181,7 +181,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `AZURE_API_KEY` | Azure OpenAI api key | nil | Conflict with other providers
 `AZURE_API_BASE` | Azure OpenAI API base | nil | Conflict with other providers
 `AZURE_API_VERSION` | Azure OpenAI version | `2024-02-15-preview` | -
-`REDTEAM_DB_NAME` | Postgres database | `javelin_redteam` | -
+`REDTEAM_DB_NAME` | Postgres database | `highflame_redteam` | -
 `HIGHFLAME_ADMIN_URL` | Highflame admin url | `http://highflame-admin:8040` | -
 `MODEL_HIGH_END` | Provider high model name | `gpt-4o` | -
 `MODEL_LOW_END` | Provider low model name | `gpt35` | -
