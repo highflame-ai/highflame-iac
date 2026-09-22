@@ -28,7 +28,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | Optional
 `MARKETPLACE_JWT_SECRET` | Highflame Marketplace secret | nil | Only for SaaS
 `HIGHFLAME_APP_URL` | Endpoint for studio service | nil | -
-`CLERK_PROXY_URL` | Highflame clerk proxy url - match with `NEXT_PUBLIC_CLERK_PROXY_URL` | nil | `https://<<studio_domain_name>>/__clerk`
+`CLERK_PROXY_URL` | Highflame clerk proxy url - match with `NEXT_PUBLIC_CLERK_PROXY_URL` | nil | Only for SaaS : `https://<<studio_domain_name>>/__clerk`
 `HIGHFLAME_SCIM_EXTERNAL_BASE_URL` | Next public scim url - must match with `NEXT_PUBLIC_SCIM_BASE_URL` from studio | nil | `https://<<control_domain_name>>/scim/v2`
 `ACCOUNT_ID` | Account ID | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
@@ -297,7 +297,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_OAUTH_AUTHORIZE_URL` | Highflame oauth authorize url | `http://highflame-authn:8051/oauth2/authorize` | -
 `HIGHFLAME_RAMPARTS_URL` | Highflame ramparts server | `http://highflame-ramparts-server:8080` | -
 `NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS` | Highflame clerk redirect origins | nil | Only for SaaS
-`NEXT_PUBLIC_CLERK_PROXY_URL` | Highflame clerk proxy url - match with `CLERK_PROXY_URL` | nil | `https://<<studio_domain_name>>/__clerk`
+`NEXT_PUBLIC_CLERK_PROXY_URL` | Highflame clerk proxy url - match with `CLERK_PROXY_URL` | nil | Only for SaaS: `https://<<studio_domain_name>>/__clerk`
 `NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
 `NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | Pass the ARN principle for accessing the AWS bedrock connector | nil | optional
 `NEXT_PUBLIC_SCIM_BASE_URL` | Next public scim url - must match with `HIGHFLAME_SCIM_EXTERNAL_BASE_URL` from admin | nil | `https://<<control_domain_name>>/scim/v2`
