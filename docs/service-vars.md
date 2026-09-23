@@ -107,7 +107,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `DB_PORT` | Postgres port | `5432` | -
 `DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
 `DISCOVERY_DB_NAME` | Postgres database | `highflame_discovery` | -
-`HIGHFLAME_DEPLOYMENT_TYPE` | Deployment type | `prod` | -
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
 `OTEL_ENABLED` | Enable OTEL | `true` | -
 `OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
@@ -225,8 +224,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_USER` | Redis username | nil | -
 `REDIS_PASS` | Redis password | nil | -
 `REDIS_CACERT` | Redis cacert | `""` | -
-`UNKEY_ROOT_KEY` | Unkey Root Key | nil | optional
-`UNKEY_API_ID` | Unkey api id | nil | optional
 `MODEL_ARMOR_TEMPLATE` | Model armor template | nil | optional
 `MODEL_ARMOR_LOCATION` | Model armor location | nil | optional
 `CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | optional - `s3` or `gcs` or `azure-blob`
@@ -235,7 +232,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
 `HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
 `HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
-`HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
 `HIGHFLAME_GUARD_URL` | highflame guard url | `http://highflame-guard:8013` | -
 `HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
 `HIGHFLAME_GUARD_PII_URL` | highflame guard pii url | `http://highflame-guard-pii:8018` | -
@@ -243,27 +239,21 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-prod-bloom-filter` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
 `HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `s3` | `s3`
-`HIGHFLAME_CHECKPHISH_STORAGE_REGION` | highflame checkphish storage region | nil | `for s3`
-`REFRESH_SECRETS_ON_401` | Refresh secrets on 401 | `true` | `true` or `false`
-`BYPASS_GUARDRAILS` | Bypass guardrails for streaming | `true` | `true` or `false`
-`AUTO_PROVISION_APPLICATION` | Auto provision the application | `true` | `true` or `false`
+`HIGHFLAME_CHECKPHISH_STORAGE_REGION` | highflame checkphish storage region | `us-east-1` | `for s3`
 `GOOGLE_CLOUD_PROJECT` | GCP project id | `javelin-saas` | -
 `GOOGLE_APPLICATION_CREDENTIALS` | GCP json cred path | `/app/config/gcp-credential.json` | optional
-`ENABLE_SENTRY` | Sentry dsn | `false` | `true` or `false`
-`SENTRY_DSN` | Sentry dsn | `""` | optional
 `CLOUD_ARCHIVE_ENABLED` | Cloud archive enabled | `false` | `true` or `false`
 `CLOUD_ARCHIVE_PREFIX` | Cloud archive prefix in the storage | `shield/sessions/` | optional
 `AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
 `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
-`AWS_REGION` | AWS Region | `""` | for `AWS deployment`
 `HIGHFLAME_SCAN_STORAGE_BUCKET`| Highflame scan s3 bucket name | nil | optional
+`AWS_SCAN_STORAGE_REGION` | Highflame scan s3 bucket Region | nil | optional
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | `https://<<auth_domain_name>>`
 `HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
 `HIGHFLAME_RECEIPT_SIGNING_AUTHN_BASE_URL`| Highflame signin authn base url | `http://highflame-authn:8051` | -
 `HIGHFLAME_RECEIPT_SIGNING_ENABLED`| Highflame signing enabled | nil | `true` or `false`
 `HIGHFLAME_AUTHN_BASE_URL`| Highflame authn url | `http://highflame-authn:8051` | -
 `HIGHFLAME_ENABLE_POLICY_SLICING`| Enable policy slicing | nil | `true` or `false`
-`ACCOUNT_ID` | Account ID | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | _Will be shared by a Highflame representative_
 
