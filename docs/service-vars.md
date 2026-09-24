@@ -238,7 +238,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-prod-bloom-filter` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
-`HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `s3` | `s3`
+`HIGHFLAME_CHECKPHISH_OBJECT_URL` | highflame checkphish object url | `https://javelin-prod-bloom-filter.s3.us-east-1.amazonaws.com/bloom_filter_url.gob` | -
+`HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `url` | `url`, `s3`
 `HIGHFLAME_CHECKPHISH_STORAGE_REGION` | highflame checkphish storage region | `us-east-1` | `for s3`
 `GOOGLE_CLOUD_PROJECT` | GCP project id | `javelin-saas` | -
 `GOOGLE_APPLICATION_CREDENTIALS` | GCP json cred path | `/app/config/gcp-credential.json` | optional
