@@ -224,8 +224,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `REDIS_USER` | Redis username | nil | -
 `REDIS_PASS` | Redis password | nil | -
 `REDIS_CACERT` | Redis cacert | `""` | -
-`MODEL_ARMOR_TEMPLATE` | Model armor template | nil | optional
-`MODEL_ARMOR_LOCATION` | Model armor location | nil | optional
 `CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | optional - `s3` or `gcs` or `azure-blob`
 `CLOUD_ARCHIVE_BUCKET` | Cloud archive bucket name | nil | optional
 `HIGHFLAME_DEPLOYMENT_TYPE` | Deploy type | `prod` | `dev` or `prod`
@@ -240,8 +238,10 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
 `HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `s3` | `s3`
 `HIGHFLAME_CHECKPHISH_STORAGE_REGION` | highflame checkphish storage region | `us-east-1` | `for s3`
-`GOOGLE_CLOUD_PROJECT` | GCP project id | `javelin-saas` | -
-`GOOGLE_APPLICATION_CREDENTIALS` | GCP json cred path | `/app/config/gcp-credential.json` | optional
+`HIGHFLAME_MODEL_ARMOR_TEMPLATE` | Model armor template | nil | optional
+`HIGHFLAME_MODEL_ARMOR_LOCATION` | Model armor location | `us-central1` | optional
+`HIGHFLAME_MODEL_ARMOR_PROJECT_ID` | Model armor GCP project id | `javelin-saas` | -
+`GOOGLE_APPLICATION_CREDENTIALS` | Model armor GCP json cred path | `/app/config/gcp-credential.json` | optional
 `CLOUD_ARCHIVE_ENABLED` | Cloud archive enabled | `false` | `true` or `false`
 `CLOUD_ARCHIVE_PREFIX` | Cloud archive prefix in the storage | `shield/sessions/` | optional
 `AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
