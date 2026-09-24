@@ -236,7 +236,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
 `HIGHFLAME_CHECKPHISH_BUCKET_NAME` | highflame checkphish bucket name | `javelin-prod-bloom-filter` | -
 `HIGHFLAME_CHECKPHISH_OBJECT_NAME` | highflame checkphish object name | `bloom_filter_url.gob` | -
-`HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `s3` | `s3`
+`HIGHFLAME_CHECKPHISH_OBJECT_URL` | highflame checkphish object url | `https://javelin-prod-bloom-filter.s3.us-east-1.amazonaws.com/bloom_filter_url.gob` | -
+`HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `url` | `url`, `s3`
 `HIGHFLAME_CHECKPHISH_STORAGE_REGION` | highflame checkphish storage region | `us-east-1` | `for s3`
 `HIGHFLAME_MODEL_ARMOR_TEMPLATE` | Model armor template | nil | optional
 `HIGHFLAME_MODEL_ARMOR_LOCATION` | Model armor location | `us-central1` | optional
