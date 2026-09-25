@@ -115,6 +115,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_SYNC_TICK_SECONDS` | Highflame sync tick interval | `86400` | -
 `HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | `https://<<auth_domain_name>>`
 `HIGHFLAME_SECRETS_BACKEND`| Highflame secrets store | `kubernetes` | -
+`HIGHFLAME_AWS_SAME_ACCOUNT_ENABLED`| Enable Highflame deployed AWS Account use for bedrock connector | `true` | `true` or `false`
 `HIGHFLAME_ADMIN_BASE_URL`| Highflame admin base url | `http://highflame-admin:8040` | -
 
 ### highflame-firehog
