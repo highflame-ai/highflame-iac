@@ -104,7 +104,7 @@ ingress:
     alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/security-groups: ${ALB_SECURITY_GROUP_IDS}
   hosts:
-    - host: control.example.com
+    - host: studio.example.com
       paths:
         - path: /v1/admin
           pathType: Prefix

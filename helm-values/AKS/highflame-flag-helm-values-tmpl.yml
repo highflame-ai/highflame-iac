@@ -62,6 +62,5 @@ volumes:
 
 volumeMounts:
   - name: goff-volume
-    mountPath: /goff/config/goff.yaml
+    mountPath: /goff/config
     readOnly: true
-    subPath: goff.yaml
