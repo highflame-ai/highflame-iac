@@ -29,7 +29,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `MARKETPLACE_JWT_SECRET` | Highflame Marketplace secret | nil | Only for SaaS
 `HIGHFLAME_APP_URL` | Endpoint for studio service | nil | -
 `CLERK_PROXY_URL` | Highflame clerk proxy url - match with `NEXT_PUBLIC_CLERK_PROXY_URL` | nil | Only for SaaS : `https://<<studio_domain_name>>/__clerk`
-`HIGHFLAME_SCIM_EXTERNAL_BASE_URL` | Next public scim url - must match with `NEXT_PUBLIC_SCIM_BASE_URL` from studio | nil | `https://<<control_domain_name>>/scim/v2`
+`HIGHFLAME_SCIM_EXTERNAL_BASE_URL` | Next public scim url - must match with `NEXT_PUBLIC_SCIM_BASE_URL` from studio | nil | `https://<<studio_domain_name>>/scim/v2`
 `ACCOUNT_ID` | Account ID | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | _Will be shared by a Highflame representative_
@@ -260,7 +260,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | `""` | `https://<<control_domain_name>>`
+`NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | `""` | `Optional : https://<<control_domain_name>>`
 `NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | `https://<<studio_domain_name>>`
 `NEXT_PUBLIC_FIREHOG_URL` | Endpoint for firehog service | nil | `https://<<gateway_domain_name>>`
 `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
@@ -290,7 +290,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_CLERK_PROXY_URL` | Highflame clerk proxy url - match with `CLERK_PROXY_URL` | nil | Only for SaaS: `https://<<studio_domain_name>>/__clerk`
 `NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
 `NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | Pass the ARN principle for accessing the AWS bedrock connector | nil | optional
-`NEXT_PUBLIC_SCIM_BASE_URL` | Next public scim url - must match with `HIGHFLAME_SCIM_EXTERNAL_BASE_URL` from admin | nil | `https://<<control_domain_name>>/scim/v2`
+`NEXT_PUBLIC_SCIM_BASE_URL` | Next public scim url - must match with `HIGHFLAME_SCIM_EXTERNAL_BASE_URL` from admin | nil | `https://<<studio_domain_name>>/scim/v2`
 `HIGHFLAME_FORGE_URL` | Highflame firehog url | `http://highflame-forge:8100` | -
 `HIGHFLAME_AUTH_PROVIDER` | Highflame auth provider | `clerk` | -
 `HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Highflame oauth signing key path | `/app/keys/oauth/oauth-signing-key.pem` | -

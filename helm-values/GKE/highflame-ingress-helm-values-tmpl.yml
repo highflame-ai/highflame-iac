@@ -84,6 +84,18 @@ ingress:
           servicePort: 8095
     - host: studio.example.com
       paths:
+        - path: /v1/admin
+          pathType: Prefix
+          serviceName: "highflame-admin"
+          servicePort: 8040
+        - path: /v2/admin
+          pathType: Prefix
+          serviceName: "highflame-admin"
+          servicePort: 8040
+        - path: /scim/v2
+          pathType: Prefix
+          serviceName: "highflame-admin"
+          servicePort: 8040
         - path: /
           pathType: Prefix
           serviceName: "highflame-studio"
