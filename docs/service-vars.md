@@ -4,308 +4,308 @@
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`DB_USERNAME` | Postgres username | nil | -
-`DB_PASSWORD` | Postgres password | nil | -
-`DB_HOST` | Postgres host | nil | -
-`DB_NAME` | Postgres database | `highflame_data` | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`AWS_KMS_KEY` | AWS KMS Key for secret manager enc | nil | optional
-`AWS_SECRET_REPLICATION_REGION` | AWS replication region | nil | optional
-`AWS_REPLICATION_KMS_KEY` | AWS KMS Key for secret manager enc in replication region | nil | optional
-`K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | -
-`REDTEAM_DB_NAME` | Postgres database | `highflame_redteam` | -
-`GUARDIAN_DB_NAME` | Guardian database | `highflame_guardian` | -
-`HIGHFLAME_FF_URL` | highflame flag url | `http://highflame-flag:1031/` | -
-`HIGHFLAME_REDTEAM_URL` | highflame redteam url | `http://highflame-redteam:8001/v1` | -
-`HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
-`HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
-`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070/v1/shield` | -
-`HIGHFLAME_CERBERUS_URL` | highflame cerberus url | `http://highflame-cerberus:8082/v1/cerberus` | -
-`HIGHFLAME_DISCOVERY_URL` | highflame discovery url | `http://highflame-discovery:8095` | -
-`HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tenancy default org tier | `free` | `free` or `paid`
-`HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Tenancy default enabled | `true` | `true` or `false`
-`HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Tenancy bootstrap super admins | `""` | Optional
-`MARKETPLACE_JWT_SECRET` | Highflame Marketplace secret | nil | Only for SaaS
-`HIGHFLAME_APP_URL` | Endpoint for studio service | nil | -
-`CLERK_PROXY_URL` | Highflame clerk proxy url - match with `NEXT_PUBLIC_CLERK_PROXY_URL` | nil | Only for SaaS : `https://<<studio_domain_name>>/__clerk`
-`HIGHFLAME_SCIM_EXTERNAL_BASE_URL` | Next public scim url - must match with `NEXT_PUBLIC_SCIM_BASE_URL` from studio | nil | `https://<<studio_domain_name>>/scim/v2`
-`ACCOUNT_ID` | Account ID | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk secret key | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | _Will be shared by a Highflame representative_
+`DB_USERNAME` | Postgres user Admin logs in as, used in all of Admin's database connections (main data, red-team and Palisade). It needs rights to create tables, because Admin runs its schema migrations at startup. | nil | -
+`DB_PASSWORD` | Password for `DB_USERNAME`, used in every Admin Postgres connection. It is inserted into a connection URL without escaping, so characters such as `@ / : #` must be percent-encoded or the connection string breaks. | nil | -
+`DB_HOST` | Hostname or IP of the Postgres server holding all of Admin's databases (main, red-team, Palisade). Admin cannot start without a reachable database. | nil | -
+`DB_NAME` | Admin's main Postgres database. It holds tenants, orgs and projects, gateways, provider keys, SCIM and marketplace state. The database must already exist on `DB_HOST`; Admin creates and migrates the tables in it at startup. | `highflame_data` | -
+`DB_PORT` | TCP port of the Postgres server, used in every Admin database connection. | `5432` | -
+`DB_SSL_MODE` | Postgres `sslmode` for every Admin database connection. Use `require` for managed Postgres (RDS, Cloud SQL, Azure) that enforces TLS; `disable` sends database traffic in plaintext. | `disable` | `disable` or `require`
+`AWS_KMS_KEY` | KMS key ID or ARN Admin uses to encrypt LLM provider API keys it stores in AWS Secrets Manager. Only applies to keys saved with the AWS secrets provider; other keys are stored as Kubernetes Secrets in Admin's namespace. If unset, Secrets Manager uses the account's default `aws/secretsmanager` key. | nil | optional
+`AWS_SECRET_REPLICATION_REGION` | If set, every new provider-key secret Admin creates in AWS Secrets Manager is also replicated to this region, for disaster recovery. Existing secrets are not replicated. Leave unset to turn replication off. | nil | optional
+`AWS_REPLICATION_KMS_KEY` | KMS key ID or ARN used to encrypt the replica secrets in `AWS_SECRET_REPLICATION_REGION`; it must be a key in that region. Ignored unless `AWS_SECRET_REPLICATION_REGION` is set. If unset, replicas use that region's default Secrets Manager key. | nil | optional
+`K8S_NAMESPACE` | Fallback tenant namespace Admin assigns to a request when neither the `x-javelin-namespace` header nor the token supplies one. It does not decide where Admin writes Kubernetes Secrets; that is always the pod's own namespace. The image sets no default, so it is empty unless you set it. | `Deployed K8s namespace` | -
+`REDTEAM_DB_NAME` | Postgres database for red-team scan data (and, for now, Palisade scan data). It must be the same database highflame-redteam uses. Admin only connects to it when the `red_team_scan` or `palisade` feature flag is on in highflame-flag. | `highflame_redteam` | -
+`GUARDIAN_DB_NAME` | **Unused.** Admin's config file builds a connection string from it, but no Admin code reads or connects to it. Leave it at the default. | `highflame_guardian` | -
+`HIGHFLAME_FF_URL` | Base URL of the feature-flag service (highflame-flag). At startup Admin reads the `red_team_scan` and `palisade` flags from it, which decide whether those features load; Admin also proxies its `/v1/admin/goff/*` routes there. If it is wrong or unreachable, both features stay off and the goff routes return 502. | `http://highflame-flag:1031/` | -
+`HIGHFLAME_REDTEAM_URL` | Base URL of highflame-redteam. Admin forwards red-team scan requests there with the caller's tenant headers added, and polls it for the system versions page. If it is wrong, red-team scans in Studio fail. | `http://highflame-redteam:8001/v1` | -
+`HIGHFLAME_AUTHZ_URL` | Base URL of highflame-authz, called with `HIGHFLAME_INTERNAL_SERVICE_SECRET`. Admin forwards v2 Cedar policy management to it and uses it to seed the default Baseline Permit policies into every new project. If empty, the v2 policy API is not registered and new projects get no policies, so Cedar's default-deny blocks everything in them. | `http://highflame-authz:8050` | -
+`HIGHFLAME_AUTHN_URL` | Base URL of highflame-authn, called with `HIGHFLAME_INTERNAL_SERVICE_SECRET`. Admin forwards agent registry, credential policies, agent containment (quarantine and release), service keys, token exchange and LLM connection management to it. If empty, the agent registry, credential policy and containment features are not available. | `http://highflame-authn:8051` | -
+`HIGHFLAME_SHIELD_URL` | Base URL of Shield, including the `/v1/shield` prefix. When a policy is deployed or deactivated, Admin calls Shield's `/policies/reload` so the change takes effect immediately. If it is empty or wrong, Shield only picks up policy changes on its next polling cycle. | `http://highflame-shield:8070/v1/shield` | -
+`HIGHFLAME_CERBERUS_URL` | Base URL of Cerberus, including the `/v1/cerberus` prefix. Admin only uses it to read Cerberus's version for the system versions page. If unset, Cerberus shows as not configured there; nothing else is affected. | `http://highflame-cerberus:8082/v1/cerberus` | -
+`HIGHFLAME_DISCOVERY_URL` | Base URL (host root, no path) of highflame-discovery, called with `HIGHFLAME_INTERNAL_SERVICE_SECRET`. Admin forwards agent-discovery connector create, edit, delete and sync calls there. If empty, connector management in Studio is unavailable. | `http://highflame-discovery:8095` | -
+`HIGHFLAME_TENANCY_DEFAULT_ORG_TIER` | Tier given to every newly created organization; tiers drive plan-based limits and features. Valid tiers are `free`, `trial`, `pro` and `enterprise` (`paid` is not a tier). The value isn't validated at startup, so a typo is stored as-is on new orgs. SaaS uses `free`; self-hosted deployments normally use `enterprise`. | `free` | `free` or `paid`
+`HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` | Turns Admin's super-admin API (`/v1/admin/internal/*`) on or off. That API covers platform stats, listing all orgs and users, and changing an org's tier. When `false`, every one of those endpoints returns 403, even for super-admins. Self-hosted deployments with a fixed tier usually set it to `false`. | `true` | `true` or `false`
+`HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS` | Comma-separated identity-provider user IDs (Clerk `user_...` IDs on SaaS) that Admin grants the platform super-admin role at every startup, so the first admin can be created without editing the database. Users who already have a global role are skipped, and removing an ID later does not revoke the role. Has no practical effect if `HIGHFLAME_TENANCY_TIER_MANAGEMENT_ENABLED` is `false`. | `""` | Optional
+`MARKETPLACE_JWT_SECRET` | HS256 secret Admin uses to sign and verify the short-lived session token for AWS Marketplace sign-ups. The token is issued by `POST /v1/marketplace/landing` and checked again when the tenant is provisioned, to set the org's tier. Only needed for SaaS listed on AWS Marketplace; if unset, marketplace sign-up fails. Generate with `openssl rand -hex 32`. | nil | Only for SaaS
+`HIGHFLAME_APP_URL` | **Unused by Admin.** Admin's code, image, config and helm values never read this variable, so setting it has no effect. | nil | -
+`CLERK_PROXY_URL` | Public URL of Studio's same-origin Clerk proxy. When Clerk runs behind this proxy, its session tokens carry this URL as their issuer, and Admin accepts only that issuer. It must exactly match Studio's `NEXT_PUBLIC_CLERK_PROXY_URL` and the proxy URL in the Clerk Dashboard, or every Studio request fails with 401 invalid issuer. Leave unset when Clerk is not proxied. | nil | Only for SaaS : `https://<<studio_domain_name>>/__clerk`
+`HIGHFLAME_SCIM_EXTERNAL_BASE_URL` | Public SCIM 2.0 base URL including `/scim/v2`: the URL tenants paste into Okta or Entra. Admin sits behind the load balancer and can't work it out itself; it uses this value for the absolute resource URIs in SCIM responses. It must be a path your ingress routes to Admin. If unset, SCIM responses leave those URIs out. Needed whenever SCIM provisioning is used, including self-hosted. | nil | `https://<<studio_domain_name>>/scim/v2`
+`ACCOUNT_ID` | **Unused.** Admin's config maps it to a default account ID, but no Admin code reads it; the account always comes from the verified token or session. Setting it has no effect. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret for service-to-service calls. Admin sends it as `X-Internal-Service-Secret` on calls to AuthZ, AuthN, Shield, Firehog, Discovery, MCP, Observatory and Cerberus, and requires it on internal endpoints those services call (for example `resolve-member`). It must be identical in every Highflame service; if missing or mismatched, those calls fail with 401 (policy reload, agent registry, LLM connections, MCP tool reload). | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk backend secret key (`sk_...`). Admin uses it to verify Studio's Clerk session tokens and to sync org and super-admin roles back to Clerk. With the shipped config, where Clerk is the only login provider, Admin won't start if this is empty. Use the same Clerk instance as Studio's `CLERK_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | HS256 secret Admin uses to verify the `x-javelin-token` JWT (the older CLI/API token path), from which it reads the account, gateway and namespace. If it is wrong or unset, requests using `x-javelin-token` get 401. Keep it identical to AuthN's and Studio's `HIGHFLAME_AUTH_JWT_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
 
 ### highflame-authn
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`DB_USERNAME` | Postgres username | nil | -
-`DB_PASSWORD` | Postgres password | nil | -
-`DB_HOST` | Postgres host | nil | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`AUTHN_DB_NAME` | Postgres database | `highflame_authn` | -
-`REDIS_HOST` | Redis host | nil | -
-`REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
-`REDIS_USER` | Redis username | nil | -
-`REDIS_PASS` | Redis password | nil | -
-`REDIS_CACERT` | Redis cacert | `""` | -
-`OTEL_ENABLED` | Enable OTEL | `true` | -
-`HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
-`OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
-`HIGHFLAME_ISSUER` | Highflame issuer | nil | `https://<<auth_domain_name>>`
-`HIGHFLAME_WIMSE_DOMAIN` | Root every agent/workload identity issued in the environment, no domain setup required. | nil | `<<root_domain_name>> or <<unique_name-root_domain_name>>`
-`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/jwt-private.pem` | -
-`HIGHFLAME_SECRETS_BACKEND` | Highflame secrets store | `kubernetes` | -
-`HIGHFLAME_AUTH_ASSERTION_RESOLVER_AUDIENCE` | authn assertion resolver | `highflame-authn` | -
-`HIGHFLAME_AUTH_ASSERTION_RESOLVER_TRUSTED_ISSUERS` | authn assertion resolver trusted issuers | `[{"issuer":"highflame-studio","jwks_url":"http://highflame-studio:3000/.well-known/jwks.json"}]` | -
-`HIGHFLAME_ALLOW_UNSAFE_DEV_STUB` | enable / disable the unsafe dev attestation stub | `false` | `true` or `false`
+`DB_USERNAME` | Postgres user AuthN connects as, combined with the other `DB_*` variables into the connection URL for `AUTHN_DB_NAME`. AuthN runs the ZeroID and AuthN schema migrations at startup, so this user needs rights to create and alter tables in that database. | nil | -
+`DB_PASSWORD` | Password for `DB_USERNAME`. AuthN inserts it into the `postgres://` connection URL without URL-escaping, so characters such as `@ : / # ? %` break the connection string. Use a password without them, or supply a pre-built `HIGHFLAME_DATABASE_URL` instead. | nil | -
+`DB_HOST` | Hostname or IP of the Postgres server holding the AuthN database. If it is empty and `HIGHFLAME_DATABASE_URL` is also unset, AuthN refuses to start (database URL is required). | nil | -
+`DB_PORT` | TCP port of the Postgres server at `DB_HOST`. | `5432` | -
+`DB_SSL_MODE` | Postgres `sslmode` for AuthN's connection. Use `require` (or `verify-ca` / `verify-full`) for managed databases that enforce TLS, such as RDS, Cloud SQL or Azure Database; `disable` only suits an in-cluster Postgres on a trusted network. | `disable` | `disable` or `require`
+`AUTHN_DB_NAME` | Postgres database holding AuthN's own data: ZeroID identities, OAuth clients, issued and revoked credentials, and downstream MCP OAuth connections. It must already exist; AuthN creates the tables in it at startup but not the database itself. | `highflame_authn` | -
+`REDIS_HOST` | Redis host AuthN uses for events shared across replicas: CIBA backchannel notifications to Studio, publishing token revocations to Shield, and the agent quarantine set Shield enforces. If unset, AuthN works only as a single replica, the quarantine API is off, and revoked tokens stay valid at Shield until they expire. Usually the same Redis the other Highflame services use. | nil | -
+`REDIS_PORT` | TCP port of the Redis server at `REDIS_HOST`. | `6379` | -
+`REDIS_TLS` | Set to `true` to connect to Redis over TLS 1.2 or later, for example ElastiCache with in-transit encryption. The server certificate is checked against `REDIS_CACERT` if set, otherwise against the system CA roots. | `false` | `true` or `false`
+`REDIS_USER` | Redis ACL username, for example an ElastiCache RBAC user. Leave empty for password-only or unauthenticated Redis. | nil | -
+`REDIS_PASS` | Redis password or auth token for `REDIS_USER`. It is passed to the client as-is, so special characters are safe. | nil | -
+`REDIS_CACERT` | Path inside the container to a PEM CA bundle used to verify the Redis server when `REDIS_TLS=true` (for example a file mounted at `/app/certs/redis-ca.pem`). Ignored when TLS is off; empty means use the system CA roots. AuthN won't start if the file is missing or contains no certificates. | `""` | -
+`OTEL_ENABLED` | Turns OpenTelemetry tracing for AuthN on or off. When on, traces go to `OTEL_EXPORTER_OTLP_ENDPOINT`. The image sets it to `true` (the code default would be off). | `true` | -
+`HIGHFLAME_ADMIN_URL` | Base URL of Admin. AuthN periodically reports credential-operation counts (token issuance, token exchange) to Admin's quota endpoint, authenticated with `HIGHFLAME_INTERNAL_SERVICE_SECRET`. Empty turns off usage metering. | `http://highflame-admin:8040` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP/gRPC endpoint that receives AuthN's traces when `OTEL_ENABLED=true`, normally the highflame-collector service. It is read directly by the OpenTelemetry SDK, so the other standard `OTEL_EXPORTER_OTLP_*` variables also work. | `http://highflame-collector:4317` | -
+`HIGHFLAME_ISSUER` | **Required.** The public URL AuthN is reached at. It becomes the `iss` claim in every token AuthN issues and the base of its OAuth discovery and JWKS URLs. It must be `http` or `https` with no trailing slash, query string or embedded credentials, or AuthN won't start. Every service that validates AuthN tokens (the `HIGHFLAME_AUTH_JWT_ISSUER` / `HIGHFLAME_JWT_ISSUER` settings elsewhere) must use exactly this value. AuthN also fetches its own JWKS from this URL, so it must be reachable from inside the AuthN pod. | nil | `https://<<auth_domain_name>>`
+`HIGHFLAME_WIMSE_DOMAIN` | **Required.** Trust domain for agent and workload identities: each identity gets a URI of the form `spiffe://<domain>/<account>/<project>/<type>/<id>`. No DNS setup is needed. It must be a bare lowercase DNS name with no `spiffe://` prefix, or AuthN won't start. Choose it once: identities already issued keep URIs under the old domain. | nil | `<<root_domain_name>> or <<unique_name-root_domain_name>>`
+`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | Path inside the container to the RSA private key AuthN uses to sign RS256 tokens for users and SDKs. It normally comes from the `highflame-auth-keys` secret mounted at `/app/keys`, with the matching public key at `/app/keys/jwt-public.pem`. The same mount must also contain the ECDSA `private.pem` / `public.pem` pair, or AuthN won't start. | `/app/keys/jwt-private.pem` | -
+`HIGHFLAME_SECRETS_BACKEND` | Where AuthN stores credentials it holds on users' behalf, such as downstream MCP and OAuth tokens. `kubernetes` keeps each as a Secret in AuthN's namespace and needs the Role in the helm values that allows managing `secrets`. `file` writes them to local disk, where they are lost when the pod is replaced; AuthN refuses `file` in production unless `HIGHFLAME_SECRETS_FILE_DURABLE=true` and the path is an absolute, persistent mount. | `kubernetes` | -
+`HIGHFLAME_AUTH_ASSERTION_RESOLVER_AUDIENCE` | The `aud` value AuthN requires in the signed login assertions Studio sends to `/oauth2/authorize` during browser and CLI login (RFC 7523). It must match Studio's `HIGHFLAME_OAUTH_ASSERTION_AUDIENCE`. If empty, it falls back to `HIGHFLAME_ISSUER`. | `highflame-authn` | -
+`HIGHFLAME_AUTH_ASSERTION_RESOLVER_TRUSTED_ISSUERS` | JSON list of services AuthN accepts login assertions from, each an `issuer` name plus the `jwks_url` of its signing keys. The default trusts Studio at its in-cluster JWKS URL, which AuthN must be able to reach. Invalid JSON stops AuthN at startup; an empty list turns off assertion-based login, which breaks CLI login through Studio. | `[{"issuer":"highflame-studio","jwks_url":"http://highflame-studio:3000/.well-known/jwks.json"}]` | -
+`HIGHFLAME_ALLOW_UNSAFE_DEV_STUB` | Development only. When `true`, ZeroID accepts any submitted image-hash or TPM attestation proof without checking it. Keep it `false`: the image runs in production mode, where ZeroID refuses to start with it on. | `false` | `true` or `false`
 `HIGHFLAME_AUTH_STUDIO_URL` | **Required.** Studio's origin. AuthN derives the device-login consent page (`/device`) and the MCP OAuth callback and client document from it. Must equal Studio's `NEXT_PUBLIC_APP_URL`. Over plain `http` (other than localhost), device login works but automatic MCP client registration is off. | nil (AuthN will not start without it) | `https://<<studio_domain_name>>`
-`HIGHFLAME_AUTH_DOWNSTREAM_CIMD_ENABLED` | Outbound CIMD: Highflame presents a Client ID Metadata Document to third-party MCP servers that support it. Enable only when every such server in use can reach Studio (an internet-reachable Studio, or only internal MCP servers); otherwise leave off and servers use Dynamic Client Registration. Requires an `https` Studio URL. | `false` | `true` or `false`
-`HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS` | Lets AuthN reach MCP servers and their OAuth servers on private addresses (internal MCP servers). Disables AuthN's SSRF protection for those calls entirely, and the HTTPS requirement on OAuth endpoints | `false` | `true` or `false`
-`HIGHFLAME_CIMD_ENABLED` | Inbound CIMD for ZeroID's own clients (unrelated to `HIGHFLAME_AUTH_DOWNSTREAM_CIMD_ENABLED`) | nil | `true` or `false`
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | A unique enc key like `hf-token-encryption-key-32b!`
+`HIGHFLAME_AUTH_DOWNSTREAM_CIMD_ENABLED` | Outbound CIMD: Highflame presents a Client ID Metadata Document to third-party MCP servers that support it. Enable only when every such server in use can reach Studio (an internet-reachable Studio, or only internal MCP servers); otherwise leave off and servers use Dynamic Client Registration. Requires an `https` Studio URL. | `true` | `true` or `false`
+`HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS` | Lets AuthN reach MCP servers and their OAuth servers on private addresses (internal MCP servers). Disables AuthN's SSRF protection for those calls entirely, and the HTTPS requirement on OAuth endpoints | `true` | `true` or `false`
+`HIGHFLAME_CIMD_ENABLED` | Inbound CIMD, unrelated to `HIGHFLAME_AUTH_DOWNSTREAM_CIMD_ENABLED`. When on, any MCP client can use an https URL as its `client_id` at AuthN's `/oauth2/authorize`, and AuthN fetches the client's metadata document from that URL instead of requiring the client to be registered first. It is effectively on unless set to `false`, and the image config accepts any client host. Set `false` if outside MCP clients should not be able to sign in unregistered, or set `HIGHFLAME_CIMD_ALLOWED_DOMAINS` to limit which hosts are accepted. | `false` | `true` or `false`
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret for service-to-service calls. AuthN requires it (header `X-Internal-Service-Secret`) from Admin, Shield, Discovery, Forge and other trusted services on its admin and internal routes, and sends it when reporting usage to Admin. It must be the same in every Highflame service; AuthN refuses to start in production without it. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | Shared HS256 secret for the short-lived authorization codes in the CLI and browser login flow: Studio signs them and AuthN verifies them. It must be at least 32 bytes and identical to Studio's `HIGHFLAME_AUTH_JWT_SECRET_KEY`; AuthN refuses to start in production without it. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Key AuthN uses to encrypt (AES-GCM) the downstream MCP and third-party OAuth tokens it stores for users. Keys of 16, 24 or 32 bytes are used as-is; other lengths are hashed to 32 bytes. If unset, AuthN turns off the whole downstream-token API, including MCP OAuth connections from Studio. Changing it later makes previously stored tokens unreadable. | nil | A unique enc key like `hf-token-encryption-key-32b!`
 
 ### highflame-authz
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`DB_USERNAME` | Postgres username | nil | -
-`DB_PASSWORD` | Postgres password | nil | -
-`DB_HOST` | Postgres host | nil | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`AUTHZ_DB_NAME` | Postgres database | `highflame_data` | -
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
+`DB_USERNAME` | Postgres user AuthZ connects as, combined with the other `DB_*` variables into its connection URL. AuthZ runs its schema migrations at startup, so this user needs rights to create and alter tables in `AUTHZ_DB_NAME`. | nil | -
+`DB_PASSWORD` | Password for `DB_USERNAME`. AuthZ URL-escapes it when building the connection string, so special characters are safe. | nil | -
+`DB_HOST` | Hostname or IP of the Postgres server holding AuthZ's policy database. If it is empty and `HIGHFLAME_DATABASE_URL` is also unset, AuthZ refuses to start. | nil | -
+`DB_PORT` | TCP port of the Postgres server at `DB_HOST`. | `5432` | -
+`DB_SSL_MODE` | Postgres `sslmode` for AuthZ's connection. Use `require` (or `verify-ca` / `verify-full`) for managed databases that enforce TLS; `disable` only for a trusted in-cluster Postgres. | `disable` | `disable` or `require`
+`AUTHZ_DB_NAME` | Postgres database holding AuthZ's Cedar policies, schemas, profiles and deployments. By default it is `highflame_data`, the same database as Admin's `DB_NAME`; AuthZ applies its own migrations there at startup. | `highflame_data` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret AuthZ checks on internal calls: from Admin, Redteam and Shield carrying tenant context in headers (`X-Internal-Service-Secret`), on Shield's cross-tenant `/policies/sync` pull (`X-Internal-Secret`), and on `/version`. It must be the same in every Highflame service. **If left empty, AuthZ still starts but skips the check**, so any caller sending those headers can act as any tenant; always set it. | nil | _Will be shared by a Highflame representative_
 
 ### highflame-cerberus
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_ADMIN_URL` | Highflame Admin URL | `http://highflame-admin:8040`| -
-`HIGHFLAME_SHEILD_URL` | Highflame Sheild URL | `http://highflame-shield:8070/v1/shield`| -
-`HIGHFLAME_COLLECTOR_URL` | Highflame Collector URL | `highflame-collector:4317`| -
-`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | Highflame JWTpublic key | `/app/config/jwt/jwt-public.pem` | -
+`HIGHFLAME_ADMIN_URL` | Base URL Cerberus uses to call Admin's internal `POST /v1/admin/internal/resolve-member` (authenticated with `HIGHFLAME_INTERNAL_SERVICE_SECRET`). Aperture identity federation uses it to map a verified Tailscale login to a Highflame user and check the user belongs to the tenant. Setting it to an empty string does not turn this check off: empty values are ignored and the built-in default applies. | `http://highflame-admin:8040`| -
+`HIGHFLAME_SHEILD_URL` | **Misspelled: Cerberus reads `HIGHFLAME_SHIELD_URL`, so this name has no effect.** The real variable is the Shield base URL, including the `/v1/shield` prefix, that Cerberus forwards normalized IDE-hook, webhook and Aperture agent events to for guardrail evaluation. It is required: Cerberus won't boot if it is empty, and leaving out `/v1/shield` makes every evaluation call return 404. | `http://highflame-shield:8070/v1/shield`| -
+`HIGHFLAME_COLLECTOR_URL` | **Unused.** Cerberus does not read this variable in its code, config or image. Traces go through the standard `OTEL_EXPORTER_OTLP_ENDPOINT` (image default `http://highflame-collector:4317`), and only when `OTEL_ENABLED=true`, which is off by default. | `highflame-collector:4317`| -
+`HIGHFLAME_AUTH_JWT_PUBLIC_KEY` | RSA public key (PEM text or a file path) Cerberus uses to verify RS256 bearer JWTs on its hook and webhook endpoints. It must be the public half of AuthN's signing key (`jwt-public.pem` in the `highflame-auth-keys` secret, which the helm chart mounts at this path). Cerberus won't start if it is empty, unreadable or not an RSA key. | `/app/config/jwt/jwt-public.pem` | -
 
 ### highflame-collector
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CLICKHOUSE_ENDPOINT` | Clickhouse Endpoint | `tcp://clickhouse-ch.clickhouse.svc.cluster.local:9000` | -
-`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
-`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
-`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
+`CLICKHOUSE_ENDPOINT` | ClickHouse native-protocol address (`tcp://host:9000`) the OpenTelemetry Collector writes every OTLP trace it receives to (from Shield, Firehog, Cerberus, Discovery and the SDKs). Observatory's dashboards read from this ClickHouse, so it must be the same instance as Observatory's `CLICKHOUSE_HOST`. If it is wrong or unreachable, the exporter retries for about 5 minutes and then drops spans, and dashboards go empty. | `tcp://clickhouse-ch.clickhouse.svc.cluster.local:9000` | -
+`CLICKHOUSE_DATABASE` | ClickHouse database holding the `otel_traces_raw` table the collector inserts spans into. The collector does not create tables (Observatory's migrations own the schema), so this must match Observatory's `CLICKHOUSE_DATABASE`, and Observatory must have run its migrations there first; otherwise exports fail. | `highflame` | -
+`CLICKHOUSE_USERNAME` | ClickHouse user the collector authenticates as when inserting traces. It needs INSERT on `otel_traces_raw` in `CLICKHOUSE_DATABASE`. If unset, the collector uses the `default` user, which only works when that user has no password. | nil | -
+`CLICKHOUSE_PASSWORD` | Password for `CLICKHOUSE_USERNAME`. If it is wrong or missing, every export fails authentication and no telemetry reaches Observatory. | nil | -
 
 ### highflame-discovery
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`DB_USERNAME` | Postgres username | nil | -
-`DB_PASSWORD` | Postgres password | nil | -
-`DB_HOST` | Postgres host | nil | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`DISCOVERY_DB_NAME` | Postgres database | `highflame_discovery` | -
-`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
-`OTEL_ENABLED` | Enable OTEL | `true` | -
-`OTEL_EXPORTER_OTLP_ENDPOINT` | OTEL endpoint | `http://highflame-collector:4317` | -
-`HIGHFLAME_ZEROID_BASE_URL` | Highflame zeriod base url | `http://highflame-authn:8051` | -
-`HIGHFLAME_SYNC_ENABLED` | Highflame sync enabled or disabled | `true` | `true` or `false`
-`HIGHFLAME_SYNC_TICK_SECONDS` | Highflame sync tick interval | `86400` | -
-`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | `https://<<auth_domain_name>>`
-`HIGHFLAME_SECRETS_BACKEND`| Highflame secrets store | `kubernetes` | -
-`HIGHFLAME_AWS_SAME_ACCOUNT_ENABLED`| Enable Highflame deployed AWS Account use for bedrock connector | `true` | `true` or `false`
-`HIGHFLAME_ADMIN_BASE_URL`| Highflame admin base url | `http://highflame-admin:8040` | -
+`DB_USERNAME` | Postgres user Discovery connects as. Discovery stores connector configuration there and runs its schema migrations on every boot, so this user needs DDL rights on `DISCOVERY_DB_NAME`. | nil | -
+`DB_PASSWORD` | Password for `DB_USERNAME`. It goes into a `postgres://user:pass@host` connection URL without URL-encoding, so characters such as `@ : / # ?` break the connection string. | nil | -
+`DB_HOST` | Postgres server hostname for Discovery's connector store. Required: Discovery won't boot if it is empty, and the code falls back to `localhost`, which is wrong inside a pod. | nil | -
+`DB_PORT` | Postgres server port for Discovery. | `5432` | -
+`DB_SSL_MODE` | Postgres `sslmode` for Discovery's connection. Use `require` for managed databases that enforce TLS, such as RDS, Cloud SQL or Azure Database; the driver also accepts `verify-ca` and `verify-full`. | `disable` | `disable` or `require`
+`DISCOVERY_DB_NAME` | Postgres database dedicated to Discovery, separate from the other services' databases. Discovery does not create it, so it must already exist; Discovery then applies its migrations into it on boot. | `highflame_discovery` | -
+`HIGHFLAME_AUTH_JWKS_URL` | AuthN's JWKS endpoint. Discovery fetches signing keys from it (ES256 and RS256, rotated automatically) to verify bearer JWTs on its connector API. The image runs in prod mode, where Discovery refuses to boot if this is empty. | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`OTEL_ENABLED` | Turns on OpenTelemetry tracing for Discovery. When `true`, spans are exported over OTLP to `OTEL_EXPORTER_OTLP_ENDPOINT`; when `false`, no traces are sent. | `true` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP/gRPC endpoint, including the scheme, that Discovery sends traces to, normally the Highflame collector on port 4317. Only used when `OTEL_ENABLED=true`. | `http://highflame-collector:4317` | -
+`HIGHFLAME_ZEROID_BASE_URL` | Base URL of AuthN (ZeroID). During each connector sync Discovery writes the agents and non-human identities it finds into AuthN, authenticating with `HIGHFLAME_INTERNAL_SERVICE_SECRET`. Discovered identities are stored only in AuthN, so if this is wrong or unreachable, syncs fail and no discovered agents appear in Studio. | `http://highflame-authn:8051` | -
+`HIGHFLAME_SYNC_ENABLED` | Turns on Discovery's background loop that re-syncs connectors on a schedule. When `false`, connectors only sync when a user clicks Sync in Studio. | `true` | `true` or `false`
+`HIGHFLAME_SYNC_TICK_SECONDS` | How often, in seconds, the background loop wakes to sync connectors whose own sync interval has elapsed. It limits how often a sync can happen: at `86400`, each connector re-syncs at most once a day whatever its own interval. Ignored unless `HIGHFLAME_SYNC_ENABLED=true`. | `86400` | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Expected `iss` claim on the bearer JWTs Discovery accepts. It must equal the issuer AuthN puts on its tokens (AuthN's `HIGHFLAME_ISSUER`). Required in prod mode: Discovery won't boot without it, and a mismatch rejects every request with 401. | nil | `https://<<auth_domain_name>>`
+`HIGHFLAME_SECRETS_BACKEND`| Where Discovery stores the IdP and cloud credentials for connectors; Postgres keeps only a tenant-scoped reference. `kubernetes` stores each credential as a Secret in the pod's namespace and needs the chart's Role granting Secret access. `file` keeps them on the container's ephemeral disk, where they would be lost when the pod is replaced, so Discovery refuses it at boot in prod mode. | `kubernetes` | -
+`HIGHFLAME_AWS_SAME_ACCOUNT_ENABLED`| Lets AWS Bedrock connectors marked `same_account` discover the AWS account Discovery itself runs in, using the pod's own identity (IRSA or EC2 instance profile) instead of a stored key or assumed role. Must be `false` on any multi-tenant install. When `true`, `HIGHFLAME_AWS_SAME_ACCOUNT_ALLOWED_ACCOUNTS` must also be set or Discovery won't boot. Requires a Discovery image that includes this feature (not yet on Discovery's `main` branch as of this writing). | `true` | `true` or `false`
+`HIGHFLAME_ADMIN_BASE_URL`| Base URL of Admin. Discovery calls Admin's `/v1/admin/internal/resolve-member` (authenticated with `HIGHFLAME_INTERNAL_SERVICE_SECRET`) to check owner emails reported by the identity provider against the tenant's member list. If empty, this check is off and reported owners are shown unverified. | `http://highflame-admin:8040` | -
 
 ### highflame-firehog
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_SHIELD_URL` | highflame shield url | `http://highflame-shield:8070/v1/shield` | -
-`HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
-`HIGHFLAME_AUTHN_URL` | highflame authn url | `http://highflame-authn:8051` | -
-`HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
-`HIGHFLAME_FIREHOG_URL` | highflame firehog url | nil | `https://<<gateway_domain_name>>`
-`OAUTH_AUTHORIZATION_SERVER` | Highflame Authorization server URL | nil | `https://<<studio_domain_name>>`
-`FIREHOG_SHIELD_SCAN_SCOPE` | LLM ingress scan scope | `full` | -
-`OAUTH_CIMD_SUPPORTED` | CIMD disabled or enabled | `false` | `true` or `false`
-`QUOTA_ENABLED` | Quota RPM/TPM enforcement | `true` | `true` or `false`
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_SHIELD_URL` | Shield base URL, including the `/v1/shield` prefix, that Firehog calls to scan LLM and MCP traffic (prompts, tool calls, tool outputs) and enforce guardrail policy. It is substituted into `shield.url` in the config at container start. Leaving out the prefix, or pointing at an unreachable Shield, breaks guardrail evaluation. | `http://highflame-shield:8070/v1/shield` | -
+`HIGHFLAME_ADMIN_URL` | Admin base URL Firehog uses to look up MCP servers registered in Studio (by slug and tenant) and to validate API keys and tenant identity. If unset, Firehog serves only statically configured servers, skips API-key validation and doesn't inject provider keys, which is unsafe outside local testing. | `http://highflame-admin:8040` | -
+`HIGHFLAME_AUTHN_URL` | Base URL of AuthN, with no `/v1/auth` suffix. Firehog uses it to fetch JWKS for verifying OAuth JWTs from MCP clients, to exchange API keys for short-lived tokens via `/oauth2/token`, and to read per-user downstream tokens. If unset, token exchange falls back to Admin's URL. | `http://highflame-authn:8051` | -
+`HIGHFLAME_JWT_ISSUER` | Trusted `iss` value (comma-separated list allowed) for OAuth JWTs presented to the gateway. **Set it to AuthN's issuer (AuthN's `HIGHFLAME_ISSUER`, `https://<<auth_domain_name>>`).** The image default `highflame-admin` rejects every real AuthN token with 401, and an empty value stops Firehog booting. | `highflame-admin` | -
+`HIGHFLAME_FIREHOG_URL` | Public URL of the gateway. Firehog advertises it as the OAuth resource in its protected-resource metadata and `WWW-Authenticate` challenges, which MCP clients use to start the OAuth flow. When OAuth is enabled, as in the shipped config, an empty or invalid value stops Firehog booting. | nil | `https://<<gateway_domain_name>>`
+`OAUTH_AUTHORIZATION_SERVER` | Public Studio URL that Firehog advertises to MCP clients as their OAuth authorization server; the advertised authorize, token and registration endpoints are built under its `/api/cli-auth/` path. It must be reachable from client machines, so use the public Studio domain, not an in-cluster address. | nil | `https://<<studio_domain_name>>`
+`FIREHOG_SHIELD_SCAN_SCOPE` | Which parts of an incoming LLM request Firehog sends to Shield. `full` scans everything, including system prompts and harness-injected reminders (these are audit-only). `user_and_tools` scans only the user prompt, tool outputs and uploaded files: fewer Shield calls, but harness-supplied context isn't inspected. Unknown values fall back to `full`, and a `shield.scan_scope` in the config file overrides this variable. | `full` | -
+`OAUTH_CIMD_SUPPORTED` | Meant to control whether Firehog's OAuth metadata tells MCP clients it supports Client ID Metadata Documents, matching AuthN's CIMD setting. **Currently has no effect:** the container starts from a config file, that path never reads this variable, and the shipped config has no `cimd_supported` key, so Firehog always advertises CIMD support. | `false` | `true` or `false`
+`QUOTA_ENABLED` | Turns on per-tenant requests-per-minute and tokens-per-minute limits at the gateway. Counters are kept in Redis (`REDIS_HOST`, `REDIS_PORT` and optionally `REDIS_USER`, `REDIS_PASS`, `REDIS_TLS`). If Redis is unreachable at boot, limits are not enforced (fail-open); an unparseable value is ignored. | `true` | `true` or `false`
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret Firehog sends on internal calls to Shield, Admin and AuthN; it also protects Firehog's `/version` endpoint. It must be the same value configured on every other Highflame service, or those internal calls are rejected. | nil | _Will be shared by a Highflame representative_
 
 ### highflame-guard-*
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HF_HUB_ENABLE_HF_TRANSFER` | Enable huggingface transfer | `1` | -
-`WORKERS` | Number of workers | `2` | -
-`MAX_BATCH_TOKENS` | Maximum batch tokens | `16384` | -
-`GPU_MEMORY_BUDGET_MB` | GPU memory allocation | `2100` | -
-`HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | _Will be shared by a Highflame representative_
+`HF_HUB_ENABLE_HF_TRANSFER` | Turns on the faster Rust `hf_transfer` downloader in the Hugging Face hub client. Only used while the image is built, to download model weights. The running pod loads weights already baked into the image and downloads nothing, so setting it on a deployment has no practical effect. | `1` | -
+`WORKERS` | Number of model-worker processes started per device, so total workers equal `NUM_DEVICES` × `WORKERS`. Each worker loads its own copy of the model, so raising it multiplies GPU and host memory use and can cause out-of-memory failures at startup. | `2` | -
+`MAX_BATCH_TOKENS` | **Unused.** No guard service reads this variable. Batching is controlled by `BATCH_SIZE`, `BATCH_TIMEOUT` and `LENGTH_BUCKETS`. | `16384` | -
+`GPU_MEMORY_BUDGET_MB` | **Unused.** No guard service reads this variable. GPU memory use depends only on the model and the number of workers (`WORKERS` × `NUM_DEVICES`). | `2100` | -
+`HIGHFLAME_MODELS_SECRET` | Shared secret the guard services require in the `X-Models-Secret` header on prediction requests; health, liveness and metrics paths are exempt so probes keep working. It must equal Shield's `HIGHFLAME_MODELS_SECRET`, which sends it on every ML detector call; a mismatch gives 401/403 and the ML detectors fail. If empty, the guard accepts unauthenticated requests (dev mode only). | nil | _Will be shared by a Highflame representative_
 
 ### highflame-observatory
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`CLICKHOUSE_HOST` | Clickhouse Host | `clickhouse-ch.clickhouse.svc.cluster.local` | -
-`CLICKHOUSE_DATABASE` | Clickhouse Database | `highflame` | -
-`CLICKHOUSE_USERNAME` | Clickhouse Username | nil | -
-`CLICKHOUSE_PASSWORD` | Clickhouse Password | nil | -
-`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | `https://<<auth_domain_name>>`
-`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
-`HIGHFLAME_RECEIPT_AUTHN_JWKS_URL` | Highflame receipt authn JWKS URL | `http://highflame-authn:8051/v1/auth/.well-known/highflame-receipt-keys` | -
-`HIGHFLAME_RAMPARTS_URL` | Highflame ramparts server | `http://highflame-ramparts-server:8080` | -
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | _Will be shared by a Highflame representative_
+`CLICKHOUSE_HOST` | Hostname of the ClickHouse server Observatory reads event and trace data from to serve Studio's dashboards; it also runs its ClickHouse migrations there on boot. Host only: the port comes from `CLICKHOUSE_PORT` (default `9000`, native protocol). It must be the ClickHouse the collector writes to (collector's `CLICKHOUSE_ENDPOINT`). A wrong value makes every Observatory query fail. | `clickhouse-ch.clickhouse.svc.cluster.local` | -
+`CLICKHOUSE_DATABASE` | ClickHouse database Observatory queries and migrates on boot. It must be the same database the collector writes to, or dashboards come back empty. Required: Observatory won't start if it is empty. | `highflame` | -
+`CLICKHOUSE_USERNAME` | ClickHouse user Observatory connects as (`CLICKHOUSE_USER` is accepted as an alias). It needs read access to the event tables and DDL rights, because Observatory runs migrations on boot. Effectively required with the shipped config file. | nil | -
+`CLICKHOUSE_PASSWORD` | Password for `CLICKHOUSE_USERNAME`. If empty, Observatory connects with no password. | nil | -
+`HIGHFLAME_AUTH_JWT_ISSUER`| Expected `iss` claim on bearer JWTs sent to the Observatory API. It must exactly match the issuer AuthN puts on its tokens (AuthN's `HIGHFLAME_ISSUER`). If unset, Observatory logs a warning and accepts tokens from any issuer whose signature verifies. | nil | `https://<<auth_domain_name>>`
+`HIGHFLAME_AUTH_JWKS_URL` | AuthN's JWKS endpoint, which Observatory uses to verify the JWT on every API request. If empty, auth runs in dev mode and accepts any bearer token, which is unsafe outside development. | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_RECEIPT_AUTHN_JWKS_URL` | URL of AuthN's published receipt-signing keys. Observatory's receipt-verification endpoint uses them to check the signed decision receipts Shield produces (see Shield's `HIGHFLAME_RECEIPT_SIGNING_ENABLED`). The path must end in AuthN's receipt key set name (`/.well-known/highflame-receipt-keys`). If receipts are enabled in config and this is empty, Observatory exits at startup. | `http://highflame-authn:8051/v1/auth/.well-known/highflame-receipt-keys` | -
+`HIGHFLAME_RAMPARTS_URL` | Base URL of highflame-ramparts-server. When a user starts an on-demand MCP server scan in Studio, Observatory calls Ramparts' `/v1/ramparts/analyze` and stores the result in ClickHouse. If empty, the scan endpoint isn't available; if wrong, on-demand scans fail. | `http://highflame-ramparts-server:8080` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared service-to-service secret. In Observatory it only protects `GET /version`, which Admin calls for the system versions page. It must match the value used by Admin and the other services. If unset, `/version` returns 503 and Studio shows Observatory's version as an error. | nil | _Will be shared by a Highflame representative_
 
 ### highflame-redteam
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`REDTEAM_SEEDER_DATASET` | Redteam seeder dataset name | nil | `highflame/highflame-red5-with-embeddings`
-`REDTEAM_SEEDER_DATASET_VER` | Redteam seeder dataset version | nil | `hf_v1`
-`REDTEAM_SEEDER_ARGS` | Redteam seeder command args | nil | `--force`
-`DB_USERNAME` | Postgres username | nil | -
-`DB_PASSWORD` | Postgres password | nil | -
-`DB_HOST` | Postgres host | nil | -
-`DB_PORT` | Postgres port | `5432` | -
-`DB_SSL_MODE` | Postgres sslmode | `disable` | `disable` or `require`
-`REDIS_HOST` | Redis host | nil | -
-`REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
-`REDIS_USER` | Redis username | nil | -
-`REDIS_PASS` | Redis password | nil | -
-`REDIS_CACERT` | Redis CA Cert | `""` | -
-`REDIS_PROGRESS_TTL_SECONDS` | Redis progress TTL seconds | `86400` | -
-`OPENAI_API_KEY` | OpenAI api key | nil | Conflict with other providers
-`XAI_API_KEY` | Xai api key | nil | Conflict with other providers
-`AZURE_API_KEY` | Azure OpenAI api key | nil | Conflict with other providers
-`AZURE_API_BASE` | Azure OpenAI API base | nil | Conflict with other providers
-`AZURE_API_VERSION` | Azure OpenAI version | `2024-02-15-preview` | -
-`REDTEAM_DB_NAME` | Postgres database | `highflame_redteam` | -
-`HIGHFLAME_ADMIN_URL` | Highflame admin url | `http://highflame-admin:8040` | -
-`MODEL_HIGH_END` | Provider high model name | `gpt-4o` | -
-`MODEL_LOW_END` | Provider low model name | `gpt35` | -
-`EMBEDDING_MODEL` | Embedding model name | `text-embedding-3-small` | -
-`GROK_MODEL` | Grok model name | `grok-2` | Conflict with other providers
-`ATTACK_GEN_MODEL` | Xai model name | `xai/grok-3` | Conflict with other providers
-`DEFAULT_PROVIDER` | Default provider | `openai` | `openai` or `bedrock` or `azure` or `local`
-`OTEL_EXPORTER_OTLP_ENDPOINT` | Highflame collector URL | `http://highflame-collector:4317` | -
-`OTEL_SERVICE_NAME` | Highflame collector service | `redteam-scanner` | -
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
-`HF_TOKEN` | HF token | nil | _Will be shared by a Highflame representative_
+`REDTEAM_SEEDER_DATASET` | Hugging Face dataset the one-time seeder job downloads and loads into the red-team Postgres/pgvector tables as the attack-prompt corpus. The pod needs outbound access to huggingface.co, plus `HF_TOKEN` if the dataset is private. If seeding fails, scans have no prompts to draw from. The image sets `highflame/highflame-red5-with-embeddings`. | nil | `highflame/highflame-red5-with-embeddings`
+`REDTEAM_SEEDER_DATASET_VER` | Version label the seeder stores on every row it loads. If data for this version already exists, the seeder skips the load unless `REDTEAM_SEEDER_ARGS` includes `--force`. The image sets `hf_v1`. | nil | `hf_v1`
+`REDTEAM_SEEDER_ARGS` | Extra flags for the seeder command. `--force` deletes any existing rows for `REDTEAM_SEEDER_DATASET_VER` and reloads them. Leave empty for normal installs so re-running the job does nothing when data already exists. | nil | `--force`
+`DB_USERNAME` | Postgres user for the red-team database, used in the connection URL shared by the API, the queue workers and the seeder. Required: there is no default. | nil | -
+`DB_PASSWORD` | Password for `DB_USERNAME`. It goes into the connection URL without URL-encoding, so characters such as `@ : / #` break it unless you percent-encode them yourself. | nil | -
+`DB_HOST` | Hostname of the Postgres server holding the red-team database. It needs the pgvector extension. Admin connects to the same server and database to read scan results. Required: there is no default. | nil | -
+`DB_PORT` | Postgres port for the red-team database. | `5432` | -
+`DB_SSL_MODE` | Postgres `sslmode` for the red-team database connection. Use `require` (or `verify-ca` / `verify-full`) for managed databases that enforce TLS. | `disable` | `disable` or `require`
+`REDIS_HOST` | **Unused by RedTeam.** RedTeam takes its Redis connection (scan queue, Palisade queue, progress tracking) only from a `REDIS_CONN_STR` URL such as `redis://user:pass@host:6379/0`, which you must set instead. | nil | -
+`REDIS_PORT` | **Unused by RedTeam.** Put the port in the `REDIS_CONN_STR` URL instead. | `6379` | -
+`REDIS_TLS` | **Unused by RedTeam.** For TLS, use a `rediss://` scheme in `REDIS_CONN_STR` (plus `REDIS_CACERT` if needed). | `false` | `true` or `false`
+`REDIS_USER` | **Unused by RedTeam.** Put the username in the `REDIS_CONN_STR` URL instead. | nil | -
+`REDIS_PASS` | **Unused by RedTeam.** Put the password in the `REDIS_CONN_STR` URL instead. | nil | -
+`REDIS_CACERT` | Path inside the container to a CA certificate used to verify the Redis server's TLS certificate. Only matters when `REDIS_CONN_STR` uses `rediss://`. The file must be mounted into the pod (for example at `/app/certs/redis-ca.pem`). Empty means no custom CA. | `""` | -
+`REDIS_PROGRESS_TTL_SECONDS` | How long, in seconds, per-scan progress records stay in Redis after they are written. Studio shows live and recent scan progress from them. | `86400` | -
+`OPENAI_API_KEY` | OpenAI API key used for all scan LLM calls (attack generation, target execution, evaluation, recon) and embeddings when `DEFAULT_PROVIDER=openai`, and for any call to an OpenAI model. Required for the default setup. It can be set alongside the other providers' keys. | nil | Conflict with other providers
+`XAI_API_KEY` | xAI (Grok) API key. Used when `DEFAULT_PROVIDER=xai`, and also whenever `ATTACK_GEN_MODEL` starts with `xai/`, as the default `xai/grok-3` does. So it is needed even with `DEFAULT_PROVIDER=openai`, unless you change `ATTACK_GEN_MODEL` to a non-xAI model. | nil | Conflict with other providers
+`AZURE_API_KEY` | Azure OpenAI API key for scan LLM calls when `DEFAULT_PROVIDER=azure` or when a model ID starts with `azure/`. Use with `AZURE_API_BASE` and `AZURE_API_VERSION`. | nil | Conflict with other providers
+`AZURE_API_BASE` | Azure OpenAI resource endpoint (for example `https://<resource>.openai.azure.com`), used when `DEFAULT_PROVIDER=azure` or for `azure/` models. With Azure, `MODEL_HIGH_END`, `MODEL_LOW_END` and `EMBEDDING_MODEL` must be your deployment names. | nil | Conflict with other providers
+`AZURE_API_VERSION` | Azure OpenAI REST API version sent with Azure calls, when `DEFAULT_PROVIDER=azure` or for `azure/` models. | `2024-02-15-preview` | -
+`REDTEAM_DB_NAME` | Postgres database holding the attack-prompt corpus, embeddings and scan results. It must equal Admin's `REDTEAM_DB_NAME`, because Admin reads red-team and Palisade scan results from it. | `highflame_redteam` | -
+`HIGHFLAME_ADMIN_URL` | **Unused.** The image sets it, but no RedTeam code reads it. Setting it has no effect. | `http://highflame-admin:8040` | -
+`MODEL_HIGH_END` | Model for the higher-quality scan roles: orchestrator, evaluator/scorer, reporter, recon, and most scan engines. For `azure` it must be an Azure deployment name. Ignored when `DEFAULT_PROVIDER=xai`, which uses `GROK_MODEL`. | `gpt-4o` | -
+`MODEL_LOW_END` | Model for the cheaper high-volume roles: the executor that runs attacks, and the attack generator when `ATTACK_GEN_MODEL` is empty. It must be a real model ID (for example `gpt-4o-mini` or `gpt-3.5-turbo`) or an Azure deployment name; the listed default `gpt35` is not a valid OpenAI model name, so override it. | `gpt35` | -
+`EMBEDDING_MODEL` | Embedding model used to turn prompts into vectors for the pgvector search; the seeder only calls it when the dataset has no precomputed embeddings. It must produce 1536-dimension vectors and match the model the seeded embeddings were built with. | `text-embedding-3-small` | -
+`GROK_MODEL` | xAI model used for every scan role when `DEFAULT_PROVIDER=xai`; needs `XAI_API_KEY`. It does not affect `ATTACK_GEN_MODEL`. | `grok-2` | Conflict with other providers
+`ATTACK_GEN_MODEL` | Model for the agent that writes attack prompts. The provider is picked from the prefix (`xai/`, `azure/`, `bedrock/`, `openai/`), so it can differ from `DEFAULT_PROVIDER`. The default `xai/grok-3` needs `XAI_API_KEY`; set it to a model from your main provider (for example `gpt-4o`) if you only have that provider's key. | `xai/grok-3` | Conflict with other providers
+`DEFAULT_PROVIDER` | Which provider supplies the scan models and API key. The shipped config supports `openai`, `azure` and `xai`. `bedrock` is accepted but has no provider entry in the shipped config, so scans fail with Provider not found in provider_map, and `local` is rejected when the config loads. | `openai` | `openai` or `bedrock` or `azure` or `local`
+`OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP/gRPC endpoint of highflame-collector, where the scanner and queue workers send per-scan traces that Observatory displays. `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` overrides it if set. If empty, tracing is off. | `http://highflame-collector:4317` | -
+`OTEL_SERVICE_NAME` | **No effect.** The service name is hardcoded to `redteam-scanner` and overrides this variable, so changing it doesn't rename the service. | `redteam-scanner` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared service-to-service secret. RedTeam uses it only to protect `GET /version`, which Admin calls for the system versions page. It must match Admin's value. If unset, `/version` returns 503 and Studio shows RedTeam's version as an error. | nil | _Will be shared by a Highflame representative_
+`HF_TOKEN` | Hugging Face access token. The seeder uses it to download `REDTEAM_SEEDER_DATASET` if that dataset is private or gated, and Palisade can use it to download gated Hugging Face models. Without it, seeding a private dataset fails. | nil | _Will be shared by a Highflame representative_
 
 ### highflame-redteam-lab1
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`MODEL_NAME` | Provider model | nil | -
-`LOCAL_MODEL_NAME` | Local Provider model | nil | -
-`AZURE_API_KEY` | Azure OpenAI api key | nil | for `DEFAULT_PROVIDER=azure`
-`AZURE_API_BASE` | Azure OpenAI API base | nil | for `DEFAULT_PROVIDER=azure`
-`AZURE_API_VERSION` | Azure OpenAI version | nil | for `DEFAULT_PROVIDER=azure`
-`BEDROCK_REGION` | Bedrock region | nil | for `DEFAULT_PROVIDER=bedrock`
-`BEDROCK_BEARER_TOKEN` | Bedrock bearer token | nil | for `DEFAULT_PROVIDER=bedrock`
-`BEDROCK_ACCESS_KEY` | Bedrock access key | nil | for `DEFAULT_PROVIDER=bedrock`
-`BEDROCK_SECRET_KEY` | Bedrock secret key | nil | for `DEFAULT_PROVIDER=bedrock`
-`OPENAI_API_KEY` | OpenAi api key | nil | for `DEFAULT_PROVIDER=openai`
-`OPENAI_API_KEY_1` | OpenAi api key | nil | Optional - for `DEFAULT_PROVIDER=openai` and need rotational key for model access
-`OPENAI_API_KEY_2` | OpenAi api key | nil | Optional - for `DEFAULT_PROVIDER=openai` and need rotational key for model access
-`OPENAI_API_KEY_3` | OpenAi api key | nil | Optional - for `DEFAULT_PROVIDER=openai` and need rotational key for model access
-`LOCAL_API_BASE` | Local API base | `http://highflame-chat-tester:8080` | for `DEFAULT_PROVIDER=local`
-`LOCAL_API_KEY` | Local api key | nil | for `DEFAULT_PROVIDER=local`
-`DEFAULT_PROVIDER` | Default provider | nil | `openai` or `bedrock` or `azure` or `local` 
+`MODEL_NAME` | Model the lab1 demo agents use with the `openai`, `azure` and `bedrock` providers: an OpenAI model ID, an Azure deployment name or a Bedrock model ID (the `azure/` or `bedrock/` prefix is added automatically). **Always required, even with `DEFAULT_PROVIDER=local`:** if unset, the provider config fails to load and every provider is unavailable. | nil | -
+`LOCAL_MODEL_NAME` | Model ID sent to the OpenAI-compatible server at `LOCAL_API_BASE` when `DEFAULT_PROVIDER=local`; it must be a model that server serves. It must always resolve for the provider config to load, which the image default (`local/llama2`) covers. | nil | -
+`AZURE_API_KEY` | Azure OpenAI API key for the lab1 agents when `DEFAULT_PROVIDER=azure`. Use with `AZURE_API_BASE`, `AZURE_API_VERSION` and a deployment name in `MODEL_NAME`. | nil | for `DEFAULT_PROVIDER=azure`
+`AZURE_API_BASE` | Azure OpenAI resource endpoint (for example `https://<resource>.openai.azure.com`) for the lab1 agents when `DEFAULT_PROVIDER=azure`. | nil | for `DEFAULT_PROVIDER=azure`
+`AZURE_API_VERSION` | Azure OpenAI REST API version for lab1 when `DEFAULT_PROVIDER=azure`. If empty, no version is sent and the client library's default applies. | nil | for `DEFAULT_PROVIDER=azure`
+`BEDROCK_REGION` | AWS region of the Bedrock endpoint for lab1 when `DEFAULT_PROVIDER=bedrock`. If empty, the AWS region from the pod's environment is used. | nil | for `DEFAULT_PROVIDER=bedrock`
+`BEDROCK_BEARER_TOKEN` | Bedrock API key (bearer token) for lab1 when `DEFAULT_PROVIDER=bedrock`, as an alternative to `BEDROCK_ACCESS_KEY` plus `BEDROCK_SECRET_KEY`. If neither is set, the AWS default credential chain is used (for example an IAM role or IRSA). | nil | for `DEFAULT_PROVIDER=bedrock`
+`BEDROCK_ACCESS_KEY` | AWS access key ID for lab1's Bedrock calls when `DEFAULT_PROVIDER=bedrock`. Use with `BEDROCK_SECRET_KEY`, or use `BEDROCK_BEARER_TOKEN` instead. | nil | for `DEFAULT_PROVIDER=bedrock`
+`BEDROCK_SECRET_KEY` | AWS secret access key paired with `BEDROCK_ACCESS_KEY` for lab1's Bedrock calls when `DEFAULT_PROVIDER=bedrock`. | nil | for `DEFAULT_PROVIDER=bedrock`
+`OPENAI_API_KEY` | OpenAI API key for the lab1 agents when `DEFAULT_PROVIDER=openai`. Separately, the playground agent in the same service always calls OpenAI with this key whatever `DEFAULT_PROVIDER` is, so it is needed whenever Studio's agent playground is used. | nil | for `DEFAULT_PROVIDER=openai`
+`OPENAI_API_KEY_1` | Optional first key in lab1's OpenAI key rotation (`DEFAULT_PROVIDER=openai`). Requests cycle through `OPENAI_API_KEY_1` to `_3` to spread rate limits; blank slots fall back to `OPENAI_API_KEY`. | nil | Optional - for `DEFAULT_PROVIDER=openai` and need rotational key for model access
+`OPENAI_API_KEY_2` | Optional second key in lab1's OpenAI key rotation; works the same way as `OPENAI_API_KEY_1`. | nil | Optional - for `DEFAULT_PROVIDER=openai` and need rotational key for model access
+`OPENAI_API_KEY_3` | Optional third key in lab1's OpenAI key rotation; works the same way as `OPENAI_API_KEY_1`. | nil | Optional - for `DEFAULT_PROVIDER=openai` and need rotational key for model access
+`LOCAL_API_BASE` | Base URL of the OpenAI-compatible chat server lab1 calls when `DEFAULT_PROVIDER=local`; the default points at the bundled highflame-chat-tester. It must always resolve for the provider config to load, which the image default covers. | `http://highflame-chat-tester:8080` | for `DEFAULT_PROVIDER=local`
+`LOCAL_API_KEY` | API key sent to the `LOCAL_API_BASE` server when `DEFAULT_PROVIDER=local`. Most local servers ignore it; if unset, a placeholder (`test_api_key`) is sent. | nil | for `DEFAULT_PROVIDER=local`
+`DEFAULT_PROVIDER` | Which LLM provider backs the lab1 demo agents: the deliberately vulnerable target apps that red-team scans and Studio's playgrounds talk to. **Required, no default:** if unset, the provider config fails to load and every chat request fails with provider not found. | nil | `openai` or `bedrock` or `azure` or `local` 
 
 ### highflame-shield
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`REDIS_HOST` | Redis host | nil | -
-`REDIS_PORT` | Redis port | `6379` | -
-`REDIS_TLS` | Redis TLS | `false` | `true` or `false`
-`REDIS_USER` | Redis username | nil | -
-`REDIS_PASS` | Redis password | nil | -
-`REDIS_CACERT` | Redis cacert | `""` | -
-`CLOUD_ARCHIVE_TYPE` | Cloud archive type | nil | optional - `s3` or `gcs` or `azure-blob`
-`CLOUD_ARCHIVE_BUCKET` | Cloud archive bucket name | nil | optional
-`HIGHFLAME_DEPLOYMENT_TYPE` | Deploy type | `prod` | `dev` or `prod`
-`K8S_NAMESPACE` | Kubernetes namespace | `Deployed K8s namespace` | `Deployed K8s namespace`
-`HIGHFLAME_ADMIN_URL` | highflame admin url | `http://highflame-admin:8040` | -
-`HIGHFLAME_AUTHZ_URL` | highflame authz url | `http://highflame-authz:8050` | -
-`HIGHFLAME_GUARD_URL` | highflame guard url | `http://highflame-guard:8013` | -
-`HIGHFLAME_GUARD_CM_URL` | highflame guard cm url | `http://highflame-guard-cm:8014` | -
-`HIGHFLAME_GUARD_PII_URL` | highflame guard pii url | `http://highflame-guard-pii:8018` | -
-`HIGHFLAME_GUARD_DEEPCONTEXT_URL` | highflame guard deepcontext url | `http://highflame-guard-deep:8022` | -
-`HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | highflame checkphish storage type | `url` | -
-`HIGHFLAME_CHECKPHISH_OBJECT_URL` | highflame checkphish object url | `https://javelin-prod-bloom-filter.s3.us-east-1.amazonaws.com/bloom_filter_url.gob` | -
-`HIGHFLAME_MODEL_ARMOR_TEMPLATE` | Model armor template | nil | optional
-`HIGHFLAME_MODEL_ARMOR_LOCATION` | Model armor location | `us-central1` | optional
-`HIGHFLAME_MODEL_ARMOR_PROJECT_ID` | Model armor GCP project id | `javelin-saas` | -
-`GOOGLE_APPLICATION_CREDENTIALS` | Model armor GCP json cred path | `/app/config/gcp-credential.json` | optional
-`CLOUD_ARCHIVE_ENABLED` | Cloud archive enabled | `false` | `true` or `false`
-`CLOUD_ARCHIVE_PREFIX` | Cloud archive prefix in the storage | `shield/sessions/` | optional
-`AWS_ACCESS_KEY_ID` | AWS Access Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
-`AWS_SECRET_ACCESS_KEY` | AWS Secret Key | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
-`HIGHFLAME_SCAN_STORAGE_BUCKET`| Highflame scan s3 bucket name | nil | optional
-`AWS_SCAN_STORAGE_REGION` | Highflame scan s3 bucket Region | nil | optional
-`HIGHFLAME_AUTH_JWT_ISSUER`| Highflame JWT Issuer | nil | `https://<<auth_domain_name>>`
-`HIGHFLAME_AUTH_JWKS_URL` | Highflame JWKS URL | `http://highflame-authn:8051/.well-known/jwks.json` | -
-`HIGHFLAME_RECEIPT_SIGNING_AUTHN_BASE_URL`| Highflame signin authn base url | `http://highflame-authn:8051` | -
-`HIGHFLAME_RECEIPT_SIGNING_ENABLED`| Highflame signing enabled | nil | `true` or `false`
-`HIGHFLAME_AUTHN_BASE_URL`| Highflame authn url | `http://highflame-authn:8051` | -
-`HIGHFLAME_ENABLE_POLICY_SLICING`| Enable policy slicing | nil | `true` or `false`
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_MODELS_SECRET` | Highflame model secret | nil | _Will be shared by a Highflame representative_
+`REDIS_HOST` | Redis host Shield uses for multi-turn session state (session snapshots with a 24h TTL), the agent-quarantine set and its pub/sub updates, and the token-revocation deny-list. If unset, Shield falls back to `localhost:6379`, which doesn't exist in a pod, so sessions, quarantine and revocation checks don't work. | nil | -
+`REDIS_PORT` | TCP port of the Redis server; combined with `REDIS_HOST` and only used when that is set. | `6379` | -
+`REDIS_TLS` | Set to `true` to connect to Redis over TLS 1.2 or later. Shield checks the server certificate against the image's system CA bundle only, so a Redis behind a private or self-signed CA fails the TLS handshake (see `REDIS_CACERT`). | `false` | `true` or `false`
+`REDIS_USER` | **Unused by Shield.** The image declares it, but Shield never reads it and doesn't send a Redis username; only `REDIS_PASS` is sent. Redis ACL users other than `default` are therefore not supported. | nil | -
+`REDIS_PASS` | Password sent with Redis AUTH (`REDIS_PASSWORD` is accepted as an alias). Leave unset for a Redis with no password. If it doesn't match the server, session, quarantine and revocation storage all fail. | nil | -
+`REDIS_CACERT` | **Unused by Shield.** Only a placeholder in the image: Shield has no setting for a CA file and verifies Redis TLS against system roots only. A Redis behind a private CA is not supported today. | `""` | -
+`CLOUD_ARCHIVE_TYPE` | Storage backend for archiving Shield session snapshots when `CLOUD_ARCHIVE_ENABLED=true`. Valid values are `s3`, `gcs`, `azure_blob` (underscore, not hyphen) and `minio`; Shield uses `s3` if unset. An invalid value makes archive setup fail at startup, and Shield logs the error and runs Redis-only. | nil | optional - `s3` or `gcs` or `azure-blob`
+`CLOUD_ARCHIVE_BUCKET` | Bucket (or Azure container) where session snapshots are written when `CLOUD_ARCHIVE_ENABLED=true`. Required whenever the archive is enabled; if empty, archive setup fails and Shield runs Redis-only. | nil | optional
+`HIGHFLAME_DEPLOYMENT_TYPE` | **Unused by Shield.** No Shield code reads it, although a comment in the config file suggests otherwise. Setting it has no effect. | `prod` | `dev` or `prod`
+`K8S_NAMESPACE` | **Unused by Shield.** No Shield code reads it; the old config keys it used to fill are no longer loaded. Setting it has no effect. | `Deployed K8s namespace` | `Deployed K8s namespace`
+`HIGHFLAME_ADMIN_URL` | Base URL of Admin. Shield sends batches of guard-evaluation counts (decision metering for quota usage) to Admin every 10 seconds, authenticated with `HIGHFLAME_INTERNAL_SERVICE_SECRET`. If this URL or the internal secret is empty, metering is off and usage and quota counts stop updating. | `http://highflame-admin:8040` | -
+`HIGHFLAME_AUTHZ_URL` | Base URL of AuthZ, where Shield's Cedar policies are stored. Shield pulls all product policies from it every 30 seconds (authenticated with `HIGHFLAME_INTERNAL_SERVICE_SECRET`) and evaluates them in-process. Shield won't start if it is empty. If AuthZ is unreachable, a new pod becomes Ready after a grace period with no policies to enforce, while an already-synced pod keeps its last-known policies. | `http://highflame-authz:8050` | -
+`HIGHFLAME_GUARD_URL` | Base URL of the prompt-injection model service (highflame-guard), which backs the `injection` ML detector (`injection_confidence`, `jailbreak_confidence`, `injection_type`). Called with `HIGHFLAME_MODELS_SECRET`. If empty, the detector isn't registered and policies using those signals get nothing. | `http://highflame-guard:8013` | -
+`HIGHFLAME_GUARD_CM_URL` | Base URL of the content-moderation model service (highflame-guard-cm), which backs the `toxicity` ML detector (violence, hate speech, sexual, weapons, crime and profanity scores). Called with `HIGHFLAME_MODELS_SECRET`. If empty, the toxicity detector isn't registered. | `http://highflame-guard-cm:8014` | -
+`HIGHFLAME_GUARD_PII_URL` | Base URL of the PII model service (highflame-guard-pii), which backs the `pii_model` ML detector (`pii_model_detected`, `pii_model_types`, `pii_model_count`, `pii_model_matches`). Called with `HIGHFLAME_MODELS_SECRET`. If empty, only the built-in regex PII detector runs. | `http://highflame-guard-pii:8018` | -
+`HIGHFLAME_GUARD_DEEPCONTEXT_URL` | Base URL of the DeepContext model service, which backs the `deepcontext` ML detector for prompt injection and jailbreaks spread across a multi-turn conversation (`prompt_injection_score`, `jailbreak_score`, `multi_turn_detection`). Called with a 30-second timeout and `HIGHFLAME_MODELS_SECRET`. If empty, the detector isn't registered. | `http://highflame-guard-deep:8022` | -
+`HIGHFLAME_CHECKPHISH_STORAGE_TYPE` | Where the phishing detector loads its bloom filter of known phishing URLs from; the filter backs the local pre-screen behind `phishing_detected` / `phishing_urls` and is reloaded every 24h. `url` downloads `HIGHFLAME_CHECKPHISH_OBJECT_URL` over HTTPS with no credentials; `s3`, `gcs`, `minio` or `azure_blob` read `HIGHFLAME_CHECKPHISH_BUCKET_NAME` instead. The pre-screen runs whenever a source is configured, even if the config file says `enabled: false`. **Air-gapped:** set this to `s3` and leave the bucket unset to turn it off; setting a variable to an empty string does not clear an image default. | `url` | -
+`HIGHFLAME_CHECKPHISH_OBJECT_URL` | Public HTTPS URL of the phishing bloom filter file (`.gob`), used only when `HIGHFLAME_CHECKPHISH_STORAGE_TYPE=url`. It must be an absolute `https://` URL with no embedded credentials. The default is Highflame's public S3 object, so the pod needs outbound internet access, or point this at a mirror. | `https://javelin-prod-bloom-filter.s3.us-east-1.amazonaws.com/bloom_filter_url.gob` | -
+`HIGHFLAME_MODEL_ARMOR_TEMPLATE` | Short ID of the Google Cloud Model Armor template for the `content_safety` cloud detector (`content_safety_score`, `content_safety_categories`, `content_safety_blocked`). The detector is only registered when this is set, so leaving it unset turns Model Armor off. When set, it also needs `HIGHFLAME_MODEL_ARMOR_PROJECT_ID`, `HIGHFLAME_MODEL_ARMOR_LOCATION` and valid `GOOGLE_APPLICATION_CREDENTIALS`. | nil | optional
+`HIGHFLAME_MODEL_ARMOR_LOCATION` | GCP region of the Model Armor template; Shield calls that region's Model Armor endpoint. It must be the region where the template was created. Only used when `HIGHFLAME_MODEL_ARMOR_TEMPLATE` is set. | `us-central1` | optional
+`HIGHFLAME_MODEL_ARMOR_PROJECT_ID` | GCP project that owns the Model Armor template. Only used when `HIGHFLAME_MODEL_ARMOR_TEMPLATE` is set. The default `javelin-saas` is Highflame's own project, so override it when using your own GCP project. | `javelin-saas` | -
+`GOOGLE_APPLICATION_CREDENTIALS` | Path inside the container to a GCP service-account JSON key, used only by Shield's Model Armor (`content_safety`) client. The key must be allowed to call Model Armor on the configured template. The shipped helm values mount the `highflame-gcp-cred` secret at this path as non-optional, so that secret must exist for the pod to start even if Model Armor is not used. | `/app/config/gcp-credential.json` | optional
+`CLOUD_ARCHIVE_ENABLED` | Set to `true` to copy every Shield session snapshot to object storage in the background, in addition to Redis. When a session has expired from Redis or is missing there, Shield reads it back from storage, so conversations can continue past the Redis TTL. Needs `CLOUD_ARCHIVE_TYPE`, `CLOUD_ARCHIVE_BUCKET` and credentials; if storage setup fails at startup, Shield logs the error and runs Redis-only. | `false` | `true` or `false`
+`CLOUD_ARCHIVE_PREFIX` | Key prefix under which archived sessions are written in `CLOUD_ARCHIVE_BUCKET`; change it to share a bucket with other data. Only used when `CLOUD_ARCHIVE_ENABLED=true`. | `shield/sessions/` | optional
+`AWS_ACCESS_KEY_ID` | Static access key for the session archive. For `s3` and `gcs` (GCS HMAC key) it is optional: when both keys are unset, Shield uses the pod's IAM role (for example IRSA). For `azure_blob` it is required and holds the storage account name. Set it together with `AWS_SECRET_ACCESS_KEY`. | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
+`AWS_SECRET_ACCESS_KEY` | Secret key paired with `AWS_ACCESS_KEY_ID` for the session archive. For `azure_blob` it is required and holds the storage account key. For `s3` and `gcs` it is optional, and the pod's IAM role is used when both keys are unset. | `""` | for `CLOUD_ARCHIVE_TYPE=s3`
+`HIGHFLAME_SCAN_STORAGE_BUCKET`| **Unused by Shield.** No Shield code reads it, so setting it has no effect. The bucket Shield actually writes to is set by `CLOUD_ARCHIVE_BUCKET`. | nil | optional
+`AWS_SCAN_STORAGE_REGION` | Despite the name, this is the region of the session-archive bucket (`CLOUD_ARCHIVE_BUCKET`), not a scan bucket. It is separate from `AWS_REGION` so the pod-wide region doesn't leak into this setting. For `s3`, Shield uses `us-east-1` when unset, so set it if the bucket is in another region. | nil | optional
+`HIGHFLAME_AUTH_JWT_ISSUER`| Expected `iss` claim on bearer JWTs sent to Shield. It must exactly match the issuer AuthN puts on tokens (AuthN's `HIGHFLAME_ISSUER`), or every JWT-authenticated request is rejected. If unset, Shield logs a warning, skips the issuer check and accepts any token signed by the configured JWKS. | nil | `https://<<auth_domain_name>>`
+`HIGHFLAME_AUTH_JWKS_URL` | AuthN's JWKS endpoint, which Shield uses to verify bearer JWT signatures (ES256 and RS256, with key rotation by `kid`). Shield exits at startup if the verifier can't be created. With no URL configured at all, bearer auth runs in dev mode and accepts any token, so it must be set in production. | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_RECEIPT_SIGNING_AUTHN_BASE_URL`| Base URL of AuthN, which vouches for (attests) Shield's signing key for signed decision receipts. Called with `HIGHFLAME_INTERNAL_SERVICE_SECRET`. Only used when `HIGHFLAME_RECEIPT_SIGNING_ENABLED=true`. | `http://highflame-authn:8051` | -
+`HIGHFLAME_RECEIPT_SIGNING_ENABLED`| Set to `true` to have Shield sign every guard decision with a short-lived Ed25519 key, producing tamper-evident receipts. Shield has the key attested by AuthN at boot and about hourly after that; each decision is signed locally, with no AuthN call per request. If attestation fails at startup, Shield exits rather than run without receipts, so AuthN and the internal secret must already work. Off (`false`) when unset. | nil | `true` or `false`
+`HIGHFLAME_AUTHN_BASE_URL`| Base URL of AuthN for step-up approval. When a policy requires a human to approve an action, Shield starts a backchannel (CIBA) request at AuthN's `/oauth2/bc-authorize` using `HIGHFLAME_INTERNAL_SERVICE_SECRET`. With no URL configured, every step-up decision becomes a Deny with reason `step_up_unconfigured`. Setting it to an empty string does not clear the image default. | `http://highflame-authn:8051` | -
+`HIGHFLAME_ENABLE_POLICY_SLICING`| **Unused by Shield.** No Shield code reads it, and no Highflame config sets it. Setting it has no effect. | nil | `true` or `false`
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret for service-to-service calls; it must be identical in every Highflame service. Inbound, Shield accepts it in the `X-Internal-Secret` header from Firehog, MCP, Studio, Admin and Cerberus. Outbound, Shield sends it on AuthZ policy sync, AuthN receipt attestation and step-up, and Admin metering. A mismatch breaks policy sync and internal callers; if it is empty, metering is also off. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_MODELS_SECRET` | Shared secret sent as `X-Models-Secret` on every call to the ML guard model services (the four `HIGHFLAME_GUARD_*_URL` settings). Kept separate from the internal secret because model deployments may be shared across clouds. It must match the guard services' `HIGHFLAME_MODELS_SECRET`; otherwise the ML detectors fail and their circuit breakers stop calling the models, so those signals go missing. | nil | _Will be shared by a Highflame representative_
 
 ### highflame-studio
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`NEXT_PUBLIC_ADMIN_API_URL` | Next public admin api url | `""` | `Optional : https://<<control_domain_name>>`
-`NEXT_PUBLIC_APP_URL` | Endpoint for studio service | nil | `https://<<studio_domain_name>>`
-`NEXT_PUBLIC_FIREHOG_URL` | Endpoint for firehog service | nil | `https://<<gateway_domain_name>>`
-`NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | -
-`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/sign-up` | -
-`NODE_ENV` | Nodejs env | `production` | `development` or `production`
-`NEXT_TELEMETRY_DISABLED` | Telemetry option | `1` | `0` or `1`
-`HIGHFLAME_ADMIN_URL` |  Admin api url | `http://highflame-admin:8040` | -
-`HIGHFLAME_SHIELD_URL` |  shield api url | `http://highflame-shield:8070/v1/shield` | -
-`HIGHFLAME_AUTHN_URL` |  authn api url | `http://highflame-authn:8051` | -
-`HIGHFLAME_OBSERVATORY_URL` |  observatory api url | `http://highflame-observatory:8090` | -
-`HIGHFLAME_REDTEAM_LAB_URL` |  redteam lab api url | `http://highflame-redteam-lab1:8002` | -
+`NEXT_PUBLIC_ADMIN_API_URL` | Base URL the browser uses to call Admin's `/v1/admin/*` APIs. It is sent to the browser at runtime (through `window.__ENV`), not baked in at build time. Leave it empty so the browser makes same-origin relative calls that your ingress routes to Admin; an absolute cross-origin URL causes CORS preflights and breaks behind SSL-inspecting proxies. Server-side routes use `HIGHFLAME_ADMIN_URL` first and only fall back to this. | `""` | `Optional : https://<<control_domain_name>>`
+`NEXT_PUBLIC_APP_URL` | Studio's own public origin. The server uses it to build invitation links, the marketplace redirect (a trusted base that prevents Host-header spoofing), the CLI OAuth authorize redirect and the `/.well-known/oauth-authorization-server` metadata; it is also sent to the browser at runtime. **Must equal AuthN's `HIGHFLAME_AUTH_STUDIO_URL`.** If unset, most uses fall back to the request origin. Do not set it to `https://studio.highflame.ai`: that exact value switches on public SEO and crawler metadata. | nil | `https://<<studio_domain_name>>`
+`NEXT_PUBLIC_FIREHOG_URL` | Public URL of the AI Gateway (Firehog), sent to the browser at runtime. The AI Gateway pages (LLM Providers, Quick Start, LLM Playground, MCP server detail) show it as the proxy URL customers point their apps at, and the playground routes traffic through it. If unset, those pages show a not-configured warning or placeholder snippets. Never used for server-to-server calls. | nil | `https://<<gateway_domain_name>>`
+`NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Path or URL of the Clerk sign-in page, sent to the browser at runtime and read by the Clerk SDK. Only matters when `HIGHFLAME_AUTH_PROVIDER=clerk`; keep the default unless a Clerk satellite setup needs an absolute URL. | `/sign-in` | -
+`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Path or URL of the Clerk sign-up page, sent to the browser at runtime and read by the Clerk SDK. Only matters when `HIGHFLAME_AUTH_PROVIDER=clerk`; keep the default. | `/sign-up` | -
+`NODE_ENV` | Standard Node.js/Next.js runtime mode. The image sets `production`. `development` turns on dev-only behaviour such as PostHog debug logging; don't use it in deployed clusters. | `production` | `development` or `production`
+`NEXT_TELEMETRY_DISABLED` | Controls Next.js's anonymous usage telemetry to Vercel. `1` disables it (the image default, and what air-gapped installs need); `0` allows it. | `1` | `0` or `1`
+`HIGHFLAME_ADMIN_URL` | Server-only internal URL of Admin. Studio's backend routes use it to proxy Admin API calls, register CLI/MCP OAuth clients, fetch MCP tool lists for scans, and handle org invitations and Agent Sandbox connect tokens. If unset, these routes fall back to `NEXT_PUBLIC_ADMIN_API_URL`, and otherwise fail with not configured. | `http://highflame-admin:8040` | -
+`HIGHFLAME_SHIELD_URL` | Server-only internal base URL of Shield, including the `/v1/shield` path. Studio's `/api/guard/*` routes (guardrail evaluate and stream, detector list, health, policy reload) and the agent playground chat routes call it with an exchanged RS256 token. If it is wrong, the Guardrails playground and detector lists fail, and the agent playground falls back to simulation mode. | `http://highflame-shield:8070/v1/shield` | -
+`HIGHFLAME_AUTHN_URL` | Server-only internal base URL of AuthN, with no `/v1/auth` suffix. Studio uses it for the CLI/MCP OAuth token exchange (`/api/cli-auth/token`), the device-login grant, downstream-token flows, AuthN management proxying, and the ZeroID quick-start token and introspection actions. If unset, CLI/MCP login and device login fail with Token service not configured. | `http://highflame-authn:8051` | -
+`HIGHFLAME_OBSERVATORY_URL` | Server-only internal base URL of Observatory. Studio's `/api/observatory/*` proxy calls it for the Observatory dashboards and availability check. It is also the entry point for MCP tool security scans: Studio hands the tool list to Observatory, which runs the Ramparts scan and stores the results. If unset, Observatory pages and MCP scans return `gateway_misconfigured`. | `http://highflame-observatory:8090` | -
+`HIGHFLAME_REDTEAM_LAB_URL` | Server-only URL of the red-team lab demo-agent service (`highflame-redteam-lab1`). The Guardrails and Observatory agent playground chat routes forward chat turns to it, together with the Shield URL, to run the multi-agent demo scenarios. Only needed if those playgrounds are used. | `http://highflame-redteam-lab1:8002` | -
 `HOSTNAME` | Service hostname | `0.0.0.0` | -
 `PORT` | Service port | `3000` | -
-`SUPPORT_SMTP_PASSKEY` | SMTP Credential | nil | optional
-`MARKETPLACE_FROM_EMAIL` | SMTP from mail | nil | Only for SaaS
-`MARKETPLACE_NOTIFY_EMAIL` | SMTP Notify mail | nil | Only for SaaS
-`HIGHFLAME_JWT_ISSUER` | highflame jwt issuer | `highflame-admin` | -
-`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | highflame rsa private key path | `/app/keys/auth/jwt-private.pem` | -
-`NEXT_PUBLIC_POSTHOG_HOST` | Posthog host | `https://us.i.posthog.com` | Only for SaaS
-`NEXT_PUBLIC_POSTHOG_KEY` | Posthog key | nil | Only for SaaS
-`NEXT_PUBLIC_AUTHN_URL` | highflame authn endpoint | nil | `https://<<auth_domain_name>>`
-`HIGHFLAME_OAUTH_SIGNING_KEY_ID` | Highflame oauth signing key ID | nil | A unique ID like `studio-poc-v1`
-`HIGHFLAME_OAUTH_ASSERTION_AUDIENCE` | Highflame oauth assertion | `highflame-authn` | -
-`HIGHFLAME_OAUTH_AUTHORIZE_URL` | Highflame oauth authorize url | `http://highflame-authn:8051/oauth2/authorize` | -
-`HIGHFLAME_RAMPARTS_URL` | Highflame ramparts server | `http://highflame-ramparts-server:8080` | -
-`NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS` | Highflame clerk redirect origins | nil | Only for SaaS
-`NEXT_PUBLIC_CLERK_PROXY_URL` | Highflame clerk proxy url - match with `CLERK_PROXY_URL` | nil | Only for SaaS: `https://<<studio_domain_name>>/__clerk`
-`NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | enable / disable feature agent discovery | nil | `true` or `false`
-`NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | Pass the ARN principle for accessing the AWS bedrock connector | nil | optional
-`NEXT_PUBLIC_SCIM_BASE_URL` | Next public scim url - must match with `HIGHFLAME_SCIM_EXTERNAL_BASE_URL` from admin | nil | `https://<<studio_domain_name>>/scim/v2`
-`HIGHFLAME_FORGE_URL` | Highflame firehog url | `http://highflame-forge:8100` | -
-`HIGHFLAME_AUTH_PROVIDER` | Highflame auth provider | `clerk` | -
-`HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Highflame oauth signing key path | `/app/keys/oauth/oauth-signing-key.pem` | -
-`CLERK_SECRET_KEY` | Clerk secret key | nil | _Will be shared by a Highflame representative_
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | _Will be shared by a Highflame representative_
-`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal service secrets | nil | _Will be shared by a Highflame representative_
+`SUPPORT_SMTP_PASSKEY` | Server-only API key for the Resend email service, despite the SMTP name. The AWS Marketplace endpoint (`/api/marketplace/notify`) uses it to email Highflame when a new Marketplace buyer submits the welcome form. SaaS-only: if it, `MARKETPLACE_FROM_EMAIL` or `MARKETPLACE_NOTIFY_EMAIL` is missing, the endpoint logs an error and sends nothing. Self-hosted installs can leave it unset. | nil | optional
+`MARKETPLACE_FROM_EMAIL` | Server-only sender address for AWS Marketplace notification emails from `/api/marketplace/notify`. It must be on a domain verified in Resend. SaaS-only; needed together with `SUPPORT_SMTP_PASSKEY` and `MARKETPLACE_NOTIFY_EMAIL`. | nil | Only for SaaS
+`MARKETPLACE_NOTIFY_EMAIL` | Server-only address that gets an email when a new AWS Marketplace buyer completes the welcome form (`/api/marketplace/notify`). SaaS-only; needed together with `SUPPORT_SMTP_PASSKEY` and `MARKETPLACE_FROM_EMAIL`. | nil | Only for SaaS
+`HIGHFLAME_JWT_ISSUER` | **Unused; safe to remove.** Studio stopped self-signing MCP tokens when AuthN took over token issuance (studio#1425), and no Studio code reads this variable any more. | `highflame-admin` | -
+`HIGHFLAME_RSA_PRIVATE_KEY_PATH` | **Unused; safe to remove.** It pointed at AuthN's RSA private key for self-signing MCP tokens, which was removed in studio#1425, and no Studio code reads it now. Do not confuse it with `HIGHFLAME_OAUTH_SIGNING_KEY_PATH`, which is still required. | `/app/keys/auth/jwt-private.pem` | -
+`NEXT_PUBLIC_POSTHOG_HOST` | PostHog API host for Studio's browser product analytics, sent to the browser at runtime. The image actually defaults to `/ingest`, a same-origin rewrite to `https://us.i.posthog.com` so ad-blockers and SSL-inspecting proxies don't drop events. Has no effect unless `NEXT_PUBLIC_POSTHOG_KEY` is set. | `https://us.i.posthog.com` | Only for SaaS
+`NEXT_PUBLIC_POSTHOG_KEY` | PostHog project key for Studio's browser product analytics, sent to the browser at runtime. When empty, PostHog never initialises and no analytics leave the browser, which is what self-hosted and air-gapped installs should use. | nil | Only for SaaS
+`NEXT_PUBLIC_AUTHN_URL` | Public URL of AuthN, used only for display: it fills the `/oauth2/token` host in the curl snippets on the Guardrails getting-started page and the Create Identity dialog. It is also a server-side fallback for the ZeroID quick-start when `HIGHFLAME_AUTHN_URL` is unset. Unlike the other `NEXT_PUBLIC_*` variables it is not sent to the browser at runtime, so the browser snippets only show a value set at image build time. | nil | `https://<<auth_domain_name>>`
+`HIGHFLAME_OAUTH_SIGNING_KEY_ID` | Server-only key ID (`kid`) on the ES256 assertions Studio signs for AuthN during CLI login (RFC 7523 JWT bearer). The same ID is published in Studio's `/.well-known/jwks.json`, which AuthN fetches to verify them. Needed together with `HIGHFLAME_OAUTH_SIGNING_KEY_PATH`; if either is missing, CLI login through AuthN fails. Change it whenever you rotate the key file. | nil | A unique ID like `studio-poc-v1`
+`HIGHFLAME_OAUTH_ASSERTION_AUDIENCE` | Server-only `aud` claim Studio puts on the assertions it sends to AuthN's `/oauth2/authorize`. It must equal AuthN's issuer identifier, or AuthN rejects the assertion and CLI login fails. The default is correct in every environment; normally leave it alone. | `highflame-authn` | -
+`HIGHFLAME_OAUTH_AUTHORIZE_URL` | Server-only internal URL of AuthN's `/oauth2/authorize` endpoint. When set, Studio issues authorization codes through AuthN: it POSTs a signed assertion for the logged-in user and relays AuthN's code for CLI login, device flow and MCP client registration. If unset, Studio falls back to minting codes itself with `HIGHFLAME_AUTH_JWT_SECRET_KEY`, and AuthN-registered CLIs such as `forge-cli` then fail with `invalid_grant`. | `http://highflame-authn:8051/oauth2/authorize` | -
+`HIGHFLAME_RAMPARTS_URL` | **Unused.** No Studio code reads it; it is only set in the image. MCP scans go through Observatory (`HIGHFLAME_OBSERVATORY_URL`), which calls Ramparts itself. | `http://highflame-ramparts-server:8080` | -
+`NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS` | Comma-separated origins Clerk may redirect back to after sign-in, for example the docs and sandbox satellite apps. Read by the root layout and sent to the browser at runtime. Clerk-only: users who start sign-in on a satellite whose origin is missing get stuck on Studio. Leave unset for Clerk's default behaviour. | nil | Only for SaaS
+`NEXT_PUBLIC_CLERK_PROXY_URL` | Public URL through which the browser reaches Clerk's Frontend API on Studio's own origin, via Studio's `/clerk-proxy` route (which also needs `CLERK_SECRET_KEY`). Sent to the browser at runtime and passed to the Clerk middleware. Clerk-only. It must match the proxy URL configured in the Clerk Dashboard; setting it before the Dashboard matches breaks sign-in for everyone. | nil | Only for SaaS: `https://<<studio_domain_name>>/__clerk`
+`NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | **Unused.** No Studio code reads this variable, so setting it has no effect. | nil | `true` or `false`
+`NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | ARN of the IAM role the `highflame-discovery` pods run as. Sent to the browser at runtime and shown as the `Principal` in the AWS connector trust-policy snippet on the agent registry and discovery pages. It must match Discovery's IRSA/service-account role. If unset or not a valid `arn:aws:iam::<12 digits>:role/...`, the snippet shows a placeholder the customer must fill in by hand. | nil | optional
+`NEXT_PUBLIC_SCIM_BASE_URL` | **Unused.** No Studio code reads this variable. The SCIM base URL shown to operators comes from Admin's `HIGHFLAME_SCIM_EXTERNAL_BASE_URL`. | nil | `https://<<studio_domain_name>>/scim/v2`
+`HIGHFLAME_FORGE_URL` | Server-only internal base URL of Forge, the Agent Sandbox service (not Firehog). Studio's `/api/agent-sandbox/*` proxy calls `/v1/forge/...` on it to create and manage sandboxes. If unset, the Agent Sandbox screen shows Forge API not configured. It also needs `HIGHFLAME_ADMIN_URL`. | `http://highflame-forge:8100` | -
+`HIGHFLAME_AUTH_PROVIDER` | Which identity provider Studio uses for login: `clerk` or `oidc` (Auth.js with a generic OIDC IdP such as Keycloak). Read at container runtime, so one image serves both. `clerk` requires `CLERK_SECRET_KEY`. `oidc` requires `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` and `AUTH_SECRET`. Unset or unrecognised values fall back to Clerk. | `clerk` | -
+`HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Server-only path to Studio's own ECDSA P-256 private key (PKCS#8 PEM). Studio signs its RFC 7523 assertions to AuthN with it and publishes the matching public key at `/.well-known/jwks.json`. The helm charts mount the `highflame-oauth-keys` secret (`oauth-signing-key.pem`) at the default path. Needed together with `HIGHFLAME_OAUTH_SIGNING_KEY_ID`; unrelated to AuthN's RSA JWT key. | `/app/keys/oauth/oauth-signing-key.pem` | -
+`CLERK_SECRET_KEY` | Server-only Clerk backend secret (`sk_...`). Required when `HIGHFLAME_AUTH_PROVIDER=clerk`: the Clerk middleware uses it to verify sessions, and Studio's `/__clerk` Frontend API proxy uses it too. Not needed for `oidc`. | nil | _Will be shared by a Highflame representative_
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public Clerk key (`pk_...`) for Clerk's browser SDK, read on each request and sent to the browser at runtime. Required for the Clerk login to render when `HIGHFLAME_AUTH_PROVIDER=clerk`, and must belong to the same Clerk instance as `CLERK_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_AUTH_JWT_SECRET_KEY` | Server-only HS256 secret for Studio's fallback CLI login, used only when `HIGHFLAME_OAUTH_AUTHORIZE_URL` is unset: Studio then signs authorization codes itself in `/api/cli-auth/authorize` and decodes them in `/api/cli-auth/token`. In a normal AuthN-backed deployment it is only a fallback. If a code path needs it and it is unset, the request fails with a server configuration error. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Server-only shared secret for internal service-to-service calls, sent as `X-Internal-Service-Secret`; it must equal the value configured on the other Highflame services. Studio uses it for best-effort MCP allowlist reloads to Firehog (skipped unless `HIGHFLAME_FIREHOG_URL` is also set) and as a fallback for AuthN management calls when token exchange fails. Normal AuthN traffic uses exchanged JWTs instead. | nil | _Will be shared by a Highflame representative_
 
 ### highflame-ramparts-server
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`LLM_PROVIDER` | Provider name | nil | -
-`LLM_MODEL` | Model name | nil | -
-`LLM_URL` | LLM complete URL | nil | -
-`LLM_API_KEY` | LLM API Key | nil | -
+`LLM_PROVIDER` | **Descriptive only.** Ramparts stores it but never acts on it: every call uses the OpenAI chat-completions format whatever this says. The image defaults it to `openai`. | nil | -
+`LLM_MODEL` | Model name Ramparts sends with its LLM security-analysis requests, which check MCP tools, prompts and resources for tool poisoning, prompt injection, secrets leakage and similar issues. For Azure, use the deployment's model. The image defaults it to `gpt-4o`. | nil | -
+`LLM_URL` | Full chat-completions endpoint URL, used exactly as given. It must be OpenAI-compatible: accept `Authorization: Bearer` and return the OpenAI response format (Anthropic's native API won't work). An Azure OpenAI URL must include `?api-version=`. The image defaults it to `https://api.openai.com/v1/chat/completions`. | nil | -
+`LLM_API_KEY` | Bearer token sent to `LLM_URL`; if empty, Ramparts falls back to `OPENAI_API_KEY`. **If neither is set, the LLM-based checks are silently skipped** and only the YARA and static checks run, so MCP scans in Observatory and Studio can look clean when they are not. | nil | -
