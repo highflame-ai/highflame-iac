@@ -61,8 +61,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_AUDIENCE` | authn assertion resolver | `highflame-authn` | -
 `HIGHFLAME_AUTH_ASSERTION_RESOLVER_TRUSTED_ISSUERS` | authn assertion resolver trusted issuers | `[{"issuer":"highflame-studio","jwks_url":"http://highflame-studio:3000/.well-known/jwks.json"}]` | -
 `HIGHFLAME_ALLOW_UNSAFE_DEV_STUB` | enable / disable the unsafe dev attestation stub | `false` | `true` or `false`
-`HIGHFLAME_DEVICE_AUTH_VERIFICATION_URI` | Studio's /device consent screen | nil | `'https://<<studio_domain_name>>/device'`
-`HIGHFLAME_CIMD_ENABLED` | Regression suite's CIMD coverage | nil | `true` or `false`
+`HIGHFLAME_AUTH_STUDIO_URL` | **Required.** Studio's origin. AuthN derives the device-login consent page (`/device`) and the MCP OAuth callback and client document from it. Must equal Studio's `NEXT_PUBLIC_APP_URL`. Over plain `http` (other than localhost), device login works but automatic MCP client registration is off. | nil (AuthN will not start without it) | `https://<<studio_domain_name>>`
+`HIGHFLAME_AUTH_DOWNSTREAM_CIMD_ENABLED` | Outbound CIMD: Highflame presents a Client ID Metadata Document to third-party MCP servers that support it. Enable only when every such server in use can reach Studio (an internet-reachable Studio, or only internal MCP servers); otherwise leave off and servers use Dynamic Client Registration. Requires an `https` Studio URL. | `false` | `true` or `false`
+`HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS` | Lets AuthN reach MCP servers and their OAuth servers on private addresses (internal MCP servers). Disables AuthN's SSRF protection for those calls entirely, and the HTTPS requirement on OAuth endpoints; a targeted allowlist is tracked in highflame-authn#219. | `false` | `true` or `false`
+`HIGHFLAME_DEVICE_AUTH_VERIFICATION_URI` | Deprecated: only read by AuthN releases before highflame-authn#218, which derive it from `HIGHFLAME_AUTH_STUDIO_URL`. Keep it until that release is deployed. | nil | `'https://<<studio_domain_name>>/device'`
+`HIGHFLAME_CIMD_ENABLED` | Inbound CIMD for ZeroID's own clients (unrelated to `HIGHFLAME_AUTH_DOWNSTREAM_CIMD_ENABLED`) | nil | `true` or `false`
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Highflame Internal communication secret | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | JWT Secret key | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_TOKEN_ENCRYPTION_KEY` | Token encryption key | nil | A unique enc key like `hf-token-encryption-key-32b!`
