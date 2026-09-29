@@ -265,6 +265,12 @@ services:
       HIGHFLAME_SECRETS_BACKEND: file
       HIGHFLAME_SECRETS_FILE_PATH: /var/lib/highflame-authn/secrets
       HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS: 'true'
+      # Studio's origin, REQUIRED by AuthN (highflame-authn#218): it derives the
+      # device-login consent page (/device) and the MCP OAuth callback from it.
+      # Kept identical to Studio's NEXT_PUBLIC_APP_URL below. Over plain http
+      # (the default here) AuthN keeps device login and leaves automatic MCP
+      # client registration off, which an air-gapped install has no use for.
+      HIGHFLAME_AUTH_STUDIO_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}
     volumes:
       - ./config/authn/config.yaml:/app/config.yaml:ro
       - ./secrets/keys:/app/keys:ro
