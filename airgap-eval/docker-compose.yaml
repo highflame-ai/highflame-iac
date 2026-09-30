@@ -223,7 +223,7 @@ services:
 
   highflame-flag:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-flag:${HIGHFLAME_FLAG_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-flag:${HIGHFLAME_FLAG_IMG_VERSION:-latest}
     container_name: highflame-flag
     restart: on-failure
     environment:
@@ -247,7 +247,7 @@ services:
 
   highflame-authn:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-authn:${HIGHFLAME_AUTHN_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-authn:${HIGHFLAME_AUTHN_IMG_VERSION:-latest}
     container_name: highflame-authn
     ports:
       - "8051:8051"
@@ -301,7 +301,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-authz:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-authz:${HIGHFLAME_AUTHZ_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-authz:${HIGHFLAME_AUTHZ_IMG_VERSION:-latest}
     container_name: highflame-authz
     ports:
       - "8050:8050"
@@ -334,7 +334,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-admin:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-admin:${HIGHFLAME_ADMIN_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-admin:${HIGHFLAME_ADMIN_IMG_VERSION:-latest}
     container_name: highflame-admin
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -391,7 +391,7 @@ services:
 
   highflame-shield:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-shield:${HIGHFLAME_SHIELD_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-shield:${HIGHFLAME_SHIELD_IMG_VERSION:-latest}
     container_name: highflame-shield
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -455,7 +455,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-collector:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-collector:${HIGHFLAME_COLLECTOR_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-collector:${HIGHFLAME_COLLECTOR_IMG_VERSION:-latest}
     container_name: highflame-collector
     ports:
       - "4317:4317"   # OTLP gRPC
@@ -483,7 +483,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-cerberus:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-cerberus:${HIGHFLAME_CERBERUS_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-cerberus:${HIGHFLAME_CERBERUS_IMG_VERSION:-latest}
     container_name: highflame-cerberus
     ports:
       - "8082:8082"
@@ -519,7 +519,7 @@ services:
 
   highflame-observatory:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-observatory:${HIGHFLAME_OBS_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-observatory:${HIGHFLAME_OBS_IMG_VERSION:-latest}
     container_name: highflame-observatory
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -553,7 +553,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-firehog:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-firehog:${HIGHFLAME_FIREHOG_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-firehog:${HIGHFLAME_FIREHOG_IMG_VERSION:-latest}
     container_name: highflame-firehog
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -663,7 +663,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-studio:
     <<: *svc
-    image: ${HIGHFLAME_REGISTRY:-ghcr.io/highflame-ai}/${HIGHFLAME_IMAGE_PREFIX:-release-}highflame-studio:${HIGHFLAME_STUDIO_VERSION:-latest}
+    image: ghcr.io/highflame-ai/release-highflame-studio:${HIGHFLAME_STUDIO_IMG_VERSION:-latest}
     container_name: highflame-studio
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
