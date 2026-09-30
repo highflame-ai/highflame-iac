@@ -1,0 +1,49 @@
+name: Air-gapped bundle setup
+
+# The bundle's setup is two docker commands on every OS, and the work behind
+# them runs in containers. This drives those commands against the real compose
+# file so a change that reintroduces a host dependency, or breaks the jobs
+# themselves, fails here rather than on an evaluator's machine.
+#
+# Linux runners only: GitHub's Windows runners cannot run Linux containers and
+# its macOS runners ship no Docker. The jobs under test run inside a Linux
+# container on every OS anyway, which is the property being relied on.
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "airgap-eval/**"
+      - ".github/scripts/airgap-setup-test.sh"
+      - ".github/workflows/airgap-setup.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  airgap-setup:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Shellcheck the setup jobs
+        run: |
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -S warning \
+            airgap-eval/bootstrap/generate.sh \
+            airgap-eval/bootstrap/preflight.sh \
+            airgap-eval/bootstrap/seed-tenant.sh \
+            .github/scripts/airgap-setup-test.sh
+
+      - name: Pull the job image
+        run: docker pull -q pgvector/pgvector:pg17
+
+      - name: Run the setup jobs
+        run: .github/scripts/airgap-setup-test.sh
