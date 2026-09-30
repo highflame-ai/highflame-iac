@@ -1,12 +1,70 @@
 # Highflame — air-gapped evaluation stack
 
-The whole Highflame platform on one machine (linux), with **Docker and Python 3 as the only
-dependency**. No Kubernetes, no Helm, no cloud account, no Highflame tenant, and
-no internet at runtime.
+The whole Highflame platform on one machine, with **Docker as the only
+dependency**.
+No Kubernetes, no Helm, no cloud account, no Highflame tenant, and no internet at runtime.
+
+It runs the same way on Linux, macOS and Windows.
+Every setup step is a `docker` command, and the work those commands do runs inside containers, so there is no host script to port and no shell, OpenSSL or Python to install.
+It needs a Compose v2 recent enough to have `docker compose wait` (check with `docker compose wait --help`), and the bundle directory on local disk: a root-squashed NFS home does not work, because the Docker daemon mounts the generated keys from it as root.
 
 ---
 
 [Read the Deployment docs here](https://docs.highflame.ai/docs/deployment/poc)
+
+## Quick start
+
+Run these from this directory, in any terminal: PowerShell, Terminal on macOS, or a Linux shell.
+
+1. **Offline only: load the images.**
+   Docker reads the compressed bundle directly.
+
+   ```
+   docker load -i highflame-airgap-<version>.tar.zst
+   ```
+
+   With network access, skip this: after `docker login ghcr.io` with the credentials Highflame provides, `docker compose up` pulls the images.
+
+2. **Configure.**
+   Copy `.env.example` to `.env`, then set `HIGHFLAME_HOST_IP` (this machine's LAN address, not `127.0.0.1`) and `HIGHFLAME_LLM_BASE_URL` (your own LLM endpoint).
+   If you skip the copy, step 3 creates `.env` for you and stops to ask for those two values.
+
+3. **Generate secrets and keys.**
+   This runs once, with no network, and writes `.env` and `secrets/`.
+
+   ```
+   docker compose -f bootstrap.yaml run --rm bootstrap
+   ```
+
+4. **Start the stack.**
+   The last service to run provisions the evaluator's organization, its default project and that project's default policies.
+
+   ```
+   docker compose up -d
+   docker compose wait seed
+   docker compose logs seed
+   ```
+
+   `wait` blocks until the seed finishes and exits non-zero if it failed; `up -d` on its own does not report a failed seed.
+   Do not use `up --wait`: it treats the seed finishing as a failure.
+   The log ends with `Ready.` and the account and project ids.
+   Then sign in at `http://<HIGHFLAME_HOST_IP>` as `evaluator`; the password is `EVALUATOR_PASSWORD` in `.env`.
+
+If `up` stops with `required variable ... is missing a value`, bootstrap has not run.
+If it stops with `service "preflight" didn't complete successfully`, bootstrap's output is missing or no longer matches `.env`, and `docker compose logs preflight` names what.
+To start over from scratch, run `docker compose down -v`, then `docker compose -f bootstrap.yaml run --rm bootstrap --force`.
+`--force` regenerates even on a stack that still has its data, and that data keeps the old passwords, so such a stack will not start afterwards.
+It therefore first copies the current `.env` and `secrets/` aside as `.env.bak-<time>` and `secrets.bak-<time>/`; putting those back undoes a `--force` run by mistake.
+
+`bundle/load-images.sh` still exists for hosts that want its checksum and manifest verification on top of step 1.
+It needs bash, `zstd` and `sha256sum`: present on most Linux hosts, and on macOS only once `zstd` and `coreutils` are installed.
+It is optional.
+
+`HIGHFLAME_HOST_IP` has to be an address the containers can route back to the host by, so the machine needs a network interface with one, even with no route beyond it.
+On a laptop with every network disconnected there is no such address, and this has not been solved for Docker Desktop.
+
+The bundle's scripts must keep LF line endings, which `.gitattributes` enforces for a fresh `git clone`.
+A Windows clone made before that file existed, or a copy through a tool that converts line endings, needs `git add --renormalize .` or a fresh clone; otherwise bootstrap fails with `$'\r': command not found`.
 
 ## Prove it does not phone home
 
@@ -15,6 +73,10 @@ This is the part worth doing yourself rather than taking on trust.
 ```bash
 ./verify/no-egress.sh --report egress-report.txt
 ```
+
+Unlike the setup steps, this check runs on the host.
+It needs bash and Python 3, so on Windows run it from WSL or Git Bash.
+It is an audit tool you choose to run, not a step the stack depends on.
 
 **Read this first, because it bounds what follows.** The stack runs on an
 ordinary Docker bridge network, which has a gateway — so nothing in it

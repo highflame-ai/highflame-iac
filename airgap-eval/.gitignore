@@ -1,10 +1,16 @@
-# Everything bootstrap.sh generates. None of this belongs in git.
+# Everything the bootstrap job generates. None of this belongs in git.
 #
 # .env holds every secret for the stack; secrets/ holds the rendered Keycloak
 # realm (which embeds the client secret and the evaluator password) and the AuthN
 # RS256 keypair.
 .env
+.env.tmp
 secrets/
+
+# What bootstrap --force copies aside before it regenerates; they hold the old
+# secrets.
+.env.bak-*
+secrets.bak-*/
 
 # Output of verify/no-egress.sh. Meant to be handed to a security reviewer, not
 # committed — it records hostnames and container names for a specific run.

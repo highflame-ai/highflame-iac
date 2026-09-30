@@ -26,19 +26,28 @@ TARBALL="${OUT_DIR}/${BASENAME}.tar.zst"
 CHECKSUM="${OUT_DIR}/${BASENAME}.sha256"
 MANIFEST="${OUT_DIR}/${BASENAME}.manifest"
 
+# --list-images prints the resolved list and stops. CI uses it, so a variable
+# made required in docker-compose.yaml without a placeholder here fails a pull
+# request instead of the next bundle build.
+LIST_ONLY=0
+[ "${1:-}" = "--list-images" ] && LIST_ONLY=1
+
 command -v docker >/dev/null || { echo "docker is required"; exit 1; }
-command -v zstd  >/dev/null || { echo "zstd is required (apt install zstd)"; exit 1; }
+[ "$LIST_ONLY" -eq 1 ] || command -v zstd >/dev/null || { echo "zstd is required (apt install zstd)"; exit 1; }
 
 # Read the image list from the compose file itself rather than maintaining a
 # second copy here. A hand-maintained list is how you ship a bundle missing the
 # one image someone added last week.
 #
 # Placeholder values are supplied only so `compose config` can interpolate; none
-# of them end up in the bundle.
-echo "resolving image list from docker-compose.yaml"
+# of them end up in the bundle. Every variable docker-compose.yaml requires with
+# `${VAR:?}` needs one, or this stops with compose's "required variable" error.
+[ "$LIST_ONLY" -eq 1 ] || echo "resolving image list from docker-compose.yaml"
 IMAGES=$(
-  HIGHFLAME_HOSTNAME=placeholder \
+  HIGHFLAME_HOST_IP=placeholder \
   HIGHFLAME_LLM_BASE_URL=placeholder \
+  EVALUATOR_PASSWORD=placeholder \
+  HIGHFLAME_MODELS_SECRET=placeholder \
   POSTGRES_PASSWORD=placeholder \
   CLICKHOUSE_PASSWORD=placeholder \
   KEYCLOAK_ADMIN_PASSWORD=placeholder \
@@ -51,6 +60,11 @@ IMAGES=$(
 )
 
 [ -n "$IMAGES" ] || { echo "no images resolved — is this the airgap-eval directory?"; exit 1; }
+
+if [ "$LIST_ONLY" -eq 1 ]; then
+  printf '%s\n' $IMAGES
+  exit 0
+fi
 
 echo "images to bundle:"
 printf '  %s\n' $IMAGES

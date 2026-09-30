@@ -1,0 +1,29 @@
+# Setup for the air-gapped evaluation stack. Run once, before the first `up`,
+# the same way on Linux, macOS and Windows:
+#
+#   docker compose -f bootstrap.yaml run --rm bootstrap
+#   docker compose -f bootstrap.yaml run --rm bootstrap --force   # regenerate
+#
+# It generates every secret and key, and renders the Keycloak realm and
+# Firehog's config, inside the Postgres image the stack already uses, with no
+# network. See bootstrap/generate.sh.
+#
+# Why a separate file rather than a service in docker-compose.yaml: compose
+# interpolates the whole file for every command, and docker-compose.yaml
+# requires every secret with `${VAR:?}`. A bootstrap service in that file could
+# not run until the secrets it exists to generate were already set. Keeping the
+# requirement there is what matters: without it, an empty value starts a
+# service with no password — ClickHouse, for one, then accepts that user from
+# any address — instead of refusing to start at all.
+#
+# Its own project, touching nothing of the stack's: no volume, no network. That
+# is also why the running stack's containers are not "orphans" of this file.
+name: highflame-airgap-bootstrap
+
+services:
+  bootstrap:
+    image: pgvector/pgvector:pg17
+    network_mode: none
+    entrypoint: ['bash', '/work/bootstrap/generate.sh']
+    volumes:
+      - ./:/work

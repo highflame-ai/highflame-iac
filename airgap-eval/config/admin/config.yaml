@@ -143,7 +143,7 @@ tenancy:
   # Worth knowing what this does and does not do: it grants a row in
   # user_global_roles, NOT a row in account_members. Admin's oidc_session grant
   # authorizes the caller's account against account_members, so this alone does
-  # not let anyone log in on a fresh install. bootstrap/seed-tenant.sh creates
+  # not let anyone log in on a fresh install. The seed job creates
   # the first membership; this only confers platform super-admin on top.
   bootstrap_super_admins:
     - "${HIGHFLAME_BOOTSTRAP_SUPER_ADMIN}"
