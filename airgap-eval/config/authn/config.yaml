@@ -36,6 +36,37 @@ token:
   default_ttl: 3600
   max_ttl: 7776000  # 90 days — CLI authorization_code tokens need long TTL
 
+# Client ID Metadata Documents (CIMD). CLOSED in this bundle.
+#
+# CIMD lets an OAuth client skip registration by presenting an https:// URL as
+# its client_id; AuthN then FETCHES that URL to read the client's metadata. The
+# fetch is the feature, so an open CIMD posture is by construction a way for a
+# request to make AuthN reach a host of its choosing.
+#
+# AuthN ships CIMD enabled with an empty cimd.allowed_domains, and empty means
+# "any public host may publish", not "none may". It has a guard that refuses to
+# boot in that state, but the guard only arms when server.env is production, and
+# this bundle runs server.env: development (line 7). So without this block the
+# bundle inherits the open posture with nothing to catch it.
+#
+# That matters here and almost nowhere else. verify/no-egress.sh cannot see this
+# one: it scans compose and config for hosts that are not in the stack, and a
+# CIMD client_id is never in a file. A caller supplies it at request time, to
+# /oauth2/authorize, before any credential is checked. That endpoint is not
+# routed by nginx, but docker-compose.yaml publishes 8051 on the host, which
+# puts it there anyway.
+#
+# An air-gapped evaluation has no public client ecosystem to onboard, so closed
+# costs nothing. If you do need CIMD, prefer naming the publishers over
+# re-enabling it open:
+#   cimd:
+#     enabled: true
+#     allowed_domains: ["clients.your-org.example"]
+#
+# See highflame-authn#199.
+cimd:
+  enabled: false
+
 # Internal Service Authentication
 # In local dev, leave empty to skip verification (insecure, acceptable for development)
 auth:
