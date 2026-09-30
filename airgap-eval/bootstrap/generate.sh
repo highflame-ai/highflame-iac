@@ -53,9 +53,13 @@ FORCE=0
 # without handing the container the Docker socket. It runs before the drop to
 # your uid below, because Postgres keeps that directory 700 and owned by its own
 # uid: as anyone but root, PG_VERSION would look absent and --force would pass.
-if [ "$FORCE" -eq 1 ] && [ -f /stack/postgres-data/PG_VERSION ]; then
-  echo "Refusing --force: this stack already has data volumes, and regenerating"
-  echo "the database passwords would lock you out of them."
+# Refuse, too, when the volume cannot be inspected at all — a run with --user,
+# say — because "could not look" is not "empty".
+if [ "$FORCE" -eq 1 ] && { [ -f /stack/postgres-data/PG_VERSION ] ||
+                           ! [ -r /stack/postgres-data ] || ! [ -x /stack/postgres-data ]; }; then
+  echo "Refusing --force: this stack already has data volumes (or they could not"
+  echo "be inspected), and regenerating the database passwords would lock you"
+  echo "out of them."
   echo
   echo "To start over from scratch (destroys evaluation data, which is fine):"
   echo "    docker compose down -v"
@@ -190,7 +194,16 @@ chmod 600 .env
 # ---------------------------------------------------------------------------
 # Render the Keycloak realm from the SAME values
 # ---------------------------------------------------------------------------
-set -a; . ./.env; set +a
+# Read only the values this needs, as compose would (last assignment wins),
+# rather than sourcing .env. Sourcing runs the file as shell, so anything that
+# ever wrote a line into it — the seed job records ids there — would get code
+# run here, and a value with a space or a quote in it would break the source.
+env_get() { grep -E "^$1=" .env | tail -1 | cut -d= -f2- || true; }
+for var in OIDC_CLIENT_SECRET EVALUATOR_PASSWORD HIGHFLAME_INTERNAL_SERVICE_SECRET \
+           HIGHFLAME_HOST_IP HIGHFLAME_IP HIGHFLAME_HOSTNAME HIGHFLAME_PORT_SUFFIX \
+           CONN_PROTOCOL HIGHFLAME_SHIELD_URL; do
+  printf -v "$var" '%s' "$(env_get "$var")"
+done
 
 echo "rendering $REALM_RENDERED"
 

@@ -213,6 +213,14 @@ PERL
 
 ORG_UUID=$(printf '%s\n' "$PROVISION_OUT" | sed -n '1p')
 PROJECT_UUID=$(printf '%s\n' "$PROVISION_OUT" | sed -n '2p')
+
+# The project id goes into .env below, so accept nothing but a UUID: whatever
+# the response held, it must not be able to add a line to that file.
+uuid_re='^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+if ! [[ "$PROJECT_UUID" =~ $uuid_re ]]; then
+  echo "FAILED: provisioning returned a project id that is not a UUID; .env left unchanged."
+  exit 1
+fi
 echo "  organization    ${ORG_UUID}"
 echo "  default project ${PROJECT_UUID}"
 

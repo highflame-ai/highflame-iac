@@ -26,6 +26,7 @@ problems=()
 # wins, as it does for compose.
 HOST_IP="${HIGHFLAME_HOST_IP:-}"
 CLIENT_SECRET=$(grep -E '^OIDC_CLIENT_SECRET=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r')
+INTERNAL_SECRET=$(grep -E '^HIGHFLAME_INTERNAL_SERVICE_SECRET=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r')
 
 # Files bootstrap renders or generates, which the services bind-mount.
 REALM=secrets/keycloak/highflame-realm.json
@@ -56,6 +57,13 @@ if [ -f "$REALM" ]; then
   if [ -n "$CLIENT_SECRET" ] && ! grep -qF "\"${CLIENT_SECRET}\"" "$REALM"; then
     problems+=("$REALM holds a different client secret from .env — run bootstrap again")
   fi
+fi
+
+# Firehog's config embeds the internal secret. A stale one does not fail at
+# startup; it fails every call to Shield and Admin with 401.
+FIREHOG=secrets/firehog/config.yaml
+if [ -f "$FIREHOG" ] && [ -n "$INTERNAL_SECRET" ] && ! grep -qF "$INTERNAL_SECRET" "$FIREHOG"; then
+  problems+=("$FIREHOG holds a different internal service secret from .env — run bootstrap again")
 fi
 
 if [ ${#problems[@]} -gt 0 ]; then
