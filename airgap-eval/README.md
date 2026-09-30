@@ -6,6 +6,7 @@ No Kubernetes, no Helm, no cloud account, no Highflame tenant, and no internet a
 
 It runs the same way on Linux, macOS and Windows.
 Every setup step is a `docker` command, and the work those commands do runs inside containers, so there is no host script to port and no shell, OpenSSL or Python to install.
+It needs a Compose v2 recent enough to have `docker compose wait` (check with `docker compose wait --help`), and the bundle directory on local disk: a root-squashed NFS home does not work, because the Docker daemon mounts the generated keys from it as root.
 
 ---
 

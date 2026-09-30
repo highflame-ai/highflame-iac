@@ -73,6 +73,10 @@ if [ ${#problems[@]} -gt 0 ]; then
   echo "Set HIGHFLAME_HOST_IP and HIGHFLAME_LLM_BASE_URL in .env, then:"
   echo "    docker compose -f bootstrap.yaml run --rm bootstrap"
   echo "    docker compose up -d"
+  echo
+  echo "If re-running bootstrap does not clear this, check that none of these"
+  echo "variables is also exported in your shell: compose prefers the shell's"
+  echo "value, while bootstrap renders from .env."
   exit 1
 fi
 

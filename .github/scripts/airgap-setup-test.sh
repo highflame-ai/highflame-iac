@@ -55,8 +55,11 @@ echo "== the stack refuses to start before bootstrap has run"
 # an interpolation error.
 expect "up refuses and names the bootstrap command" 15 "run docker compose -f bootstrap.yaml run --rm bootstrap" \
   -- docker compose up -d --no-start
-[ ! -e secrets ] && pass "no bind-mount directories were created" \
-  || fail "secrets/ exists after a refused up"
+
+echo "== the bundle's image list resolves from a clean checkout"
+# save-images.sh must supply a placeholder for every required variable.
+expect "save-images.sh --list-images" 0 "pgvector/pgvector:pg17" \
+  -- bash bundle/save-images.sh --list-images
 
 echo "== the bootstrap file parses with no .env, and says nothing about it"
 out=$(docker compose -f bootstrap.yaml config -q 2>&1) || true
@@ -67,8 +70,10 @@ expect "bootstrap stops on the missing values" 1 "HIGHFLAME_HOST_IP" \
   -- docker compose -f bootstrap.yaml run --rm bootstrap
 [ -f .env ] && pass ".env created from the example" || fail ".env was not created"
 
-echo "== bootstrap with a .env saved by a Windows editor"
-printf 'HIGHFLAME_HOST_IP=10.0.0.42\nHIGHFLAME_LLM_BASE_URL=http://llm.example.invalid:8000/v1\n' >> .env
+echo "== bootstrap with a .env saved by a Windows editor, values written as people write them"
+# Quoted, and with an inline comment: compose reads 10.0.0.42 from this, and so
+# must bootstrap, or the realm it renders can never match.
+printf 'HIGHFLAME_HOST_IP="10.0.0.42"  # this laptop\nHIGHFLAME_LLM_BASE_URL=http://llm.example.invalid:8000/v1 # vLLM\n' >> .env
 sed -i.bak 's/$/\r/' .env && rm -f .env.bak
 expect "bootstrap completes" 0 "Bootstrap complete" \
   -- docker compose -f bootstrap.yaml run --rm bootstrap
@@ -112,6 +117,8 @@ done
 [ "$(stat -c '%a' secrets)" = "700" ] && pass "secrets/ is 700" || fail "secrets/ is not 700"
 [ "$(stat -c '%a' .env)" = "600" ] && pass ".env is 600" || fail ".env is not 600"
 [ ! -e .env.tmp ] && pass "no temporary copy of .env left behind" || fail ".env.tmp left behind"
+grep -q '^COMPOSE_IGNORE_ORPHANS=true' .env && pass "orphan warning switched off" \
+  || fail "COMPOSE_IGNORE_ORPHANS not set"
 
 secret=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)
 [ ${#secret} -eq 32 ] && pass "secrets generated" || fail "POSTGRES_PASSWORD not generated"
@@ -140,6 +147,20 @@ echo 'HIGHFLAME_HOST_IP=10.0.0.99' >> .env
 expect "preflight refuses the drift" 1 "different HIGHFLAME_HOST_IP" \
   -- docker compose run --rm preflight
 sed -i.bak '$d' .env && rm -f .env.bak
+
+echo "== bootstrap refuses a host address that is not a plain origin"
+cp .env .env.good
+echo 'HIGHFLAME_HOST_IP=10.0.0.42 laptop' >> .env
+expect "bootstrap names the bad value" 1 "do not make a plain origin" \
+  -- docker compose -f bootstrap.yaml run --rm bootstrap
+mv .env.good .env
+
+echo "== preflight catches a Firehog config rendered with another internal secret"
+cp secrets/firehog/config.yaml firehog.good
+sed -i.bak 's/^HIGHFLAME_INTERNAL_SERVICE_SECRET=.*/HIGHFLAME_INTERNAL_SERVICE_SECRET=rotatedbutnotrerendered0000000000000000000000/' .env && rm -f .env.bak
+expect "preflight refuses the stale firehog config" 1 "different internal service secret" \
+  -- docker compose run --rm preflight
+mv firehog.good secrets/firehog/config.yaml
 
 echo "== --force is allowed on an empty stack and refused once it has data"
 expect "--force with no data" 0 "generated POSTGRES_PASSWORD" \

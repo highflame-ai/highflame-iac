@@ -70,10 +70,11 @@ fi
 # Do the rest as whoever owns this directory, not as the container's root.
 #
 # On Linux a bind mount keeps numeric owners, so files written as root would be
-# root-owned and the .env the operator is told to edit would need sudo. Worse,
-# on a root-squashed NFS home — common on corporate Linux — root cannot write
-# here at all. Writing as the owner avoids both, and is what the host script
-# this replaced did with `docker run -u`.
+# root-owned and the .env the operator is told to edit would need sudo. Writing
+# as the owner avoids that, and is what the host script this replaced did with
+# `docker run -u`. (It does not make a root-squashed NFS home work: the Docker
+# daemon mounts from secrets/ as root, which NFS refuses. Keep the bundle on
+# local disk.)
 #
 # When the owner reads as root, stay root: that is Docker Desktop on Windows,
 # and rootless Docker, where container root already maps to you.
@@ -112,14 +113,33 @@ if grep -q $'\r' .env; then
   echo "converted .env line endings to LF"
 fi
 
+# The copy the operator made is 644. Close it before any secret goes in.
+chmod 600 .env
+
+# Read a value the way compose's .env parser does for the forms people write:
+# the last assignment wins, surrounding whitespace is dropped, one pair of
+# matching quotes is removed, and an unquoted value ends at " #". Anything
+# naive here renders `HIGHFLAME_HOST_IP="10.0.0.42"  # laptop` into the realm
+# verbatim, while compose reads 10.0.0.42 — a realm no re-run can repair.
+#
+# .env is never sourced: that runs it as shell, and the seed job writes to it.
+env_get() {
+  local v
+  v=$(grep -E "^[[:space:]]*$1[[:space:]]*=" .env | tail -1 | cut -d= -f2- || true)
+  v="${v#"${v%%[![:space:]]*}"}"
+  case "$v" in
+    \"*) v="${v#\"}"; v="${v%%\"*}" ;;
+    \'*) v="${v#\'}"; v="${v%%\'*}" ;;
+    *)   v="${v%%[[:space:]]#*}"; v="${v%"${v##*[![:space:]]}"}" ;;
+  esac
+  printf '%s' "$v"
+}
+
 missing=()
 for required in HIGHFLAME_LLM_BASE_URL HIGHFLAME_HOST_IP; do
-  # tail -1, not head -1: docker compose honours the LAST assignment in a .env,
-  # and appending to the bottom of the file is what people actually do. Reading
-  # the first match meant the empty placeholder shipped in .env.example won, and
-  # bootstrap insisted the variable was unset while compose would have used the
-  # value fine.
-  value=$(grep -E "^${required}=" .env | tail -1 | cut -d= -f2- || true)
+  # The LAST assignment, as compose reads it: appending to the bottom of the
+  # file is what people actually do, and the example ships an empty one above.
+  value=$(env_get "$required")
   [ -z "$value" ] && missing+=("$required")
 done
 
@@ -156,8 +176,8 @@ rand() { openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c "${1:-32}"; }
 # set_env KEY — generate and write only if currently empty (or --force).
 set_env() {
   local key="$1" len="${2:-32}" current
-  # Last assignment, as compose reads it. awk below rewrites every copy.
-  current=$(grep -E "^${key}=" .env | tail -1 | cut -d= -f2- || true)
+  # awk below rewrites every copy of the key.
+  current=$(env_get "$key")
 
   if [ -n "$current" ] && [ "$FORCE" -eq 0 ]; then
     echo "  keep      $key (already set)"
@@ -189,19 +209,18 @@ set_env HIGHFLAME_TOKEN_ENCRYPTION_KEY 48
 set_env HIGHFLAME_INTERNAL_SERVICE_SECRET 48
 set_env HIGHFLAME_MODELS_SECRET 32
 
-chmod 600 .env
+# Upgraders' .env files predate this setting; see .env.example for why the
+# orphan warning must stay off.
+if [ -z "$(env_get COMPOSE_IGNORE_ORPHANS)" ]; then
+  printf '\nCOMPOSE_IGNORE_ORPHANS=true\n' >> .env
+  echo "  added     COMPOSE_IGNORE_ORPHANS=true (see .env.example)"
+fi
 
 # ---------------------------------------------------------------------------
 # Render the Keycloak realm from the SAME values
 # ---------------------------------------------------------------------------
-# Read only the values this needs, as compose would (last assignment wins),
-# rather than sourcing .env. Sourcing runs the file as shell, so anything that
-# ever wrote a line into it — the seed job records ids there — would get code
-# run here, and a value with a space or a quote in it would break the source.
-env_get() { grep -E "^$1=" .env | tail -1 | cut -d= -f2- || true; }
 for var in OIDC_CLIENT_SECRET EVALUATOR_PASSWORD HIGHFLAME_INTERNAL_SERVICE_SECRET \
-           HIGHFLAME_HOST_IP HIGHFLAME_IP HIGHFLAME_HOSTNAME HIGHFLAME_PORT_SUFFIX \
-           CONN_PROTOCOL HIGHFLAME_SHIELD_URL; do
+           HIGHFLAME_HOST_IP CONN_PROTOCOL HIGHFLAME_SHIELD_URL; do
   printf -v "$var" '%s' "$(env_get "$var")"
 done
 
@@ -217,30 +236,19 @@ echo "rendering $REALM_RENDERED"
 # redirect URIs resolve against, so it must equal the origin Studio actually
 # serves on — otherwise Keycloak rejects the callback as invalid_redirect_uri.
 #
-# Two addressing styles are supported because the compose file has used both:
-# HIGHFLAME_IP with per-service ports, and a single HIGHFLAME_HOSTNAME behind the
-# nginx ingress. Deriving it here rather than hard-coding one keeps this file
-# correct under either, instead of silently rendering a realm that disagrees with
-# the compose that imports it.
-# HIGHFLAME_HOST_IP is the name docker-compose.yaml uses and the one shipped in
-# .env.example; HIGHFLAME_IP is accepted as an alias because this script used to
-# ask for that and the error message named it. They were genuinely different
-# variables before: setting the documented one left this script refusing to run,
-# and setting the one this script asked for left compose building URLs against
-# an empty host.
-#
 # No port. The browser reaches every service through the bundled nginx on :80,
 # so the realm's redirect URIs must be built against that origin — see the
 # single-origin note in docker-compose.yaml.
-HOST_ADDR="${HIGHFLAME_HOST_IP:-${HIGHFLAME_IP:-}}"
-if [ -n "$HOST_ADDR" ]; then
-  EXTERNAL_URL="${CONN_PROTOCOL:-http}://${HOST_ADDR}"
-elif [ -n "${HIGHFLAME_HOSTNAME:-}" ]; then
-  EXTERNAL_URL="${CONN_PROTOCOL:-http}://${HIGHFLAME_HOSTNAME}${HIGHFLAME_PORT_SUFFIX:-}"
-else
-  echo "Set HIGHFLAME_HOST_IP (or HIGHFLAME_HOSTNAME) in .env — the realm's redirect"
-  echo "URIs are built from it, and a realm with the wrong origin fails login"
-  echo "with invalid_redirect_uri rather than anything that names the cause."
+EXTERNAL_URL="${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}"
+
+# The realm is rendered by substitution into JSON, so a value that is not a
+# plain origin would produce a file Keycloak cannot import. Name the line.
+# `]` first in the bracket: POSIX brackets have no escapes, and IPv6 needs both.
+origin_re='^https?://[][A-Za-z0-9.:_-]+$'
+if ! [[ "$EXTERNAL_URL" =~ $origin_re ]]; then
+  echo "HIGHFLAME_HOST_IP / CONN_PROTOCOL in .env do not make a plain origin:"
+  echo "    $EXTERNAL_URL"
+  echo "Expected an address such as 10.0.0.42, and http or https."
   exit 1
 fi
 
@@ -405,7 +413,7 @@ for var in HIGHFLAME_ADMIN_IMG_VERSION HIGHFLAME_AUTHN_IMG_VERSION HIGHFLAME_AUT
            HIGHFLAME_SHIELD_IMG_VERSION HIGHFLAME_COLLECTOR_IMG_VERSION HIGHFLAME_CERBERUS_IMG_VERSION \
            HIGHFLAME_OBS_IMG_VERSION HIGHFLAME_FIREHOG_IMG_VERSION HIGHFLAME_STUDIO_IMG_VERSION \
            HIGHFLAME_FLAG_IMG_VERSION; do
-  value=$(grep -E "^${var}=" .env | tail -1 | cut -d= -f2- || true)
+  value=$(env_get "$var")
   if [ -z "$value" ] || [ "$value" = "latest" ]; then
     name=${var#HIGHFLAME_}
     unpinned="$unpinned ${name%_IMG_VERSION}"
@@ -428,6 +436,7 @@ Bootstrap complete.
           # its default project and that project's default policies, and adds
           # your membership
   then:   docker compose wait seed     # exits non-zero if seeding failed
+                                       # (needs a Compose v2 with `wait`)
           docker compose logs seed     # the account and project ids
 
 Sign in at ${EXTERNAL_URL} as 'evaluator'.
