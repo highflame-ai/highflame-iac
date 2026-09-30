@@ -2,8 +2,20 @@
 #
 # Generate every secret this stack needs, once, locally.
 #
-# Nothing is fetched, registered or phoned home. Secrets are produced by
-# `openssl rand` on this machine and written to two places that must agree:
+# Runs as the `bootstrap` job in docker-compose.yaml, the same way on every
+# operating system:
+#
+#   docker compose run --rm bootstrap
+#   docker compose run --rm bootstrap --force    # regenerate everything
+#
+# It runs in the Postgres image the stack already uses, which carries openssl
+# and bash, so the host needs nothing but Docker. That is the point: an
+# evaluator on Windows or macOS has neither a POSIX shell nor a predictable
+# openssl, and a script that only runs on the host we tested is not a bundle.
+#
+# Nothing is fetched, registered or phoned home. The job runs with no network
+# at all. Secrets are produced by `openssl rand` and written to two places that
+# must agree:
 #
 #   .env                             — consumed by docker compose
 #   secrets/keycloak/*-realm.json    — imported by Keycloak on first boot
@@ -12,6 +24,10 @@
 # evaluator password appear in both files, and if they drift the failure is
 # opaque: Keycloak rejects the token exchange with invalid_client, or login
 # silently fails, and neither says "your two config files disagree".
+#
+# Why not commit the keys instead: this bundle is handed to security reviewers,
+# and the first thing they do is grep it for key material. Committed PEMs would
+# also mean every evaluator shares one JWT signing key.
 #
 # Idempotent by refusal: it will not overwrite secrets that are already set,
 # so re-running after editing .env is safe. Use --force to regenerate.
@@ -22,16 +38,31 @@ cd "$(dirname "$0")/.."
 FORCE=0
 [ "${1:-}" = "--force" ] && FORCE=1
 
+# The container runs as root, and on Linux a bind mount keeps the numeric owner,
+# so everything written here would land root-owned and the .env the operator is
+# told to edit would need sudo. Hand it all back to whoever owns this directory,
+# on every exit path. On Docker Desktop (macOS, Windows) the mount maps
+# ownership itself and chown is refused or ignored, which is fine.
+OWNER=$(stat -c '%u:%g' .)
+restore_owner() {
+  chown -R "$OWNER" .env secrets 2>/dev/null || true
+}
+trap restore_owner EXIT
+
 # --force AFTER the stack has run once will break it. Postgres and ClickHouse
-# store the credentials they were initialised with, so regenerating
-# POSTGRES_PASSWORD / CLICKHOUSE_PASSWORD leaves compose passing a value the
-# database no longer accepts. Learned the direct way.
-if [ "$FORCE" -eq 1 ] && docker volume ls --format '{{.Name}}' 2>/dev/null | grep -q 'highflame-airgap-eval_postgres-data'; then
+# store the credentials they were initialised with, and Keycloak imports the
+# realm only into an empty database, so regenerating leaves compose passing
+# values the stack no longer accepts. Learned the direct way.
+#
+# The compose job mounts the database volume read-only at this path so the
+# check works without handing the container the Docker socket.
+if [ "$FORCE" -eq 1 ] && [ -f /stack/postgres-data/PG_VERSION ]; then
   echo "Refusing --force: this stack already has data volumes, and regenerating"
   echo "the database passwords would lock you out of them."
   echo
   echo "To start over from scratch (destroys evaluation data, which is fine):"
-  echo "    docker compose down -v && ./bootstrap/bootstrap.sh --force"
+  echo "    docker compose down -v"
+  echo "    docker compose run --rm bootstrap --force"
   exit 1
 fi
 
@@ -42,19 +73,27 @@ KEYS_DIR="secrets/keys"
 # ---------------------------------------------------------------------------
 # Preflight
 # ---------------------------------------------------------------------------
-# openssl comes from the container this normally runs in (see bootstrap.sh).
-# The check stays for the HIGHFLAME_BOOTSTRAP_IN_CONTAINER=1 escape hatch, where
-# the host toolchain is used instead.
 command -v openssl >/dev/null || {
-  echo "openssl not found."
-  echo "Run ./bootstrap/bootstrap.sh instead — it supplies openssl from a container."
+  echo "openssl not found. Run this through compose, which supplies it:"
+  echo "    docker compose run --rm bootstrap"
   exit 1
 }
 
+# Copying the example is the first thing every evaluator does, and `cp` is not a
+# command on every host. Doing it here keeps the whole setup to docker commands.
 if [ ! -f .env ]; then
-  echo "No .env found. Copy the example first:"
-  echo "    cp .env.example .env"
-  exit 1
+  cp .env.example .env
+  echo "created .env from .env.example"
+fi
+
+# An .env saved by a Windows editor has CRLF line endings. Compose tolerates
+# them; this script does not, because every value read below would carry a
+# trailing carriage return into the realm and the rendered configs, and the
+# result is an issuer URL that is wrong by one invisible byte. Normalise once,
+# in place, so the file keeps its owner and permissions.
+if grep -q $'\r' .env; then
+  tr -d '\r' < .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp
+  echo "converted .env line endings to LF"
 fi
 
 missing=()
@@ -69,7 +108,7 @@ for required in HIGHFLAME_LLM_BASE_URL HIGHFLAME_HOST_IP; do
 done
 
 if [ ${#missing[@]} -gt 0 ]; then
-    echo "These must be set in .env before bootstrapping:"
+    echo "These must be set in .env before bootstrapping, then run it again:"
     printf '    %s\n' "${missing[@]}"
     echo
 
@@ -110,10 +149,12 @@ set_env() {
 
   local value
   value=$(rand "$len")
-  # In-place, portable across GNU and BSD sed by writing a temp file.
+  # Through a temp file, then copied back over rather than renamed, so .env
+  # keeps its inode, owner and permissions. A rename would replace the operator's
+  # file with one owned by this container's user.
   awk -v k="$key" -v v="$value" \
     'BEGIN{FS=OFS="="} $1==k {print k"="v; found=1; next} {print} END{if(!found) print k"="v}' \
-    .env > .env.tmp && mv .env.tmp .env
+    .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp
   echo "  generated $key"
 }
 
@@ -167,9 +208,9 @@ echo "rendering $REALM_RENDERED"
 # single-origin note in docker-compose.yaml.
 HOST_ADDR="${HIGHFLAME_HOST_IP:-${HIGHFLAME_IP:-}}"
 if [ -n "$HOST_ADDR" ]; then
-  EXTERNAL_URL="http://${HOST_ADDR}"
+  EXTERNAL_URL="${CONN_PROTOCOL:-http}://${HOST_ADDR}"
 elif [ -n "${HIGHFLAME_HOSTNAME:-}" ]; then
-  EXTERNAL_URL="http://${HIGHFLAME_HOSTNAME}${HIGHFLAME_PORT_SUFFIX:-}"
+  EXTERNAL_URL="${CONN_PROTOCOL:-http}://${HIGHFLAME_HOSTNAME}${HIGHFLAME_PORT_SUFFIX:-}"
 else
   echo "Set HIGHFLAME_HOST_IP (or HIGHFLAME_HOSTNAME) in .env — the realm's redirect"
   echo "URIs are built from it, and a realm with the wrong origin fails login"
@@ -197,7 +238,10 @@ if grep -q "REPLACE_ME_" "$REALM_RENDERED"; then
   exit 1
 fi
 
-chmod 600 "$REALM_RENDERED"
+# 644, not 600, for the same reason as the keys below: Keycloak reads this as
+# its own uid (1000), not yours. 600 only worked where the operator happened to
+# be uid 1000 too; anyone else got a Keycloak that could not import its realm.
+chmod 644 "$REALM_RENDERED"
 echo "  client secret and evaluator password written from .env"
 
 # ---------------------------------------------------------------------------
@@ -223,7 +267,7 @@ mkdir -p secrets/firehog
 # config with a literal ${...} in it — which is precisely the failure this step
 # exists to prevent (firehog does not expand env vars itself and panics on the
 # literal string).
-sed -e "s|\${HIGHFLAME_SHIELD_URL}|${HIGHFLAME_SHIELD_URL}|g" \
+sed -e "s|\${HIGHFLAME_SHIELD_URL}|${HIGHFLAME_SHIELD_URL:-http://highflame-shield:8070/v1/shield}|g" \
     -e "s|\${HIGHFLAME_INTERNAL_SERVICE_SECRET}|${HIGHFLAME_INTERNAL_SERVICE_SECRET}|g" \
     "config/firehog/config.yaml.template" > "secrets/firehog/config.yaml"
 
@@ -263,10 +307,10 @@ else
   openssl ec -in "$KEYS_DIR/private.pem" -pubout -out "$KEYS_DIR/public.pem" 2>/dev/null
 
   # 644, not 600. These are bind-mounted into containers that run as uid 10000,
-  # while bootstrap.sh runs as you — so 600 makes them unreadable inside the
-  # container and AuthN dies with "permission denied" on its own private key.
-  # Matching the container uid would need root, which this script deliberately
-  # does not require.
+  # while the files end up owned by you (see restore_owner above) — so 600 makes
+  # them unreadable inside the container and AuthN dies with "permission denied"
+  # on its own private key. Owning them as uid 10000 instead would leave you
+  # unable to read or delete your own keys without root.
   #
   # The trade-off is stated rather than hidden: on a single-tenant evaluation host
   # these are deployment-local keys generated on the spot and thrown away with the
@@ -311,20 +355,29 @@ chmod 644 "$AUTHZ_KEYS"/*.key
 # thing you need". This warns rather than fails, because an unpinned tag is the
 # right default while evaluating and the wrong one when handing the bundle to
 # someone else.
+#
+# The names are the ones docker-compose.yaml reads, and an unset one IS latest,
+# because that is the compose default. This used to check names compose never
+# read and required an explicit `=latest`, so it never fired — and under
+# pipefail the grep that found nothing ended the script before it said
+# "Bootstrap complete".
 unpinned=""
-for var in HIGHFLAME_ADMIN_VERSION HIGHFLAME_AUTHN_VERSION HIGHFLAME_AUTHZ_VERSION \
-           HIGHFLAME_SHIELD_VERSION HIGHFLAME_COLLECTOR_VERSION HIGHFLAME_OBS_VERSION \
-           HIGHFLAME_FIREHOG_VERSION HIGHFLAME_STUDIO_VERSION; do
-  value=$(grep -E "^${var}=" .env | head -1 | cut -d= -f2-)
-  [ "$value" = "latest" ] && unpinned="$unpinned ${var%_VERSION}"
+for var in HIGHFLAME_ADMIN_IMG_VERSION HIGHFLAME_AUTHN_IMG_VERSION HIGHFLAME_AUTHZ_IMG_VERSION \
+           HIGHFLAME_SHIELD_IMG_VERSION HIGHFLAME_COLLECTOR_IMG_VERSION HIGHFLAME_CERBERUS_IMG_VERSION \
+           HIGHFLAME_OBS_IMG_VERSION HIGHFLAME_FIREHOG_IMG_VERSION HIGHFLAME_STUDIO_IMG_VERSION \
+           HIGHFLAME_FLAG_IMG_VERSION; do
+  value=$(grep -E "^${var}=" .env | tail -1 | cut -d= -f2- || true)
+  if [ -z "$value" ] || [ "$value" = "latest" ]; then
+    name=${var#HIGHFLAME_}
+    unpinned="$unpinned ${name%_IMG_VERSION}"
+  fi
 done
 
 if [ -n "$unpinned" ]; then
   echo
   echo "NOTE: these services are on 'latest', so what you get depends on when you pull:"
-  echo "   $(echo "$unpinned" | tr ' ' '\n' | sed 's/HIGHFLAME_//' | tr '\n' ' ')"
-  echo "  Pin them in .env before sharing this bundle — .env.example records why"
-  echo "  each floor exists."
+  echo "  ${unpinned# }"
+  echo "  Pin them in .env before sharing this bundle."
 fi
 
 cat <<EOF
@@ -332,10 +385,10 @@ cat <<EOF
 Bootstrap complete.
 
   next:   docker compose up -d
-  then:   ./bootstrap/seed-tenant.sh        # provisions the org, its default
-                                            # project and that project's default
-                                            # policies, then adds your membership
-  prove:  ./verify/no-egress.sh --report egress-report.txt
+          # starts the stack, then the seed job provisions the organization,
+          # its default project and that project's default policies, and adds
+          # your membership. Its output has the account and project ids:
+  then:   docker compose logs seed
 
 Sign in at ${EXTERNAL_URL} as 'evaluator'.
 The password is EVALUATOR_PASSWORD in .env.

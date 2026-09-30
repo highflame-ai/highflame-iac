@@ -1,4 +1,4 @@
-# Everything bootstrap.sh generates. None of this belongs in git.
+# Everything the bootstrap job generates. None of this belongs in git.
 #
 # .env holds every secret for the stack; secrets/ holds the rendered Keycloak
 # realm (which embeds the client secret and the evaluator password) and the AuthN

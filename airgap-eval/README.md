@@ -1,12 +1,56 @@
 # Highflame — air-gapped evaluation stack
 
-The whole Highflame platform on one machine (linux), with **Docker and Python 3 as the only
-dependency**. No Kubernetes, no Helm, no cloud account, no Highflame tenant, and
-no internet at runtime.
+The whole Highflame platform on one machine, with **Docker as the only
+dependency**.
+No Kubernetes, no Helm, no cloud account, no Highflame tenant, and no internet at runtime.
+
+It runs the same way on Linux, macOS and Windows.
+Every setup step is a `docker` command, and the work those commands do runs inside containers, so there is no host script to port and no shell, OpenSSL or Python to install.
 
 ---
 
 [Read the Deployment docs here](https://docs.highflame.ai/docs/deployment/poc)
+
+## Quick start
+
+Run these from this directory, in any terminal: PowerShell, Terminal on macOS, or a Linux shell.
+
+1. **Offline only: load the images.**
+   Docker reads the compressed bundle directly.
+
+   ```
+   docker load -i highflame-airgap-<version>.tar.zst
+   ```
+
+   With network access, skip this; `docker compose up` pulls the images.
+
+2. **Configure.**
+   Copy `.env.example` to `.env`, then set `HIGHFLAME_HOST_IP` (this machine's LAN address, not `127.0.0.1`) and `HIGHFLAME_LLM_BASE_URL` (your own LLM endpoint).
+   If you skip the copy, step 3 creates `.env` for you and stops to ask for those two values.
+
+3. **Generate secrets and keys.**
+   This runs once, with no network, and writes `.env` and `secrets/`.
+
+   ```
+   docker compose run --rm bootstrap
+   ```
+
+4. **Start the stack.**
+   The last service to run provisions the evaluator's organization, its default project and that project's default policies.
+
+   ```
+   docker compose up -d
+   docker compose logs -f seed
+   ```
+
+   When the seed log says `Ready.`, sign in at `http://<HIGHFLAME_HOST_IP>` as `evaluator`.
+   The password is `EVALUATOR_PASSWORD` in `.env`.
+
+If `up` starts nothing, bootstrap has not run or `.env` changed since it did: `docker compose logs preflight` names what is missing.
+To start over from scratch, run `docker compose down -v`, then `docker compose run --rm bootstrap --force`.
+
+`bundle/load-images.sh` still exists for Linux and macOS hosts that want its checksum and manifest verification on top of step 1.
+It is optional.
 
 ## Prove it does not phone home
 
@@ -15,6 +59,10 @@ This is the part worth doing yourself rather than taking on trust.
 ```bash
 ./verify/no-egress.sh --report egress-report.txt
 ```
+
+Unlike the setup steps, this check runs on the host.
+It needs bash and Python 3, so on Windows run it from WSL or Git Bash.
+It is an audit tool you choose to run, not a step the stack depends on.
 
 **Read this first, because it bounds what follows.** The stack runs on an
 ordinary Docker bridge network, which has a gateway — so nothing in it

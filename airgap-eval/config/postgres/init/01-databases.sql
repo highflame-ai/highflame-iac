@@ -6,7 +6,7 @@
 -- the code.
 --
 -- Deliberately NOT seeded here: the evaluator's tenant and membership rows.
--- Those live in bootstrap/seed-tenant.sh instead, because account_members does
+-- Those come from the seed job (bootstrap/seed-tenant.sh), because account_members does
 -- not exist yet at this point — Admin creates it during its first-boot
 -- migration, which happens after initdb has finished.
 
