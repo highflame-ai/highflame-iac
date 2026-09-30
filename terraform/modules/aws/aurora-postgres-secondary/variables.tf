@@ -17,7 +17,7 @@ variable "engine" {
 variable "engine_version" {
   description = "Aurora engine version"
   type        = string
-  default     = "16.8"
+  default     = "16.13"
 }
 
 variable "aurora_global_cluster_identifier" {
