@@ -33,12 +33,16 @@ pass() { echo "  PASS  $*"; }
 fail() { echo "  FAIL  $*"; failures=$((failures + 1)); }
 
 # expect <description> <expected exit> <output pattern> -- <command...>
+# An expected exit of "nonzero" accepts any failure status. Compose's status
+# for an interpolation error differs between versions (15 in v2.32, 1 on
+# GitHub's runners), so those checks key on the message instead.
 expect() {
   local what="$1" want_rc="$2" pattern="$3"
   shift 4
   local out rc=0
   out=$("$@" 2>&1) || rc=$?
-  if [ "$rc" -ne "$want_rc" ]; then
+  if { [ "$want_rc" = nonzero ] && [ "$rc" -eq 0 ]; } ||
+     { [ "$want_rc" != nonzero ] && [ "$rc" -ne "$want_rc" ]; }; then
     fail "$what: exit $rc, wanted $want_rc"
     printf '%s\n' "$out" | sed 's/^/        /'
   elif [ -n "$pattern" ] && ! printf '%s\n' "$out" | grep -qE "$pattern"; then
@@ -51,9 +55,8 @@ expect() {
 
 echo "== the stack refuses to start before bootstrap has run"
 # Every generated secret is required, so compose stops at parse time rather
-# than starting anything with an empty password. 15 is compose's exit status for
-# an interpolation error.
-expect "up refuses and names the bootstrap command" 15 "run docker compose -f bootstrap.yaml run --rm bootstrap" \
+# than starting anything with an empty password.
+expect "up refuses and names the bootstrap command" nonzero "run docker compose -f bootstrap.yaml run --rm bootstrap" \
   -- docker compose up -d --no-start
 
 echo "== the bundle's image list resolves from a clean checkout"
@@ -134,7 +137,7 @@ echo "== an emptied secret stops compose, even for a single service without its 
 # so --no-deps (which skips preflight) must still be refused.
 cp .env .env.good
 sed -i.bak 's/^CLICKHOUSE_PASSWORD=.*/CLICKHOUSE_PASSWORD=/' .env && rm -f .env.bak
-expect "empty CLICKHOUSE_PASSWORD refused" 15 "CLICKHOUSE_PASSWORD is empty" \
+expect "empty CLICKHOUSE_PASSWORD refused" nonzero "CLICKHOUSE_PASSWORD is empty" \
   -- docker compose up -d --no-deps --no-start highflame-clickhouse
 mv .env.good .env
 
