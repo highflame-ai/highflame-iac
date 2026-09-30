@@ -24,7 +24,7 @@ problems=()
 # interpolated. The client secret is read from the file instead, so the exited
 # container keeps no copy of a secret in its configuration. Last assignment
 # wins, as it does for compose.
-# shellcheck source=env.sh
+# shellcheck source-path=SCRIPTDIR source=env.sh
 . bootstrap/env.sh
 HOST_IP="${HIGHFLAME_HOST_IP:-}"
 CLIENT_SECRET=$(env_get OIDC_CLIENT_SECRET | tr -d '\r')
@@ -62,10 +62,12 @@ if [ -f "$REALM" ]; then
 fi
 
 # Firehog's config embeds the internal secret. A stale one does not fail at
-# startup; it fails every call to Shield and Admin with 401.
+# startup; it fails every call to Shield and Admin with 401. Anchored at both
+# ends so a truncated value in .env does not pass as a prefix. Safe as a
+# regex: bootstrap generates it alphanumeric.
 FIREHOG=secrets/firehog/config.yaml
 if [ -f "$FIREHOG" ] && [ -n "$INTERNAL_SECRET" ] &&
-   ! grep -qF -- "internal_secret: ${INTERNAL_SECRET}" "$FIREHOG"; then
+   ! grep -qE "^[[:space:]]*internal_secret: ${INTERNAL_SECRET}\$" "$FIREHOG"; then
   problems+=("$FIREHOG holds a different internal service secret from .env — run bootstrap again")
 fi
 

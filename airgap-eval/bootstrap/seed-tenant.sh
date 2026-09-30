@@ -261,7 +261,7 @@ esac
 # carrying literals that have to be kept in step with this job by hand.
 # Upsert rather than append: re-running must not leave two of each. Written
 # back over the file rather than renamed onto it, so .env keeps its permissions.
-# shellcheck source=env.sh
+# shellcheck source-path=SCRIPTDIR source=env.sh
 . bootstrap/env.sh
 upsert_env() {
   # Leave the file alone when it already says this. The job runs on every

@@ -180,8 +180,12 @@ expect "bootstrap keeps the exported secret rather than appending a new one" 0 "
 mv .env.good .env
 
 echo "== --force is allowed on an empty stack and refused once it has data"
+echo 'export HIGHFLAME_MODELS_SECRET="stale"  # hand-added' >> .env
 expect "--force with no data" 0 "generated POSTGRES_PASSWORD" \
   -- docker compose -f bootstrap.yaml run --rm bootstrap --force
+[ "$(grep -c 'HIGHFLAME_MODELS_SECRET' .env)" = "1" ] \
+  && pass "--force rewrote every form of a key into one assignment" \
+  || fail "HIGHFLAME_MODELS_SECRET assigned more than once after --force"
 docker run --rm --entrypoint sh -v "$VOLUME:/d" pgvector/pgvector:pg17 -c 'touch /d/PG_VERSION'
 expect "--force with data" 1 "Refusing --force" \
   -- docker compose -f bootstrap.yaml run --rm bootstrap --force

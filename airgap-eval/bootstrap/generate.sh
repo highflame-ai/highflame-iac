@@ -117,7 +117,7 @@ fi
 chmod 600 .env
 
 # Values are read as compose reads them; see bootstrap/env.sh.
-# shellcheck source=env.sh
+# shellcheck source-path=SCRIPTDIR source=env.sh
 . bootstrap/env.sh
 
 missing=()
