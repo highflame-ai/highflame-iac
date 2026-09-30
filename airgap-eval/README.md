@@ -1,6 +1,6 @@
 # Highflame — air-gapped evaluation stack
 
-The whole Highflame platform on one machine, with **Docker and Python 3 as the only
+The whole Highflame platform on one machine (linux), with **Docker and Python 3 as the only
 dependency**. No Kubernetes, no Helm, no cloud account, no Highflame tenant, and
 no internet at runtime.
 
