@@ -4,6 +4,7 @@
 # realm (which embeds the client secret and the evaluator password) and the AuthN
 # RS256 keypair.
 .env
+.env.tmp
 secrets/
 
 # Output of verify/no-egress.sh. Meant to be handed to a security reviewer, not

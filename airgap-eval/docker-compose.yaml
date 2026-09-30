@@ -2,12 +2,17 @@
 # One dependency: Docker with Compose v2. The same commands on Linux, macOS and
 # Windows:
 #
-#   docker compose run --rm bootstrap    # once: secrets, keys, rendered configs
-#   docker compose up -d                 # the stack, then the tenant seed
+#   docker compose -f bootstrap.yaml run --rm bootstrap   # once: secrets, keys
+#   docker compose up -d                                  # stack + tenant seed
 #
-# Everything that used to be a host shell script runs in a container defined
-# below, in an image the stack already uses, so the host needs no bash, openssl
-# or python and nothing new is added to the offline bundle.
+# Everything that used to be a host shell script runs in a container, in an
+# image the stack already uses, so the host needs no bash, openssl or python and
+# nothing new is added to the offline bundle.
+#
+# Every generated secret is required with `${VAR:?}`, so compose refuses to do
+# anything with this file until bootstrap has run. That is deliberate and must
+# stay: an empty value does not fail every service closed — ClickHouse, for
+# one, starts with a passwordless user it accepts from any address.
 
 # The same name .env.example pins as COMPOSE_PROJECT_NAME. They used to differ,
 # which was invisible while every command ran with a .env in place — and now
@@ -50,37 +55,17 @@ services:
   # Setup jobs
   # --------------------------------------------------------------------------
 
-  # Generates every secret and key, renders the Keycloak realm and Firehog's
-  # config. Run it explicitly, once, before the first `up`:
-  #
-  #   docker compose run --rm bootstrap
-  #   docker compose run --rm bootstrap --force    # regenerate everything
-  #
-  # It is behind a profile so `up` never runs it: the secrets it writes to .env
-  # are interpolated into this file, so they have to exist before `up` reads it.
-  # That ordering is also why none of the secrets below use `${VAR:?}` — compose
-  # interpolates the whole file for every command, including this one, and a
-  # required-variable error would stop the job that sets the variable.
-  # `preflight` is what fails loudly instead.
-  bootstrap:
-    <<: *job
-    profiles: ['setup']
-    network_mode: none
-    entrypoint: ['bash', '/work/bootstrap/generate.sh']
-    volumes:
-      - ./:/work
-      # Read to refuse --force once the database holds data initialised with
-      # the current passwords. Mounting it creates the volume if it does not
-      # exist yet, which is harmless: Postgres initialises an empty volume.
-      - postgres-data:/stack/postgres-data:ro
-
-  # Stops `up` before anything starts if bootstrap has not run, or ran against a
-  # different HIGHFLAME_HOST_IP. The data tier waits on it, and everything else
-  # waits on the data tier.
+  # Stops `up` before anything starts if bootstrap's rendered files are
+  # missing, or were rendered for a different HIGHFLAME_HOST_IP or client secret
+  # than .env now holds. The data tier waits on it, and everything else waits on
+  # the data tier.
   #
   # Without it, a missing rendered file is worse than an error: Docker creates
   # the absent bind-mount source as an empty root-owned DIRECTORY, and the next
   # bootstrap then fails to write the file where that directory now sits.
+  #
+  # It reads .env from the read-only mount rather than taking the values in its
+  # environment, so the exited container does not keep a copy of the secrets.
   preflight:
     <<: *job
     network_mode: none
@@ -88,17 +73,6 @@ services:
     environment:
       HIGHFLAME_HOST_IP: ${HIGHFLAME_HOST_IP:-}
       CONN_PROTOCOL: ${CONN_PROTOCOL:-http}
-      HIGHFLAME_LLM_BASE_URL: ${HIGHFLAME_LLM_BASE_URL:-}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-}
-      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
-      EVALUATOR_PASSWORD: ${EVALUATOR_PASSWORD:-}
-      AUTH_SECRET: ${AUTH_SECRET:-}
-      HIGHFLAME_AUTH_JWT_SECRET_KEY: ${HIGHFLAME_AUTH_JWT_SECRET_KEY:-}
-      HIGHFLAME_TOKEN_ENCRYPTION_KEY: ${HIGHFLAME_TOKEN_ENCRYPTION_KEY:-}
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}
-      HIGHFLAME_MODELS_SECRET: ${HIGHFLAME_MODELS_SECRET:-}
     volumes:
       - ./:/work:ro
 
@@ -112,14 +86,14 @@ services:
     <<: *job
     entrypoint: ['bash', '/work/bootstrap/seed-tenant.sh']
     environment:
-      HIGHFLAME_HOST_IP: ${HIGHFLAME_HOST_IP:-}
+      HIGHFLAME_HOST_IP: ${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
       CONN_PROTOCOL: ${CONN_PROTOCOL:-http}
       PGHOST: highflame-db
       PGUSER: ${POSTGRES_USER:-highflame}
-      PGPASSWORD: ${POSTGRES_PASSWORD:-}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       PGDATABASE: ${POSTGRES_DB:-javelin_data}
-      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
-      EVALUATOR_PASSWORD: ${EVALUATOR_PASSWORD:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?OIDC_CLIENT_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      EVALUATOR_PASSWORD: ${EVALUATOR_PASSWORD:?EVALUATOR_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
     volumes:
       # Writable so it can record the ids it provisioned in .env, where the
       # notebook reads them.
@@ -147,7 +121,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-highflame}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       POSTGRES_DB: ${POSTGRES_DB:-javelin_data}
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -193,7 +167,7 @@ services:
       - "9000:9000"   # Native protocol
     environment:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-highflame}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?CLICKHOUSE_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-highflame}
     ulimits:
       nofile: { soft: 262144, hard: 262144 }
@@ -251,7 +225,7 @@ services:
       start_period: 20s
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       KC_HTTP_ENABLED: 'true'
       # Pins the issuer and every browser-facing URL to the single external
       # origin. Without this Keycloak derives them from the request host, so the
@@ -268,7 +242,7 @@ services:
       # discovery fetches fine and everything looks healthy — but every login
       # fails issuer validation, which is the hardest version of this bug to
       # diagnose from the outside.
-      KC_HOSTNAME: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:-}/auth
+      KC_HOSTNAME: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}/auth
       KC_HOSTNAME_STRICT: 'false'
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY_HEADERS: xforwarded
@@ -276,7 +250,7 @@ services:
       KC_DB_URL_HOST: highflame-db
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-highflame}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
     volumes:
       # The RENDERED realm, not the template under config/. bootstrap writes
       # this from the same generated values it puts in .env, so the client secret
@@ -374,11 +348,11 @@ services:
     environment:
       DB_HOST: highflame-db
       DB_USERNAME: ${POSTGRES_USER:-highflame}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       REDIS_HOST: highflame-redis
-      HIGHFLAME_AUTH_JWT_SECRET_KEY: ${HIGHFLAME_AUTH_JWT_SECRET_KEY:-}
-      HIGHFLAME_TOKEN_ENCRYPTION_KEY: ${HIGHFLAME_TOKEN_ENCRYPTION_KEY:-}
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}
+      HIGHFLAME_AUTH_JWT_SECRET_KEY: ${HIGHFLAME_AUTH_JWT_SECRET_KEY:?HIGHFLAME_AUTH_JWT_SECRET_KEY is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      HIGHFLAME_TOKEN_ENCRYPTION_KEY: ${HIGHFLAME_TOKEN_ENCRYPTION_KEY:?HIGHFLAME_TOKEN_ENCRYPTION_KEY is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       HIGHFLAME_RSA_PRIVATE_KEY_PATH: /app/keys/rsa-private.pem
       HIGHFLAME_RSA_PUBLIC_KEY_PATH: /app/keys/rsa-public.pem
       HIGHFLAME_RSA_KEY_ID: v1
@@ -390,7 +364,7 @@ services:
       # Kept identical to Studio's NEXT_PUBLIC_APP_URL below. Over plain http
       # (the default here) AuthN keeps device login and leaves automatic MCP
       # client registration off, which an air-gapped install has no use for.
-      HIGHFLAME_AUTH_STUDIO_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:-}
+      HIGHFLAME_AUTH_STUDIO_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
     volumes:
       - ./config/authn/config.yaml:/app/config.yaml:ro
       - ./secrets/keys:/app/keys:ro
@@ -432,9 +406,9 @@ services:
     environment:
       DB_HOST: highflame-db
       DB_USERNAME: ${POSTGRES_USER:-highflame}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       AUTHZ_DB_NAME: ${POSTGRES_DB:-javelin_data}
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
     volumes:
       - ./config/authz/config.yaml:/app/config.yaml:ro
       # ED25519 keys for signing policy audit proofs, generated by bootstrap.
@@ -474,9 +448,9 @@ services:
     environment:
       POSTGRES_HOST: highflame-db
       POSTGRES_USER: ${POSTGRES_USER:-highflame}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
-      HIGHFLAME_AUTH_JWT_SECRET_KEY: ${HIGHFLAME_AUTH_JWT_SECRET_KEY:-}
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      HIGHFLAME_AUTH_JWT_SECRET_KEY: ${HIGHFLAME_AUTH_JWT_SECRET_KEY:?HIGHFLAME_AUTH_JWT_SECRET_KEY is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       # No JWT key paths here, deliberately. I added them after seeing Admin
       # answer 401 {"error":"Invalid token"} and concluded it could not verify
       # the RS256 tokens it mints. That diagnosis was wrong: Admin expects the
@@ -492,7 +466,7 @@ services:
       # The audience is Studio's Keycloak CLIENT ID, not a name containing
       # "admin": Keycloak puts the requesting client's id in the ID token's
       # `aud`, and Studio sends the ID token as subject_token.
-      HIGHFLAME_OIDC_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:-}/auth/realms/highflame
+      HIGHFLAME_OIDC_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}/auth/realms/highflame
       HIGHFLAME_OIDC_AUDIENCE: highflame-studio
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       HIGHFLAME_OBSERVATORY_URL: http://highflame-observatory:8090
@@ -531,9 +505,9 @@ services:
     environment:
       POSTGRES_HOST: highflame-db
       POSTGRES_USER: ${POSTGRES_USER:-highflame}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       REDIS_HOST: highflame-redis
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       # Issuer Shield expects on the RS256 tokens Admin mints. Must match what
       # AuthN actually stamps, or every authenticated request to Shield fails
       # issuer validation — the same class of mismatch as the Keycloak `iss`
@@ -541,7 +515,7 @@ services:
       HIGHFLAME_AUTH_JWT_ISSUER: ${HIGHFLAME_AUTH_JWT_ISSUER:-http://highflame-authn:8051}
       # Shared secret for the Shield -> detector-model calls. Local-only here,
       # since the models run in this stack.
-      HIGHFLAME_MODELS_SECRET: ${HIGHFLAME_MODELS_SECRET:-}
+      HIGHFLAME_MODELS_SECRET: ${HIGHFLAME_MODELS_SECRET:?HIGHFLAME_MODELS_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       # ML detector endpoints, pointed at in-stack names that DO NOT EXIST in
       # this deployment. That is deliberate, and the reasoning matters more than
       # it looks.
@@ -593,7 +567,7 @@ services:
       CLICKHOUSE_ENDPOINT: tcp://highflame-clickhouse:9000
       CLICKHOUSE_DATABASE: ${CLICKHOUSE_DB:-highflame}
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-highflame}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?CLICKHOUSE_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
     volumes:
       - ./config/collector/config.yaml:/etc/otelcol-contrib/config.yaml:ro
     depends_on:
@@ -616,7 +590,7 @@ services:
       HIGHFLAME_ADMIN_URL: http://highflame-admin:8040
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       HIGHFLAME_SHIELD_URL: "http://highflame-shield:8070/v1/shield"
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: "${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}"
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: "${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}"
       HIGHFLAME_SHIELD_SERVICE_NAME: "highflame-cerberus"
       OTEL_ENABLED: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://highflame-collector:4317"
@@ -659,8 +633,8 @@ services:
     environment:
       CLICKHOUSE_HOST: highflame-clickhouse
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-highflame}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?CLICKHOUSE_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
     volumes:
       - ./config/observatory/config.yaml:/app/config.yaml:ro
     depends_on:
@@ -706,7 +680,7 @@ services:
       HIGHFLAME_ADMIN_URL: http://highflame-admin:8040
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       ADMIN_API_URL: http://highflame-admin:8040
-      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:-}
+      HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       # Where the gateway sends traffic, and the single most important block in
       # this file for an air-gapped evaluation.
       #
@@ -734,8 +708,8 @@ services:
       # HIGHFLAME_LLM_BASE_URL feeds the OpenAI-compatible entry, because that is
       # what vLLM, TGI, Ollama's compat endpoint and most self-hosted servers
       # speak. Override any individual one if you need a different shape.
-      OPENAI_BASE_URL: ${HIGHFLAME_OPENAI_BASE_URL:-${HIGHFLAME_LLM_BASE_URL:-}}
-      OLLAMA_BASE_URL: ${HIGHFLAME_OLLAMA_BASE_URL:-${HIGHFLAME_LLM_BASE_URL:-}}
+      OPENAI_BASE_URL: ${HIGHFLAME_OPENAI_BASE_URL:-${HIGHFLAME_LLM_BASE_URL:?set HIGHFLAME_LLM_BASE_URL in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}}
+      OLLAMA_BASE_URL: ${HIGHFLAME_OLLAMA_BASE_URL:-${HIGHFLAME_LLM_BASE_URL:?set HIGHFLAME_LLM_BASE_URL in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}}
       ANTHROPIC_BASE_URL: ${HIGHFLAME_ANTHROPIC_BASE_URL:-http://anthropic.disabled.invalid/v1}
       GEMINI_BASE_URL: ${HIGHFLAME_GEMINI_BASE_URL:-http://gemini.disabled.invalid/v1}
       VERTEX_BASE_URL: ${HIGHFLAME_VERTEX_BASE_URL:-http://vertex.disabled.invalid/v1}
@@ -805,19 +779,19 @@ services:
       # the image tag, so this file says which IdP the stack uses — and so the
       # image below is an ordinary Studio image rather than a special build.
       HIGHFLAME_AUTH_PROVIDER: oidc
-      OIDC_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:-}/auth/realms/highflame
+      OIDC_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}/auth/realms/highflame
       OIDC_CLIENT_ID: highflame-studio
-      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
-      AUTH_SECRET: ${AUTH_SECRET:-}
-      AUTH_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?OIDC_CLIENT_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
+      AUTH_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
       AUTH_TRUST_HOST: 'true'
       # Matches ssoSessionMaxLifespan in config/keycloak/highflame-realm.json.
       # Studio's own default is longer, which would leave a browser holding a
       # session after Keycloak had already ended it — the id_token refresh is
       # what would quietly start failing. Change both together or neither.
       OIDC_SESSION_MAX_AGE_SECONDS: '36000'
-      NEXT_PUBLIC_APP_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:-}
-      NEXT_PUBLIC_FIREHOG_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:-}/gateway
+      NEXT_PUBLIC_APP_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
+      NEXT_PUBLIC_FIREHOG_URL: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}/gateway
       # Empty means SAME-ORIGIN: the browser issues relative /v1/admin/...
       # requests against Studio's own host and nginx routes them to Admin.
       # This is the value dev1 and prod ship (k8s-deploy/*/highflame-studio),

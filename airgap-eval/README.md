@@ -32,7 +32,7 @@ Run these from this directory, in any terminal: PowerShell, Terminal on macOS, o
    This runs once, with no network, and writes `.env` and `secrets/`.
 
    ```
-   docker compose run --rm bootstrap
+   docker compose -f bootstrap.yaml run --rm bootstrap
    ```
 
 4. **Start the stack.**
@@ -46,8 +46,9 @@ Run these from this directory, in any terminal: PowerShell, Terminal on macOS, o
    When the seed log says `Ready.`, sign in at `http://<HIGHFLAME_HOST_IP>` as `evaluator`.
    The password is `EVALUATOR_PASSWORD` in `.env`.
 
-If `up` starts nothing, bootstrap has not run or `.env` changed since it did: `docker compose logs preflight` names what is missing.
-To start over from scratch, run `docker compose down -v`, then `docker compose run --rm bootstrap --force`.
+If `up` stops with `required variable ... is missing a value`, bootstrap has not run.
+If it stops with `service "preflight" didn't complete successfully`, bootstrap's output is missing or no longer matches `.env`, and `docker compose logs preflight` names what.
+To start over from scratch, run `docker compose down -v`, then `docker compose -f bootstrap.yaml run --rm bootstrap --force`.
 
 `bundle/load-images.sh` still exists for Linux and macOS hosts that want its checksum and manifest verification on top of step 1.
 It is optional.

@@ -9,10 +9,9 @@
 #
 #   docker compose logs preflight
 #
-# This replaces the `${VAR:?}` guards the compose file used to carry. Those
-# fired at parse time for EVERY compose command, including the one that runs
-# bootstrap, so the job that generates the secrets could not run until the
-# secrets existed.
+# docker-compose.yaml already refuses to run with any generated secret empty
+# (`${VAR:?}`), so this checks what interpolation cannot: the files bootstrap
+# renders, and that they match the .env compose is using now.
 #
 # Nothing here writes anything. The working directory is mounted read-only.
 set -uo pipefail
@@ -21,15 +20,12 @@ cd "$(dirname "$0")/.." || exit 1
 
 problems=()
 
-# Values compose interpolated into this job's environment from .env. Empty
-# means bootstrap has not run, or .env was replaced after it did.
-for var in HIGHFLAME_HOST_IP HIGHFLAME_LLM_BASE_URL \
-           POSTGRES_PASSWORD CLICKHOUSE_PASSWORD KEYCLOAK_ADMIN_PASSWORD \
-           OIDC_CLIENT_SECRET EVALUATOR_PASSWORD AUTH_SECRET \
-           HIGHFLAME_AUTH_JWT_SECRET_KEY HIGHFLAME_TOKEN_ENCRYPTION_KEY \
-           HIGHFLAME_INTERNAL_SERVICE_SECRET HIGHFLAME_MODELS_SECRET; do
-  [ -n "${!var:-}" ] || problems+=("$var is empty in .env")
-done
+# The address and protocol come from compose, so they are exactly what it
+# interpolated. The client secret is read from the file instead, so the exited
+# container keeps no copy of a secret in its configuration. Last assignment
+# wins, as it does for compose.
+HOST_IP="${HIGHFLAME_HOST_IP:-}"
+CLIENT_SECRET=$(grep -E '^OIDC_CLIENT_SECRET=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r')
 
 # Files bootstrap renders or generates, which the services bind-mount.
 REALM=secrets/keycloak/highflame-realm.json
@@ -51,13 +47,13 @@ done
 # drifts below fail much later and much less clearly: a changed host address as
 # invalid_redirect_uri at login, a changed client secret as invalid_client.
 if [ -f "$REALM" ]; then
-  if [ -n "${HIGHFLAME_HOST_IP:-}" ] &&
-     ! grep -qF "\"${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP}\"" "$REALM"; then
+  if [ -n "$HOST_IP" ] &&
+     ! grep -qF "\"${CONN_PROTOCOL:-http}://${HOST_IP}\"" "$REALM"; then
     # Re-rendering is not enough on a stack that has already run: Keycloak
     # imports the realm only into an empty database and keeps the first one.
     problems+=("$REALM was rendered for a different HIGHFLAME_HOST_IP — run bootstrap again; if the stack has run before, Keycloak keeps the realm it first imported, so start over with docker compose down -v")
   fi
-  if [ -n "${OIDC_CLIENT_SECRET:-}" ] && ! grep -qF "\"${OIDC_CLIENT_SECRET}\"" "$REALM"; then
+  if [ -n "$CLIENT_SECRET" ] && ! grep -qF "\"${CLIENT_SECRET}\"" "$REALM"; then
     problems+=("$REALM holds a different client secret from .env — run bootstrap again")
   fi
 fi
@@ -67,7 +63,7 @@ if [ ${#problems[@]} -gt 0 ]; then
   printf '  - %s\n' "${problems[@]}"
   echo
   echo "Set HIGHFLAME_HOST_IP and HIGHFLAME_LLM_BASE_URL in .env, then:"
-  echo "    docker compose run --rm bootstrap"
+  echo "    docker compose -f bootstrap.yaml run --rm bootstrap"
   echo "    docker compose up -d"
   exit 1
 fi

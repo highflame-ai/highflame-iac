@@ -40,6 +40,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# The temporary copy of .env written below holds every secret; keep it private.
+umask 077
+
 # PGHOST, PGUSER, PGPASSWORD and PGDATABASE come from the compose job, so every
 # psql call below reaches the stack's database with no flags.
 : "${HIGHFLAME_HOST_IP:?HIGHFLAME_HOST_IP is empty — set it in .env}"

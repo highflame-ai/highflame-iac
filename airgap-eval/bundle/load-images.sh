@@ -105,7 +105,7 @@ All $checked images verified against the manifest.
 
 Next:
     cp .env.example .env      # set HIGHFLAME_HOST_IP and HIGHFLAME_LLM_BASE_URL
-    docker compose run --rm bootstrap
+    docker compose -f bootstrap.yaml run --rm bootstrap
     docker compose up -d      # also provisions the tenant and its default policies
     ./verify/no-egress.sh --report egress-report.txt
 EOF

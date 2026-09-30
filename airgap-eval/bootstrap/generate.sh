@@ -2,11 +2,11 @@
 #
 # Generate every secret this stack needs, once, locally.
 #
-# Runs as the `bootstrap` job in docker-compose.yaml, the same way on every
+# Runs as the `bootstrap` job in bootstrap.yaml, the same way on every
 # operating system:
 #
-#   docker compose run --rm bootstrap
-#   docker compose run --rm bootstrap --force    # regenerate everything
+#   docker compose -f bootstrap.yaml run --rm bootstrap
+#   docker compose -f bootstrap.yaml run --rm bootstrap --force   # regenerate
 #
 # It runs in the Postgres image the stack already uses, which carries openssl
 # and bash, so the host needs nothing but Docker. That is the point: an
@@ -35,6 +35,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Nothing this writes is for anyone else. Without this the container's root
+# umask (022) made every temporary copy of .env world-readable, and .env itself
+# readable by all from the moment it was copied until the chmod further down.
+# Files the services must read are opened up explicitly below.
+umask 077
+
 FORCE=0
 [ "${1:-}" = "--force" ] && FORCE=1
 
@@ -62,7 +68,7 @@ if [ "$FORCE" -eq 1 ] && [ -f /stack/postgres-data/PG_VERSION ]; then
   echo
   echo "To start over from scratch (destroys evaluation data, which is fine):"
   echo "    docker compose down -v"
-  echo "    docker compose run --rm bootstrap --force"
+  echo "    docker compose -f bootstrap.yaml run --rm bootstrap --force"
   exit 1
 fi
 
@@ -75,7 +81,7 @@ KEYS_DIR="secrets/keys"
 # ---------------------------------------------------------------------------
 command -v openssl >/dev/null || {
   echo "openssl not found. Run this through compose, which supplies it:"
-  echo "    docker compose run --rm bootstrap"
+  echo "    docker compose -f bootstrap.yaml run --rm bootstrap"
   exit 1
 }
 
@@ -241,6 +247,8 @@ fi
 # 644, not 600, for the same reason as the keys below: Keycloak reads this as
 # its own uid (1000), not yours. 600 only worked where the operator happened to
 # be uid 1000 too; anyone else got a Keycloak that could not import its realm.
+# It holds the client secret and the evaluator password, so it is secrets/ being
+# 700 that keeps other users on this host from reading it.
 chmod 644 "$REALM_RENDERED"
 echo "  client secret and evaluator password written from .env"
 
@@ -310,11 +318,11 @@ else
   # while the files end up owned by you (see restore_owner above) — so 600 makes
   # them unreadable inside the container and AuthN dies with "permission denied"
   # on its own private key. Owning them as uid 10000 instead would leave you
-  # unable to read or delete your own keys without root.
+  # unable to read your own keys without root.
   #
-  # The trade-off is stated rather than hidden: on a single-tenant evaluation host
-  # these are deployment-local keys generated on the spot and thrown away with the
-  # stack. Do not copy this permission choice into a shared or multi-user host.
+  # Other users on this host still cannot read them: secrets/ itself is 700 (see
+  # the end of this file). The Docker daemon resolves bind-mount sources as root,
+  # so the containers never need to pass through it.
 fi
 
 # Outside the branch on purpose. Permissions must be corrected even when the keys
@@ -340,6 +348,17 @@ else
   openssl pkey -in "$AUTHZ_KEYS/private.key" -pubout -out "$AUTHZ_KEYS/public.key" 2>/dev/null
 fi
 chmod 644 "$AUTHZ_KEYS"/*.key
+
+# ---------------------------------------------------------------------------
+# Directory permissions
+# ---------------------------------------------------------------------------
+# The files above are 644 because the services read them as their own uids.
+# What keeps other users on this host out is the top directory: 700, owned by
+# you. The subdirectories are 755 because keys/ and authz-keys/ are mounted as
+# directories, and a container user has to be able to list them; they are only
+# reachable through secrets/, so that exposes nothing.
+chmod 755 secrets/keycloak secrets/firehog "$KEYS_DIR" "$AUTHZ_KEYS"
+chmod 700 secrets
 
 # ---------------------------------------------------------------------------
 # Warn about services left on "latest"
