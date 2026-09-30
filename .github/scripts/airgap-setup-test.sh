@@ -15,11 +15,9 @@ set -euo pipefail
 SRC="$(cd "$(dirname "$0")/../../airgap-eval" && pwd)"
 WORK="$(mktemp -d)"
 export COMPOSE_PROJECT_NAME="airgap-setup-test-$$"
-VOLUME="${COMPOSE_PROJECT_NAME}_postgres-data"
 
 cleanup() {
   (cd "$WORK" && docker compose down -v --remove-orphans >/dev/null 2>&1) || true
-  docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
   rm -rf "$WORK"
 }
 trap cleanup EXIT
@@ -120,8 +118,6 @@ done
 [ "$(stat -c '%a' secrets)" = "700" ] && pass "secrets/ is 700" || fail "secrets/ is not 700"
 [ "$(stat -c '%a' .env)" = "600" ] && pass ".env is 600" || fail ".env is not 600"
 [ ! -e .env.tmp ] && pass "no temporary copy of .env left behind" || fail ".env.tmp left behind"
-grep -q '^COMPOSE_IGNORE_ORPHANS=true' .env && pass "orphan warning switched off" \
-  || fail "COMPOSE_IGNORE_ORPHANS not set"
 
 secret=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)
 [ ${#secret} -eq 32 ] && pass "secrets generated" || fail "POSTGRES_PASSWORD not generated"
@@ -182,16 +178,37 @@ expect "bootstrap keeps the exported secret rather than appending a new one" 0 "
   && pass "no duplicate assignment appended" || fail "HIGHFLAME_INTERNAL_SERVICE_SECRET assigned more than once"
 mv .env.good .env
 
-echo "== --force is allowed on an empty stack and refused once it has data"
+echo "== --force regenerates, and first copies what it replaces aside"
+old_pg=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)
 echo 'export HIGHFLAME_MODELS_SECRET="stale"  # hand-added' >> .env
-expect "--force with no data" 0 "generated POSTGRES_PASSWORD" \
+expect "--force regenerates" 0 "backed up the current secrets" \
   -- docker compose -f bootstrap.yaml run --rm bootstrap --force
 [ "$(grep -c 'HIGHFLAME_MODELS_SECRET' .env)" = "1" ] \
   && pass "--force rewrote every form of a key into one assignment" \
   || fail "HIGHFLAME_MODELS_SECRET assigned more than once after --force"
-docker run --rm --entrypoint sh -v "$VOLUME:/d" pgvector/pgvector:pg17 -c 'touch /d/PG_VERSION'
-expect "--force with data" 1 "Refusing --force" \
-  -- docker compose -f bootstrap.yaml run --rm bootstrap --force
+[ "$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)" != "$old_pg" ] \
+  && pass "secrets regenerated" || fail "POSTGRES_PASSWORD unchanged after --force"
+backup=$(find . -maxdepth 1 -name '.env.bak-*' | head -1)
+if [ -n "$backup" ] && grep -q "^POSTGRES_PASSWORD=$old_pg\$" "$backup"; then
+  pass "the old .env is kept as $backup"
+else
+  fail "no .env.bak-* holding the previous POSTGRES_PASSWORD"
+fi
+[ "$(stat -c '%a' "$backup" 2>/dev/null)" = "600" ] && pass "the backup is 600" || fail "the backup is not 600"
+sdir=$(find . -maxdepth 1 -type d -name 'secrets.bak-*' | head -1)
+[ -n "$sdir" ] && [ -s "$sdir/keys/private.pem" ] && ! cmp -s "$sdir/keys/private.pem" secrets/keys/private.pem \
+  && pass "the old keys are kept in $sdir" || fail "no secrets.bak-* holding the previous keys"
+
+echo "== an older .env's project-name pin is dropped, so bootstrap stays its own project"
+echo 'COMPOSE_PROJECT_NAME=highflame-airgap' >> .env
+expect "bootstrap drops the pin" 0 "removed +COMPOSE_PROJECT_NAME" \
+  -- docker compose -f bootstrap.yaml run --rm bootstrap
+grep -q 'COMPOSE_PROJECT_NAME' .env && fail "COMPOSE_PROJECT_NAME still in .env" \
+  || pass "COMPOSE_PROJECT_NAME removed"
+echo 'COMPOSE_PROJECT_NAME=my-own-name' >> .env
+docker compose -f bootstrap.yaml run --rm bootstrap >/dev/null 2>&1
+grep -q '^COMPOSE_PROJECT_NAME=my-own-name' .env && pass "a deliberately chosen name is kept" \
+  || fail "a custom COMPOSE_PROJECT_NAME was removed"
 
 echo
 if [ "$failures" -gt 0 ]; then

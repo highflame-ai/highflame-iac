@@ -14,10 +14,10 @@
 # stay: an empty value does not fail every service closed — ClickHouse, for
 # one, starts with a passwordless user it accepts from any address.
 
-# The same name .env.example pins as COMPOSE_PROJECT_NAME. They used to differ,
-# which was invisible while every command ran with a .env in place — and now
-# that bootstrap runs before one exists, it split the stack across two projects
-# whose fixed container names then collided on the next `up`.
+# The stack's project name, and so the prefix of its volume and network names.
+# .env used to pin a different one as COMPOSE_PROJECT_NAME, which split the
+# stack across two projects the moment a command ran without a .env; bootstrap
+# drops that pin from older .env files. bootstrap.yaml is its own project.
 name: highflame-airgap
 
 x-svc: &svc

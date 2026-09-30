@@ -53,6 +53,8 @@ Run these from this directory, in any terminal: PowerShell, Terminal on macOS, o
 If `up` stops with `required variable ... is missing a value`, bootstrap has not run.
 If it stops with `service "preflight" didn't complete successfully`, bootstrap's output is missing or no longer matches `.env`, and `docker compose logs preflight` names what.
 To start over from scratch, run `docker compose down -v`, then `docker compose -f bootstrap.yaml run --rm bootstrap --force`.
+`--force` regenerates even on a stack that still has its data, and that data keeps the old passwords, so such a stack will not start afterwards.
+It therefore first copies the current `.env` and `secrets/` aside as `.env.bak-<time>` and `secrets.bak-<time>/`; putting those back undoes a `--force` run by mistake.
 
 `bundle/load-images.sh` still exists for hosts that want its checksum and manifest verification on top of step 1.
 It needs bash, `zstd` and `sha256sum`: present on most Linux hosts, and on macOS only once `zstd` and `coreutils` are installed.

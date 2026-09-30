@@ -30,7 +30,8 @@
 # also mean every evaluator shares one JWT signing key.
 #
 # Idempotent by refusal: it will not overwrite secrets that are already set,
-# so re-running after editing .env is safe. Use --force to regenerate.
+# so re-running after editing .env is safe. Use --force to regenerate, which
+# backs up what it replaces first (see below).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -43,29 +44,6 @@ umask 077
 
 FORCE=0
 [ "${1:-}" = "--force" ] && FORCE=1
-
-# --force AFTER the stack has run once will break it. Postgres and ClickHouse
-# store the credentials they were initialised with, and Keycloak imports the
-# realm only into an empty database, so regenerating leaves compose passing
-# values the stack no longer accepts. Learned the direct way.
-#
-# The job mounts the database volume read-only at this path so the check works
-# without handing the container the Docker socket. It runs before the drop to
-# your uid below, because Postgres keeps that directory 700 and owned by its own
-# uid: as anyone but root, PG_VERSION would look absent and --force would pass.
-# Refuse, too, when the volume cannot be inspected at all — a run with --user,
-# say — because "could not look" is not "empty".
-if [ "$FORCE" -eq 1 ] && { [ -f /stack/postgres-data/PG_VERSION ] ||
-                           ! [ -r /stack/postgres-data ] || ! [ -x /stack/postgres-data ]; }; then
-  echo "Refusing --force: this stack already has data volumes (or they could not"
-  echo "be inspected), and regenerating the database passwords would lock you"
-  echo "out of them."
-  echo
-  echo "To start over from scratch (destroys evaluation data, which is fine):"
-  echo "    docker compose down -v"
-  echo "    docker compose -f bootstrap.yaml run --rm bootstrap --force"
-  exit 1
-fi
 
 # Do the rest as whoever owns this directory, not as the container's root.
 #
@@ -81,6 +59,24 @@ fi
 OWNER=$(stat -c '%u:%g' .)
 if [ "$(id -u)" = 0 ] && [ "${OWNER%%:*}" != 0 ]; then
   exec gosu "$OWNER" bash "$0" "$@"
+fi
+
+# --force regenerates everything, and on a stack that has already started that
+# locks it out of its own data: Postgres and ClickHouse keep the passwords they
+# were created with, and Keycloak keeps the realm it first imported. It is not
+# refused — force means force, and the reset it is for is `docker compose down
+# -v` first — but it is made undoable. What it replaces is copied aside first,
+# under a timestamp so a second --force cannot overwrite the first backup, and
+# putting the copies back restores a stack that was forced by mistake.
+if [ "$FORCE" -eq 1 ] && { [ -f .env ] || [ -d secrets ]; }; then
+  stamp=$(date -u +%Y%m%dT%H%M%SZ)
+  [ -f .env ] && cp -p .env ".env.bak-$stamp"
+  [ -d secrets ] && cp -Rp secrets "secrets.bak-$stamp"
+  echo "--force: backed up the current secrets to .env.bak-$stamp and secrets.bak-$stamp/"
+  echo "  If this stack has already run and you did not 'docker compose down -v' first,"
+  echo "  it will not start with the new secrets. To undo, put .env.bak-$stamp back as"
+  echo "  .env and secrets.bak-$stamp/ back as secrets/."
+  echo
 fi
 
 REALM_TEMPLATE="config/keycloak/highflame-realm.json"
@@ -188,11 +184,15 @@ set_env HIGHFLAME_TOKEN_ENCRYPTION_KEY 48
 set_env HIGHFLAME_INTERNAL_SERVICE_SECRET 48
 set_env HIGHFLAME_MODELS_SECRET 32
 
-# Upgraders' .env files predate this setting; see .env.example for why the
-# orphan warning must stay off.
-if [ -z "$(env_get COMPOSE_IGNORE_ORPHANS)" ]; then
-  printf '\nCOMPOSE_IGNORE_ORPHANS=true\n' >> .env
-  echo "  added     COMPOSE_IGNORE_ORPHANS=true (see .env.example)"
+# bootstrap.yaml runs as its own compose project so the stack's containers are
+# not "orphans" of it (compose would suggest --remove-orphans, which deletes
+# them). A .env from an older bundle pins COMPOSE_PROJECT_NAME to the stack's
+# name, which would pull bootstrap back into the stack's project. That value is
+# the name docker-compose.yaml already declares, so dropping the line changes
+# nothing for the stack. A different, deliberately chosen name is left alone.
+if grep -qE '^[[:space:]]*(export[[:space:]]+)?COMPOSE_PROJECT_NAME[[:space:]]*=[[:space:]]*highflame-airgap[[:space:]]*$' .env; then
+  grep -vE '^[[:space:]]*(export[[:space:]]+)?COMPOSE_PROJECT_NAME[[:space:]]*=' .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp
+  echo "  removed   COMPOSE_PROJECT_NAME=highflame-airgap (docker-compose.yaml names the stack)"
 fi
 
 # ---------------------------------------------------------------------------

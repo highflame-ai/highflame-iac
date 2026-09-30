@@ -15,10 +15,10 @@
 # requirement there is what matters: without it, an empty value starts a
 # service with no password — ClickHouse, for one, then accepts that user from
 # any address — instead of refusing to start at all.
-
-# COMPOSE_PROJECT_NAME in .env overrides this, and must: the volume below is
-# named after the stack's project.
-name: highflame-airgap
+#
+# Its own project, touching nothing of the stack's: no volume, no network. That
+# is also why the running stack's containers are not "orphans" of this file.
+name: highflame-airgap-bootstrap
 
 services:
   bootstrap:
@@ -27,12 +27,3 @@ services:
     entrypoint: ['bash', '/work/bootstrap/generate.sh']
     volumes:
       - ./:/work
-      # The stack's database volume, read to refuse --force once it holds data
-      # initialised with the current passwords. Mounting it creates it empty if
-      # the stack has never run, which is harmless: Postgres initialises an
-      # empty volume.
-      - postgres-data:/stack/postgres-data:ro
-
-volumes:
-  postgres-data:
-    name: ${COMPOSE_PROJECT_NAME:-highflame-airgap}_postgres-data

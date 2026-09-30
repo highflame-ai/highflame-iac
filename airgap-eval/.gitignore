@@ -7,6 +7,11 @@
 .env.tmp
 secrets/
 
+# What bootstrap --force copies aside before it regenerates; they hold the old
+# secrets.
+.env.bak-*
+secrets.bak-*/
+
 # Output of verify/no-egress.sh. Meant to be handed to a security reviewer, not
 # committed — it records hostnames and container names for a specific run.
 egress-report.txt
