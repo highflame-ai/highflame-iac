@@ -23,7 +23,7 @@ Run these from this directory, in any terminal: PowerShell, Terminal on macOS, o
    docker load -i highflame-airgap-<version>.tar.zst
    ```
 
-   With network access, skip this; `docker compose up` pulls the images.
+   With network access, skip this: after `docker login ghcr.io` with the credentials Highflame provides, `docker compose up` pulls the images.
 
 2. **Configure.**
    Copy `.env.example` to `.env`, then set `HIGHFLAME_HOST_IP` (this machine's LAN address, not `127.0.0.1`) and `HIGHFLAME_LLM_BASE_URL` (your own LLM endpoint).
