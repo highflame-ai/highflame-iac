@@ -261,15 +261,14 @@ esac
 # carrying literals that have to be kept in step with this job by hand.
 # Upsert rather than append: re-running must not leave two of each. Written
 # back over the file rather than renamed onto it, so .env keeps its permissions.
+# shellcheck source=env.sh
+. bootstrap/env.sh
 upsert_env() {
-  local key="$1" value="$2"
   # Leave the file alone when it already says this. The job runs on every
   # `up`, and rewriting an unchanged .env each time only risks racing an editor
   # that has it open.
-  [ "$(grep -E "^${key}=" .env | tail -1 | cut -d= -f2- || true)" = "$value" ] && return 0
-  awk -v k="$key" -v v="$value" \
-    'BEGIN{FS=OFS="="} $1==k {print k"="v; found=1; next} {print} END{if(!found) print k"="v}' \
-    .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp
+  [ "$(env_get "$1")" = "$2" ] && return 0
+  env_set "$1" "$2"
 }
 upsert_env HIGHFLAME_ACCOUNT_ID "$ACCOUNT_ID"
 upsert_env HIGHFLAME_PROJECT_ID "$PROJECT_UUID"

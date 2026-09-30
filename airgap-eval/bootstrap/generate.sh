@@ -116,24 +116,9 @@ fi
 # The copy the operator made is 644. Close it before any secret goes in.
 chmod 600 .env
 
-# Read a value the way compose's .env parser does for the forms people write:
-# the last assignment wins, surrounding whitespace is dropped, one pair of
-# matching quotes is removed, and an unquoted value ends at " #". Anything
-# naive here renders `HIGHFLAME_HOST_IP="10.0.0.42"  # laptop` into the realm
-# verbatim, while compose reads 10.0.0.42 — a realm no re-run can repair.
-#
-# .env is never sourced: that runs it as shell, and the seed job writes to it.
-env_get() {
-  local v
-  v=$(grep -E "^[[:space:]]*$1[[:space:]]*=" .env | tail -1 | cut -d= -f2- || true)
-  v="${v#"${v%%[![:space:]]*}"}"
-  case "$v" in
-    \"*) v="${v#\"}"; v="${v%%\"*}" ;;
-    \'*) v="${v#\'}"; v="${v%%\'*}" ;;
-    *)   v="${v%%[[:space:]]#*}"; v="${v%"${v##*[![:space:]]}"}" ;;
-  esac
-  printf '%s' "$v"
-}
+# Values are read as compose reads them; see bootstrap/env.sh.
+# shellcheck source=env.sh
+. bootstrap/env.sh
 
 missing=()
 for required in HIGHFLAME_LLM_BASE_URL HIGHFLAME_HOST_IP; do
@@ -176,7 +161,6 @@ rand() { openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c "${1:-32}"; }
 # set_env KEY — generate and write only if currently empty (or --force).
 set_env() {
   local key="$1" len="${2:-32}" current
-  # awk below rewrites every copy of the key.
   current=$(env_get "$key")
 
   if [ -n "$current" ] && [ "$FORCE" -eq 0 ]; then
@@ -186,12 +170,7 @@ set_env() {
 
   local value
   value=$(rand "$len")
-  # Through a temp file, then copied back over rather than renamed, so .env
-  # keeps its inode, owner and permissions. A rename would replace the operator's
-  # file with one owned by this container's user.
-  awk -v k="$key" -v v="$value" \
-    'BEGIN{FS=OFS="="} $1==k {print k"="v; found=1; next} {print} END{if(!found) print k"="v}' \
-    .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp
+  env_set "$key" "$value"
   echo "  generated $key"
 }
 
@@ -295,6 +274,18 @@ echo "  client secret and evaluator password written from .env"
 # Env-var expansion is per-service and inconsistent across this platform: Admin
 # renders a config.yaml.template, Shield expands ${VAR} itself, Firehog does
 # neither. Rendering here removes the need to know which is which.
+# Validated for the same reason as the origin above: it is substituted into a
+# sed expression and a YAML file, and compose-style ${VAR} references are not
+# expanded here.
+SHIELD_URL="${HIGHFLAME_SHIELD_URL:-http://highflame-shield:8070/v1/shield}"
+url_re='^https?://[][A-Za-z0-9.:_-]+(/[A-Za-z0-9._/-]*)?$'
+if ! [[ "$SHIELD_URL" =~ $url_re ]]; then
+  echo "HIGHFLAME_SHIELD_URL in .env is not a plain URL:"
+  echo "    $SHIELD_URL"
+  echo "Leave it unset for the in-stack default, http://highflame-shield:8070/v1/shield."
+  exit 1
+fi
+
 echo "rendering secrets/firehog/config.yaml"
 mkdir -p secrets/firehog
 # Substitution only, same reasoning as the realm above: no python on the host.
@@ -303,7 +294,7 @@ mkdir -p secrets/firehog
 # config with a literal ${...} in it — which is precisely the failure this step
 # exists to prevent (firehog does not expand env vars itself and panics on the
 # literal string).
-sed -e "s|\${HIGHFLAME_SHIELD_URL}|${HIGHFLAME_SHIELD_URL:-http://highflame-shield:8070/v1/shield}|g" \
+sed -e "s|\${HIGHFLAME_SHIELD_URL}|${SHIELD_URL}|g" \
     -e "s|\${HIGHFLAME_INTERNAL_SERVICE_SECRET}|${HIGHFLAME_INTERNAL_SERVICE_SECRET}|g" \
     "config/firehog/config.yaml.template" > "secrets/firehog/config.yaml"
 

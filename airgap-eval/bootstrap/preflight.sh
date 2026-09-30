@@ -24,9 +24,11 @@ problems=()
 # interpolated. The client secret is read from the file instead, so the exited
 # container keeps no copy of a secret in its configuration. Last assignment
 # wins, as it does for compose.
+# shellcheck source=env.sh
+. bootstrap/env.sh
 HOST_IP="${HIGHFLAME_HOST_IP:-}"
-CLIENT_SECRET=$(grep -E '^OIDC_CLIENT_SECRET=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r')
-INTERNAL_SECRET=$(grep -E '^HIGHFLAME_INTERNAL_SERVICE_SECRET=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r')
+CLIENT_SECRET=$(env_get OIDC_CLIENT_SECRET | tr -d '\r')
+INTERNAL_SECRET=$(env_get HIGHFLAME_INTERNAL_SERVICE_SECRET | tr -d '\r')
 
 # Files bootstrap renders or generates, which the services bind-mount.
 REALM=secrets/keycloak/highflame-realm.json
@@ -62,7 +64,8 @@ fi
 # Firehog's config embeds the internal secret. A stale one does not fail at
 # startup; it fails every call to Shield and Admin with 401.
 FIREHOG=secrets/firehog/config.yaml
-if [ -f "$FIREHOG" ] && [ -n "$INTERNAL_SECRET" ] && ! grep -qF "$INTERNAL_SECRET" "$FIREHOG"; then
+if [ -f "$FIREHOG" ] && [ -n "$INTERNAL_SECRET" ] &&
+   ! grep -qF -- "internal_secret: ${INTERNAL_SECRET}" "$FIREHOG"; then
   problems+=("$FIREHOG holds a different internal service secret from .env — run bootstrap again")
 fi
 

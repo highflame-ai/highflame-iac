@@ -156,11 +156,28 @@ expect "bootstrap names the bad value" 1 "do not make a plain origin" \
 mv .env.good .env
 
 echo "== preflight catches a Firehog config rendered with another internal secret"
-cp secrets/firehog/config.yaml firehog.good
+cp .env .env.good
 sed -i.bak 's/^HIGHFLAME_INTERNAL_SERVICE_SECRET=.*/HIGHFLAME_INTERNAL_SERVICE_SECRET=rotatedbutnotrerendered0000000000000000000000/' .env && rm -f .env.bak
 expect "preflight refuses the stale firehog config" 1 "different internal service secret" \
   -- docker compose run --rm preflight
-mv firehog.good secrets/firehog/config.yaml
+mv .env.good .env
+
+echo "== every job reads a hand-edited .env the way compose does"
+# Quoted, commented and exported forms of the same secrets: compose, bootstrap
+# and preflight must all see the bare values, or preflight refuses forever.
+cp .env .env.good
+client=$(grep '^OIDC_CLIENT_SECRET=' .env | cut -d= -f2)
+internal=$(grep '^HIGHFLAME_INTERNAL_SERVICE_SECRET=' .env | cut -d= -f2)
+sed -i.bak -e "s/^OIDC_CLIENT_SECRET=.*/OIDC_CLIENT_SECRET=\"$client\"/" \
+           -e "s/^HIGHFLAME_INTERNAL_SERVICE_SECRET=.*/export HIGHFLAME_INTERNAL_SERVICE_SECRET=$internal  # rotated never/" .env
+rm -f .env.bak
+expect "preflight accepts quoted and exported secrets" 0 "consistent with .env" \
+  -- docker compose run --rm preflight
+expect "bootstrap keeps the exported secret rather than appending a new one" 0 "keep +HIGHFLAME_INTERNAL_SERVICE_SECRET" \
+  -- docker compose -f bootstrap.yaml run --rm bootstrap
+[ "$(grep -c 'HIGHFLAME_INTERNAL_SERVICE_SECRET=' .env)" = "1" ] \
+  && pass "no duplicate assignment appended" || fail "HIGHFLAME_INTERNAL_SERVICE_SECRET assigned more than once"
+mv .env.good .env
 
 echo "== --force is allowed on an empty stack and refused once it has data"
 expect "--force with no data" 0 "generated POSTGRES_PASSWORD" \

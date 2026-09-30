@@ -36,10 +36,12 @@ jobs:
 
       - name: Shellcheck the setup jobs
         run: |
-          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -S warning \
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -S warning -x \
             airgap-eval/bootstrap/generate.sh \
             airgap-eval/bootstrap/preflight.sh \
             airgap-eval/bootstrap/seed-tenant.sh \
+            airgap-eval/bootstrap/env.sh \
+            airgap-eval/bundle/save-images.sh \
             .github/scripts/airgap-setup-test.sh
 
       - name: Pull the job image
