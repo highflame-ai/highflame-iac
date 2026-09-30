@@ -40,18 +40,28 @@ Run these from this directory, in any terminal: PowerShell, Terminal on macOS, o
 
    ```
    docker compose up -d
-   docker compose logs -f seed
+   docker compose wait seed
+   docker compose logs seed
    ```
 
-   When the seed log says `Ready.`, sign in at `http://<HIGHFLAME_HOST_IP>` as `evaluator`.
-   The password is `EVALUATOR_PASSWORD` in `.env`.
+   `wait` blocks until the seed finishes and exits non-zero if it failed; `up -d` on its own does not report a failed seed.
+   Do not use `up --wait`: it treats the seed finishing as a failure.
+   The log ends with `Ready.` and the account and project ids.
+   Then sign in at `http://<HIGHFLAME_HOST_IP>` as `evaluator`; the password is `EVALUATOR_PASSWORD` in `.env`.
 
 If `up` stops with `required variable ... is missing a value`, bootstrap has not run.
 If it stops with `service "preflight" didn't complete successfully`, bootstrap's output is missing or no longer matches `.env`, and `docker compose logs preflight` names what.
 To start over from scratch, run `docker compose down -v`, then `docker compose -f bootstrap.yaml run --rm bootstrap --force`.
 
-`bundle/load-images.sh` still exists for Linux and macOS hosts that want its checksum and manifest verification on top of step 1.
+`bundle/load-images.sh` still exists for hosts that want its checksum and manifest verification on top of step 1.
+It needs bash, `zstd` and `sha256sum`: present on most Linux hosts, and on macOS only once `zstd` and `coreutils` are installed.
 It is optional.
+
+`HIGHFLAME_HOST_IP` has to be an address the containers can route back to the host by, so the machine needs a network interface with one, even with no route beyond it.
+On a laptop with every network disconnected there is no such address, and this has not been solved for Docker Desktop.
+
+The bundle's scripts must keep LF line endings, which `.gitattributes` enforces for a fresh `git clone`.
+A Windows clone made before that file existed, or a copy through a tool that converts line endings, needs `git add --renormalize .` or a fresh clone; otherwise bootstrap fails with `$'\r': command not found`.
 
 ## Prove it does not phone home
 

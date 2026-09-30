@@ -43,6 +43,15 @@ cd "$(dirname "$0")/.."
 # The temporary copy of .env written below holds every secret; keep it private.
 umask 077
 
+# Run as whoever owns this directory, so the .env this job updates stays theirs
+# and a root-squashed NFS home does not refuse the write. Same rule as
+# bootstrap/generate.sh: an owner that reads as root means container root
+# already maps to the operator.
+OWNER=$(stat -c '%u:%g' .)
+if [ "$(id -u)" = 0 ] && [ "${OWNER%%:*}" != 0 ]; then
+  exec gosu "$OWNER" bash "$0" "$@"
+fi
+
 # PGHOST, PGUSER, PGPASSWORD and PGDATABASE come from the compose job, so every
 # psql call below reaches the stack's database with no flags.
 : "${HIGHFLAME_HOST_IP:?HIGHFLAME_HOST_IP is empty — set it in .env}"
@@ -243,10 +252,13 @@ esac
 # Record the ids provisioning chose, so the notebook reads them instead of
 # carrying literals that have to be kept in step with this job by hand.
 # Upsert rather than append: re-running must not leave two of each. Written
-# back over the file rather than renamed onto it, so .env keeps the owner and
-# permissions bootstrap gave it.
+# back over the file rather than renamed onto it, so .env keeps its permissions.
 upsert_env() {
   local key="$1" value="$2"
+  # Leave the file alone when it already says this. The job runs on every
+  # `up`, and rewriting an unchanged .env each time only risks racing an editor
+  # that has it open.
+  [ "$(grep -E "^${key}=" .env | tail -1 | cut -d= -f2- || true)" = "$value" ] && return 0
   awk -v k="$key" -v v="$value" \
     'BEGIN{FS=OFS="="} $1==k {print k"="v; found=1; next} {print} END{if(!found) print k"="v}' \
     .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp

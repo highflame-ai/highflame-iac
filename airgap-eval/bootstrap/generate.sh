@@ -44,24 +44,15 @@ umask 077
 FORCE=0
 [ "${1:-}" = "--force" ] && FORCE=1
 
-# The container runs as root, and on Linux a bind mount keeps the numeric owner,
-# so everything written here would land root-owned and the .env the operator is
-# told to edit would need sudo. Hand it all back to whoever owns this directory,
-# on every exit path. On Docker Desktop (macOS, Windows) the mount maps
-# ownership itself and chown is refused or ignored, which is fine.
-OWNER=$(stat -c '%u:%g' .)
-restore_owner() {
-  chown -R "$OWNER" .env secrets 2>/dev/null || true
-}
-trap restore_owner EXIT
-
 # --force AFTER the stack has run once will break it. Postgres and ClickHouse
 # store the credentials they were initialised with, and Keycloak imports the
 # realm only into an empty database, so regenerating leaves compose passing
 # values the stack no longer accepts. Learned the direct way.
 #
-# The compose job mounts the database volume read-only at this path so the
-# check works without handing the container the Docker socket.
+# The job mounts the database volume read-only at this path so the check works
+# without handing the container the Docker socket. It runs before the drop to
+# your uid below, because Postgres keeps that directory 700 and owned by its own
+# uid: as anyone but root, PG_VERSION would look absent and --force would pass.
 if [ "$FORCE" -eq 1 ] && [ -f /stack/postgres-data/PG_VERSION ]; then
   echo "Refusing --force: this stack already has data volumes, and regenerating"
   echo "the database passwords would lock you out of them."
@@ -70,6 +61,21 @@ if [ "$FORCE" -eq 1 ] && [ -f /stack/postgres-data/PG_VERSION ]; then
   echo "    docker compose down -v"
   echo "    docker compose -f bootstrap.yaml run --rm bootstrap --force"
   exit 1
+fi
+
+# Do the rest as whoever owns this directory, not as the container's root.
+#
+# On Linux a bind mount keeps numeric owners, so files written as root would be
+# root-owned and the .env the operator is told to edit would need sudo. Worse,
+# on a root-squashed NFS home — common on corporate Linux — root cannot write
+# here at all. Writing as the owner avoids both, and is what the host script
+# this replaced did with `docker run -u`.
+#
+# When the owner reads as root, stay root: that is Docker Desktop on Windows,
+# and rootless Docker, where container root already maps to you.
+OWNER=$(stat -c '%u:%g' .)
+if [ "$(id -u)" = 0 ] && [ "${OWNER%%:*}" != 0 ]; then
+  exec gosu "$OWNER" bash "$0" "$@"
 fi
 
 REALM_TEMPLATE="config/keycloak/highflame-realm.json"
@@ -146,7 +152,8 @@ rand() { openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c "${1:-32}"; }
 # set_env KEY — generate and write only if currently empty (or --force).
 set_env() {
   local key="$1" len="${2:-32}" current
-  current=$(grep -E "^${key}=" .env | head -1 | cut -d= -f2- || true)
+  # Last assignment, as compose reads it. awk below rewrites every copy.
+  current=$(grep -E "^${key}=" .env | tail -1 | cut -d= -f2- || true)
 
   if [ -n "$current" ] && [ "$FORCE" -eq 0 ]; then
     echo "  keep      $key (already set)"
@@ -315,7 +322,7 @@ else
   openssl ec -in "$KEYS_DIR/private.pem" -pubout -out "$KEYS_DIR/public.pem" 2>/dev/null
 
   # 644, not 600. These are bind-mounted into containers that run as uid 10000,
-  # while the files end up owned by you (see restore_owner above) — so 600 makes
+  # while the files are owned by you (see the drop to your uid above) — so 600 makes
   # them unreadable inside the container and AuthN dies with "permission denied"
   # on its own private key. Owning them as uid 10000 instead would leave you
   # unable to read your own keys without root.
@@ -404,10 +411,11 @@ cat <<EOF
 Bootstrap complete.
 
   next:   docker compose up -d
-          # starts the stack, then the seed job provisions the organization,
+          # starts the stack; the seed job then provisions the organization,
           # its default project and that project's default policies, and adds
-          # your membership. Its output has the account and project ids:
-  then:   docker compose logs seed
+          # your membership
+  then:   docker compose wait seed     # exits non-zero if seeding failed
+          docker compose logs seed     # the account and project ids
 
 Sign in at ${EXTERNAL_URL} as 'evaluator'.
 The password is EVALUATOR_PASSWORD in .env.

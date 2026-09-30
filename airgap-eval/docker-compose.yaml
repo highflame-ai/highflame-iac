@@ -55,10 +55,11 @@ services:
   # Setup jobs
   # --------------------------------------------------------------------------
 
-  # Stops `up` before anything starts if bootstrap's rendered files are
-  # missing, or were rendered for a different HIGHFLAME_HOST_IP or client secret
-  # than .env now holds. The data tier waits on it, and everything else waits on
-  # the data tier.
+  # Stops `up` before any service that uses a secret starts, if bootstrap's
+  # rendered files are missing or were rendered for a different
+  # HIGHFLAME_HOST_IP or client secret than .env now holds. The data tier waits
+  # on it and the rest wait on the data tier; only Redis and the flag service,
+  # which hold no secret, start regardless.
   #
   # Without it, a missing rendered file is worse than an error: Docker creates
   # the absent bind-mount source as an empty root-owned DIRECTORY, and the next
@@ -79,9 +80,10 @@ services:
   # Provisions the evaluator's organization, its default project and that
   # project's default policies through Admin, then grants the evaluator's
   # membership. Runs on every `up` once the ingress is healthy, and is
-  # idempotent. Its output is the account and project ids:
+  # idempotent. Nothing depends on it, so `up -d` does not report its failure:
   #
-  #   docker compose logs seed
+  #   docker compose wait seed    # its exit status
+  #   docker compose logs seed    # the account and project ids
   seed:
     <<: *job
     entrypoint: ['bash', '/work/bootstrap/seed-tenant.sh']
