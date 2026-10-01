@@ -34,6 +34,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret for service-to-service calls. Admin sends it as `X-Internal-Service-Secret` on calls to AuthZ, AuthN, Shield, Firehog, Discovery, MCP, Observatory and Cerberus, and requires it on internal endpoints those services call (for example `resolve-member`). It must be identical in every Highflame service; if missing or mismatched, those calls fail with 401 (policy reload, agent registry, LLM connections, MCP tool reload). | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk backend secret key (`sk_...`). Admin uses it to verify Studio's Clerk session tokens and to sync org and super-admin roles back to Clerk. With the shipped config, where Clerk is the only login provider, Admin won't start if this is empty. Use the same Clerk instance as Studio's `CLERK_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | HS256 secret Admin uses to verify the `x-javelin-token` JWT (the older CLI/API token path), from which it reads the account, gateway and namespace. If it is wrong or unset, requests using `x-javelin-token` get 401. Keep it identical to AuthN's and Studio's `HIGHFLAME_AUTH_JWT_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_DEPLOYMENT_MODEL` | Highflame platform deployment model type | `self_managed` | `self_managed` or `saas`
 
 ### highflame-authn
 
