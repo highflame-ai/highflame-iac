@@ -106,7 +106,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
 `INGEST_OIDC_ISSUER_URL` | Highflame OIDC issuer url | nil | -
 `INGEST_OIDC_AUDIENCE` | Highflame ZeroID defaults to the issuer URL | nil | -
-`INGEST_OIDC_ISSUER_URL` | Highflame internal collector gRPC endpoint | `highflame-collector:4317` | -
+`INGEST_FORWARD_ENDPOINT` | Highflame internal collector gRPC endpoint | `highflame-collector:4317` | -
 
 ### highflame-discovery
 
