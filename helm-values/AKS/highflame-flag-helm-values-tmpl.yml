@@ -39,7 +39,7 @@ service:
   port: 1031
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-flag"
+  repository: "ghcr.io/highflame-ai/highflame-flag"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

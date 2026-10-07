@@ -56,7 +56,7 @@ gceIngress:
         name: "highflame-cloud-security-policy"
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-cerberus"
+  repository: "ghcr.io/highflame-ai/highflame-cerberus"
   pullPolicy: IfNotPresent
   tag: ${IMAGE_TAG}
 

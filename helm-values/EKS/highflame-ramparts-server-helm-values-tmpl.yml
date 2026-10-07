@@ -38,7 +38,7 @@ service:
   port: 8080
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-ramparts-server"
+  repository: "ghcr.io/highflame-ai/highflame-ramparts-server"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 
