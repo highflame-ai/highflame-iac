@@ -26,7 +26,7 @@ readinessProbe:
   failureThreshold: 2
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-redteam-lab1"
+  repository: "ghcr.io/highflame-ai/highflame-redteam-lab1"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

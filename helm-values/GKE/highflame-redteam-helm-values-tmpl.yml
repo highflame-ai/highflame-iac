@@ -11,7 +11,7 @@ service:
   port: 8001
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-redteam"
+  repository: "ghcr.io/highflame-ai/highflame-redteam"
   pullPolicy: IfNotPresent
   tag: ${IMAGE_TAG}
 

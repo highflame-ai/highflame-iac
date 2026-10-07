@@ -36,7 +36,7 @@ service:
   port: 8050
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-authz"
+  repository: "ghcr.io/highflame-ai/highflame-authz"
   pullPolicy: IfNotPresent
   tag: ${IMAGE_TAG}
 

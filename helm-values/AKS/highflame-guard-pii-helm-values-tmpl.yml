@@ -36,7 +36,7 @@ service:
   port: 8018
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-guard-pii"
+  repository: "ghcr.io/highflame-ai/highflame-guard-pii"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 

@@ -100,6 +100,14 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CLICKHOUSE_USERNAME` | ClickHouse user the collector authenticates as when inserting traces. It needs INSERT on `otel_traces_raw` in `CLICKHOUSE_DATABASE`. If unset, the collector uses the `default` user, which only works when that user has no password. | nil | -
 `CLICKHOUSE_PASSWORD` | Password for `CLICKHOUSE_USERNAME`. If it is wrong or missing, every export fails authentication and no telemetry reaches Observatory. | nil | -
 
+### highflame-collector-ingest
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`INGEST_OIDC_ISSUER_URL` | Highflame OIDC issuer url | nil | -
+`INGEST_OIDC_AUDIENCE` | Highflame ZeroID defaults to the issuer URL | nil | -
+`INGEST_OIDC_ISSUER_URL` | Highflame internal collector gRPC endpoint | `highflame-collector:4317` | -
+
 ### highflame-discovery
 
 Variable Name | Variable Value | Default Value | Acceptable Value
@@ -291,11 +299,12 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_OAUTH_AUTHORIZE_URL` | Server-only internal URL of AuthN's `/oauth2/authorize` endpoint. When set, Studio issues authorization codes through AuthN: it POSTs a signed assertion for the logged-in user and relays AuthN's code for CLI login, device flow and MCP client registration. If unset, Studio falls back to minting codes itself with `HIGHFLAME_AUTH_JWT_SECRET_KEY`, and AuthN-registered CLIs such as `forge-cli` then fail with `invalid_grant`. | `http://highflame-authn:8051/oauth2/authorize` | -
 `HIGHFLAME_RAMPARTS_URL` | **Unused.** No Studio code reads it; it is only set in the image. MCP scans go through Observatory (`HIGHFLAME_OBSERVATORY_URL`), which calls Ramparts itself. | `http://highflame-ramparts-server:8080` | -
 `NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS` | Comma-separated origins Clerk may redirect back to after sign-in, for example the docs and sandbox satellite apps. Read by the root layout and sent to the browser at runtime. Clerk-only: users who start sign-in on a satellite whose origin is missing get stuck on Studio. Leave unset for Clerk's default behaviour. | nil | Only for SaaS
+`NEXT_PUBLIC_DRONESHIP_ORIGINS` | Droneship service endpoint for session share | nil | Only for SaaS
 `NEXT_PUBLIC_CLERK_PROXY_URL` | Public URL through which the browser reaches Clerk's Frontend API on Studio's own origin, via Studio's `/clerk-proxy` route (which also needs `CLERK_SECRET_KEY`). Sent to the browser at runtime and passed to the Clerk middleware. Clerk-only. It must match the proxy URL configured in the Clerk Dashboard; setting it before the Dashboard matches breaks sign-in for everyone. | nil | Only for SaaS: `https://<<studio_domain_name>>/__clerk`
 `NEXT_PUBLIC_FEATURE_AGENT_DISCOVERY` | **Unused.** No Studio code reads this variable, so setting it has no effect. | nil | `true` or `false`
 `NEXT_PUBLIC_DISCOVERY_PRINCIPAL_ARN` | ARN of the IAM role the `highflame-discovery` pods run as. Sent to the browser at runtime and shown as the `Principal` in the AWS connector trust-policy snippet on the agent registry and discovery pages. It must match Discovery's IRSA/service-account role. If unset or not a valid `arn:aws:iam::<12 digits>:role/...`, the snippet shows a placeholder the customer must fill in by hand. | nil | optional
 `NEXT_PUBLIC_SCIM_BASE_URL` | **Unused.** No Studio code reads this variable. The SCIM base URL shown to operators comes from Admin's `HIGHFLAME_SCIM_EXTERNAL_BASE_URL`. | nil | `https://<<studio_domain_name>>/scim/v2`
-`HIGHFLAME_FORGE_URL` | Server-only internal base URL of Forge, the Agent Sandbox service (not Firehog). Studio's `/api/agent-sandbox/*` proxy calls `/v1/forge/...` on it to create and manage sandboxes. If unset, the Agent Sandbox screen shows Forge API not configured. It also needs `HIGHFLAME_ADMIN_URL`. | `http://highflame-forge:8100` | -
+`HIGHFLAME_FORGE_URL` | Server-only internal base URL of Forge, the Agent Sandbox service (not Firehog). Studio's `/api/agent-sandbox/*` proxy calls `/v1/forge/...` on it to create and manage sandboxes. If unset, the Agent Sandbox screen shows Forge API not configured. It also needs `HIGHFLAME_ADMIN_URL`. | `http://highflame-forge:8100` | Only for SaaS
 `HIGHFLAME_AUTH_PROVIDER` | Which identity provider Studio uses for login: `clerk` or `oidc` (Auth.js with a generic OIDC IdP such as Keycloak). Read at container runtime, so one image serves both. `clerk` requires `CLERK_SECRET_KEY`. `oidc` requires `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` and `AUTH_SECRET`. Unset or unrecognised values fall back to Clerk. | `clerk` | -
 `HIGHFLAME_OAUTH_SIGNING_KEY_PATH` | Server-only path to Studio's own ECDSA P-256 private key (PKCS#8 PEM). Studio signs its RFC 7523 assertions to AuthN with it and publishes the matching public key at `/.well-known/jwks.json`. The helm charts mount the `highflame-oauth-keys` secret (`oauth-signing-key.pem`) at the default path. Needed together with `HIGHFLAME_OAUTH_SIGNING_KEY_ID`; unrelated to AuthN's RSA JWT key. | `/app/keys/oauth/oauth-signing-key.pem` | -
 `CLERK_SECRET_KEY` | Server-only Clerk backend secret (`sk_...`). Required when `HIGHFLAME_AUTH_PROVIDER=clerk`: the Clerk middleware uses it to verify sessions, and Studio's `/__clerk` Frontend API proxy uses it too. Not needed for `oidc`. | nil | _Will be shared by a Highflame representative_

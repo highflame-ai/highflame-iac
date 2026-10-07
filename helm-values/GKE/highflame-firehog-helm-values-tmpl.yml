@@ -56,7 +56,7 @@ gceIngress:
         name: "highflame-cloud-security-policy"
 
 image:
-  repository: "ghcr.io/highflame-ai/release-highflame-firehog"
+  repository: "ghcr.io/highflame-ai/highflame-firehog"
   pullPolicy: Always
   tag: ${IMAGE_TAG}
 
