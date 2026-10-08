@@ -124,10 +124,10 @@ oauth_clients:
   # (jwt_assertion_resolver.go: "scopes would let a trusted intermediary widen
   # authority"), so this list is the only source.
   #
-  # No scopes (forge#247): no service reads a scope on a droneship token.
-  # Keep "scopes: []" written out: a missing key loads as nil, and AuthN
-  # then keeps the old stored list. Do not reuse a sandbox:* name for a new
-  # check: refresh copies scopes from the old token, so old sessions hold them.
+  # account:read only (forge#247): no service checked the old sandbox:* scopes.
+  # Do not empty this list: zeroid reads an empty registration as "no
+  # ceiling", not "no scope". Do not reuse a sandbox:* name for a new check:
+  # refresh copies scopes from the old token, so old sessions still hold them.
   #
   # redirect_uris: ONE loopback entry is enough. zeroid's redirectURIAllowed
   # implements RFC 8252 loopback flexibility — for a loopback candidate it
@@ -143,7 +143,7 @@ oauth_clients:
     grant_types: [authorization_code, refresh_token]
     access_token_ttl: 3600      # 1 hour — short; the CLI silently refreshes
     refresh_token_ttl: 2592000  # 30 days
-    scopes: []
+    scopes: [account:read]
     redirect_uris:
       - http://127.0.0.1:0/oauth/callback
       - http://localhost:0/oauth/callback
