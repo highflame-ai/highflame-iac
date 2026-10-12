@@ -35,6 +35,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_PROVIDERS_CLERK_CONFIG_SECRET` | Clerk backend secret key (`sk_...`). Admin uses it to verify Studio's Clerk session tokens and to sync org and super-admin roles back to Clerk. With the shipped config, where Clerk is the only login provider, Admin won't start if this is empty. Use the same Clerk instance as Studio's `CLERK_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | HS256 secret Admin uses to verify the `x-javelin-token` JWT (the older CLI/API token path), from which it reads the account, gateway and namespace. If it is wrong or unset, requests using `x-javelin-token` get 401. Keep it identical to AuthN's and Studio's `HIGHFLAME_AUTH_JWT_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_DEPLOYMENT_MODEL` | Highflame platform deployment model type | `self_managed` | `self_managed` or `saas`
+`HIGHFLAME_TENANCY_DOMAIN_JOIN_ENABLED` | Users get auto-assigned by email domain to org when they sign-up | `false` | `true` or `false`
 
 ### highflame-authn
 
