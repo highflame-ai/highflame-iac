@@ -47,8 +47,9 @@ auth:
   # is plaintext http, which is only safe inside the compose network.
   #
   # RFC 7523 JWT-bearer principal resolver. Without trusted_issuers the resolver
-  # is not registered and /oauth2/authorize accepts only the api_key principal,
-  # so Studio's CLI-auth assertion is rejected and every `overwatch login`
+  # is not registered and /oauth2/authorize has no way to authenticate a
+  # person (it refuses every api_key, highflame-authn#278), so Studio's
+  # CLI-auth assertion is rejected and every `overwatch login`
   # against the local stack dies at the token exchange with "invalid
   # authorization code". Studio stamps iss=highflame-studio (packages/auth
   # cli-auth assertion.ts) and serves its public JWK at /.well-known/jwks.json.
