@@ -725,6 +725,10 @@ services:
       AZURE_OPENAI_ENDPOINT: ${HIGHFLAME_AZURE_OPENAI_ENDPOINT:-http://azure.disabled.invalid}
       BEDROCK_ENDPOINT: ${HIGHFLAME_BEDROCK_ENDPOINT:-http://bedrock.disabled.invalid}
       HIGHFLAME_LLM_API_KEY: ${HIGHFLAME_LLM_API_KEY:-}
+      # firehog fetches its LLM price list from raw.githubusercontent.com every
+      # 24h, and also at start from highflame-firehog #679 on. 0 turns the fetch
+      # off and uses the list built into the image; no-egress.sh check 7 requires it.
+      LLM_PRICE_REFRESH_HOURS: ${HIGHFLAME_LLM_PRICE_REFRESH_HOURS:-0}
     volumes:
       # The RENDERED config, from secrets/. Firehog does NOT expand ${VAR} in its
       # config file — the release build takes the literal string and panics with

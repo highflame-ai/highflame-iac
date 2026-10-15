@@ -104,7 +104,7 @@ evidence for, each of:
 6. The one intended egress points at _your_ LLM, and it prints the value so you
    can confirm it
 7. Every LLM provider endpoint is explicitly pinned, none left to a public
-   default
+   default, and firehog's LLM price list fetch from GitHub is off
 
 A check it cannot complete is reported as **WARN / unproven**, never as a pass.
 The report is plain text, meant to be attached to your own review.
