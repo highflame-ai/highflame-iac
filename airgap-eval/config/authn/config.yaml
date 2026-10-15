@@ -46,12 +46,15 @@ auth:
   # takes account_id/project_id/sub verbatim from the assertion), and the JWKS URL
   # is plaintext http, which is only safe inside the compose network.
   #
-  # RFC 7523 JWT-bearer principal resolver. Without trusted_issuers the resolver
-  # is not registered and /oauth2/authorize accepts only the api_key principal,
-  # so Studio's CLI-auth assertion is rejected and every `overwatch login`
-  # against the local stack dies at the token exchange with "invalid
-  # authorization code". Studio stamps iss=highflame-studio (packages/auth
-  # cli-auth assertion.ts) and serves its public JWK at /.well-known/jwks.json.
+  # RFC 7523 JWT-bearer principal resolver. AuthN is the only authorization
+  # server and has no login screen: /oauth2/authorize sends the browser to
+  # Studio's /cli-auth page, and Studio returns a signed assertion naming the
+  # user. Without trusted_issuers the resolver is not registered, so AuthN
+  # never redirects to Studio, does not serve or advertise its public client
+  # registration endpoint, and every interactive login (`overwatch login`,
+  # device login, MCP clients) fails. Studio stamps iss=highflame-studio
+  # (packages/auth cli-auth assertion.ts) and serves its public JWK at
+  # /.well-known/jwks.json.
   assertion_resolver:
     audience: highflame-authn
     jwks_refresh_interval: 1m
