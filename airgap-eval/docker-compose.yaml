@@ -361,6 +361,13 @@ services:
       HIGHFLAME_SECRETS_BACKEND: file
       HIGHFLAME_SECRETS_FILE_PATH: /var/lib/highflame-authn/secrets
       HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS: 'true'
+      # AuthN's issuer: the `iss` on every token AND the base of every OAuth
+      # endpoint it advertises (authorize, token, device, registration). Clients
+      # on other machines open those URLs, so it is this host's external origin,
+      # served by nginx — the same origin as Studio, never a container name.
+      # Shield's HIGHFLAME_AUTH_JWT_ISSUER below and Firehog's rendered config
+      # carry the identical value; see config/authn/config.yaml.
+      HIGHFLAME_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
       # Studio's origin, REQUIRED by AuthN (highflame-authn#218): it derives the
       # device-login consent page (/device) and the MCP OAuth callback from it.
       # Kept identical to Studio's NEXT_PUBLIC_APP_URL below. Over plain http
@@ -510,11 +517,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       REDIS_HOST: highflame-redis
       HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
-      # Issuer Shield expects on the RS256 tokens Admin mints. Must match what
-      # AuthN actually stamps, or every authenticated request to Shield fails
-      # issuer validation — the same class of mismatch as the Keycloak `iss`
-      # problem, one layer in.
-      HIGHFLAME_AUTH_JWT_ISSUER: ${HIGHFLAME_AUTH_JWT_ISSUER:-http://highflame-authn:8051}
+      # Issuer Shield expects on the RS256 tokens AuthN mints. Must match what
+      # AuthN actually stamps (its HIGHFLAME_ISSUER above), or every
+      # authenticated request to Shield fails issuer validation — the same class
+      # of mismatch as the Keycloak `iss` problem, one layer in. Built from the
+      # same expression rather than read from .env, so the two cannot drift.
+      HIGHFLAME_AUTH_JWT_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
       # Shared secret for the Shield -> detector-model calls. Local-only here,
       # since the models run in this stack.
       HIGHFLAME_MODELS_SECRET: ${HIGHFLAME_MODELS_SECRET:?HIGHFLAME_MODELS_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}

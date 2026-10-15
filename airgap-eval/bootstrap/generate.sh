@@ -190,6 +190,15 @@ set_env HIGHFLAME_MODELS_SECRET 32
 # name, which would pull bootstrap back into the stack's project. That value is
 # the name docker-compose.yaml already declares, so dropping the line changes
 # nothing for the stack. A different, deliberately chosen name is left alone.
+# An older .env pins Shield's issuer to AuthN's container name. Compose no
+# longer reads it (Shield's issuer is now built from HIGHFLAME_HOST_IP, the same
+# as AuthN's), so the line is dead; it is removed so nobody edits it expecting an
+# effect. Only that exact old default is dropped.
+if grep -qE '^[[:space:]]*(export[[:space:]]+)?HIGHFLAME_AUTH_JWT_ISSUER[[:space:]]*=[[:space:]]*http://highflame-authn:8051[[:space:]]*$' .env; then
+  grep -vE '^[[:space:]]*(export[[:space:]]+)?HIGHFLAME_AUTH_JWT_ISSUER[[:space:]]*=' .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp
+  echo "  removed   HIGHFLAME_AUTH_JWT_ISSUER (AuthN's issuer now comes from HIGHFLAME_HOST_IP)"
+fi
+
 if grep -qE '^[[:space:]]*(export[[:space:]]+)?COMPOSE_PROJECT_NAME[[:space:]]*=[[:space:]]*highflame-airgap[[:space:]]*$' .env; then
   grep -vE '^[[:space:]]*(export[[:space:]]+)?COMPOSE_PROJECT_NAME[[:space:]]*=' .env > .env.tmp && cat .env.tmp > .env && rm -f .env.tmp
   echo "  removed   COMPOSE_PROJECT_NAME=highflame-airgap (docker-compose.yaml names the stack)"
@@ -294,8 +303,13 @@ mkdir -p secrets/firehog
 # config with a literal ${...} in it — which is precisely the failure this step
 # exists to prevent (firehog does not expand env vars itself and panics on the
 # literal string).
+# HIGHFLAME_AUTHN_ISSUER is the external origin computed above: AuthN's issuer
+# (docker-compose.yaml builds HIGHFLAME_ISSUER from the same two values), which
+# Firehog both pins on tokens and advertises to MCP clients as their
+# authorization server.
 sed -e "s|\${HIGHFLAME_SHIELD_URL}|${SHIELD_URL}|g" \
     -e "s|\${HIGHFLAME_INTERNAL_SERVICE_SECRET}|${HIGHFLAME_INTERNAL_SERVICE_SECRET}|g" \
+    -e "s|\${HIGHFLAME_AUTHN_ISSUER}|${EXTERNAL_URL}|g" \
     "config/firehog/config.yaml.template" > "secrets/firehog/config.yaml"
 
 if grep -qE '\$\{[A-Z_]+\}' "secrets/firehog/config.yaml"; then
