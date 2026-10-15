@@ -398,7 +398,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-hdr "7. Every LLM provider endpoint is pinned, and none of them is public"
+hdr "7. Every LLM provider endpoint is pinned, none is public, and the price fetch is off"
 # The check that would have caught the one this script missed.
 #
 # Checks 1-6 read configuration, and configuration is exactly where this problem
@@ -468,6 +468,16 @@ else
     bad "a provider endpoint points at a public LLM service"
   else
     ok "no provider endpoint names a public LLM service"
+  fi
+
+  # The same rule for the price list: unset means firehog fetches it from
+  # GitHub. firehog reads the value as a number, so any all-zero value is off.
+  price_refresh=$(printf '%s\n' "$FH_ENV" | sed -n "s|^LLM_PRICE_REFRESH_HOURS=||p" | head -1)
+  if printf '%s' "$price_refresh" | grep -qE '^\+?0+$'; then
+    ok "the LLM price list fetch from GitHub is off (LLM_PRICE_REFRESH_HOURS=0)"
+  else
+    say "  LLM_PRICE_REFRESH_HOURS=${price_refresh:-<unset>}"
+    bad "firehog will fetch its LLM price list from GitHub; set LLM_PRICE_REFRESH_HOURS=0"
   fi
 fi
 
