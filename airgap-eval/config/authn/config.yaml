@@ -75,7 +75,8 @@ backchannel:
     cacertpath: ""  # Env var REDIS_CACERT overrides
 
 # OAuth clients to seed on startup (idempotent).
-# Public PKCE clients used by Studio's authorization_code flow.
+# Public PKCE clients that sign in through AuthN's authorization_code flow
+# (Studio only hosts the sign-in page).
 oauth_clients:
   # Shield's CIBA client_id — AuthN's /oauth2/bc-authorize hard-fails
   # on unknown client_id (zeroid invalid_client). Mirror of the
