@@ -148,6 +148,38 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `QUOTA_ENABLED` | Turns on per-tenant requests-per-minute and tokens-per-minute limits at the gateway. Counters are kept in Redis (`REDIS_HOST`, `REDIS_PORT` and optionally `REDIS_USER`, `REDIS_PASS`, `REDIS_TLS`). If Redis is unreachable at boot, limits are not enforced (fail-open); an unparseable value is ignored. | `true` | `true` or `false`
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret Firehog sends on internal calls to Shield, Admin and AuthN; it also protects Firehog's `/version` endpoint. It must be the same value configured on every other Highflame service, or those internal calls are rejected. | nil | _Will be shared by a Highflame representative_
 
+### highflame-forge
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`FORGE_HOST` | Address the Forge (Agent Sandbox) API listens on. | `0.0.0.0` | -
+`FORGE_PORT` | Port the Forge API listens on. The orchestrators for Claude Code routines call the service back on it, so it must be a fixed port when routines are on. | `8100` | -
+`FORGE_AUTH_MODE` | Not read by Forge: it always verifies RS256 tokens against `HIGHFLAME_AUTH_JWKS_URL`, and there is no other mode. Still set in the Helm values; safe to remove. | nil | -
+`FORGE_BACKEND` | Default compute backend that sandboxes are created on. Deployed tiers run on Modal. | `local` | `modal`, `local`
+`HIGHFLAME_AUTH_JWT_ISSUER` | Public `iss` of AuthN tokens for this tier. A token from another issuer is rejected. | nil | `https://<<auth_domain_name>>`
+`HIGHFLAME_AUTH_JWKS_URL` | AuthN JWKS endpoint used to verify caller tokens; the single trust root. | `http://highflame-authn:8051/.well-known/jwks.json` | -
+`HIGHFLAME_AUTHN_URL` | AuthN base URL. Forge reads the launching user's stored GitHub token from it to clone a private repository. | `http://highflame-authn:8051` | -
+`HIGHFLAME_AUTHZ_URL` | AuthZ base URL for the Cedar policy-bundle sync. Forge refuses to start without it. | `http://highflame-authz:8050` | -
+`HIGHFLAME_ADMIN_URL` | Admin base URL, for MCP server lookup at launch and for plan limits. | `http://highflame-admin:8040` | -
+`HIGHFLAME_OBSERVATORY_URL` | Observatory base URL, for per-sandbox spend and monthly sandbox hours. | `http://highflame-observatory:8090` | -
+`OTEL_EXPORTER_OTLP_ENDPOINT` | Collector that sandbox lifecycle spans are sent to. | `http://highflame-collector:4317` | -
+`OTEL_SERVICE_NAME` | Service name on Forge's spans. | `forge` | -
+`HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared service-to-service secret, used for the ZeroID mint, AuthN and Admin calls. | nil | _Will be shared by a Highflame representative_
+`MODAL_TOKEN_ID` | Modal token id of the workspace sandboxes are created in. | nil | Only for SaaS
+`MODAL_TOKEN_SECRET` | Modal token secret of the workspace sandboxes are created in. | nil | Only for SaaS
+`FORGE_MODAL_REGISTRY_SECRET` | Name of the Modal Secret holding GHCR credentials, so Modal can pull the private harness images. | nil | Only for SaaS
+`FORGE_CLAUDE_CODE_IMAGE` | Sandbox image for Claude Code, and for the runners of Claude Code routines. Pinned per tier and bumped by the image workflow. | `ghcr.io/highflame-ai/agent-workspace-claude-code:dev` | -
+`FORGE_CODEX_IMAGE` | Sandbox image for the OpenAI Codex CLI. | `ghcr.io/highflame-ai/agent-workspace-codex:dev` | -
+`FORGE_PYTHON_IMAGE` | Sandbox image for Python and LangGraph agents. | `ghcr.io/highflame-ai/agent-workspace-python:dev` | -
+`FORGE_CODEOID_IMAGE` | Sandbox image for codeoid. | `ghcr.io/highflame-ai/agent-workspace-codeoid:dev` | -
+`FORGE_MINT_CODEOID_KEY` | Mint a scoped ZeroID identity per sandbox instead of injecting a standing key. Required when the LLM gateway is configured. | `false` | `true` or `false`
+`FORGE_CODEOID_EMBED_ALLOWED_ORIGINS` | Studio origin allowed to frame codeoid's web UI. | nil | `https://<<studio_domain_name>>`
+`HIGHFLAME_FIREHOG_URL` | AI gateway origin that sandbox model calls are routed through. | nil | `https://<<gateway_domain_name>>`
+`FORGE_LLM_GATEWAY_MODE` | Who decides whether a sandbox's model calls go through the gateway. Deployed tiers use `user-choice` (set in the image's config). | `always` | `always`, `user-choice`, `off`
+`FORGE_PUBLIC_URL` | Forge's public URL, which a sandbox uses to reach Forge, for example to report agent state. | nil | `https://<<api_domain_name>>`
+`FORGE_ROUTINES_ENABLED` | Run Claude Code routines: one Anthropic self-hosted-runner orchestrator per registered environment, inside Forge, each launching a sandbox per queued Claude session. Needs `FORGE_ROUTINES_SECRET_KEY`. | `false` | `true` or `false`
+`FORGE_ROUTINES_SECRET_KEY` | Fernet key that customers' Claude self-hosted environment keys are encrypted with at rest. Required when routines are on, or Forge refuses to start. Keep it stable: changing it orphans every stored key. One per tier, from AWS Secrets Manager (`gitops-highflame-forge`). | nil | Output of `Fernet.generate_key()`
+
 ### highflame-guard-*
 
 Variable Name | Variable Value | Default Value | Acceptable Value
