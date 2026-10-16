@@ -482,7 +482,7 @@ services:
       # Platform super-admin, by IdP subject. This is the uuid pinned for the
       # evaluator in the imported realm — the same one the seed job uses.
       #
-      # It grants a user_global_roles row, NOT an account_members row, so it does
+      # It grants a global_roles row, NOT an account_members row, so it does
       # not by itself make login work: Admin's oidc_session grant authorizes
       # against account_members. The seed job handles that half.
       HIGHFLAME_BOOTSTRAP_SUPER_ADMIN: ${HIGHFLAME_EVALUATOR_SUB:-0f5d0c7e-26bd-437e-93d2-6ea988f1292e}
