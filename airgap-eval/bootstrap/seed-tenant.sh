@@ -24,16 +24,17 @@
 # 403 access_denied and there is no in-product way to grant themselves one.
 #
 # In SaaS this never surfaces because creating a Clerk organization drives
-# provisioning. With a generic OIDC provider nothing does.
+# provisioning. With a generic OIDC provider nothing does, so this job does.
 #
-# Admin's `bootstrap_super_admins` config does NOT close this: it grants a row in
-# `global_roles`, whereas the grant checks `account_members`. So the first
-# membership has to be created out of band, which is what this does.
+# Admin's `bootstrap_super_admins` config does not close this by itself: it
+# grants a row in `global_roles`, whereas the grant checks `account_members`.
+# What it does is make the evaluator a platform operator, and an operator may
+# provision an organization naming its owner (ADR 0044 D3). Provisioning then
+# writes the evaluator's `owner` membership in the same transaction as the org,
+# which is the first membership.
 #
-# Upstream fix worth making (not done here — changing an authorization gate is
-# not an evaluation-harness decision): either have the oidc_session grant accept
-# a global super-admin as an alternative to account membership, or give Admin a
-# first-run provisioning path for OIDC deployments.
+# The seed's own membership insert, further down, only does anything against
+# an Admin that predates owner-at-provisioning.
 #
 # Idempotent: it runs on every `up`, against a fresh or an already-seeded stack.
 set -euo pipefail
@@ -204,20 +205,25 @@ my $provision = {
     org_name      => 'Evaluation',
     owner_user_id => $ENV{HIGHFLAME_OWNER_USER_ID},
 };
+# Only Admin's owner_required refusal is the race; any other 403 (an issuer
+# or organization mismatch) is a real misconfiguration and fails at once.
 my $deadline = time + 60;
+my $awaiting_operator;
 while (1) {
     ($status, $raw) = call(
         'POST', '/v1/admin/tenancy/provision',
         token => $token,
         json  => $provision,
     );
-    last unless $status == 403 && time < $deadline;
-    print STDERR "  provisioning refused (403); waiting for Admin's bootstrap operator grant\n";
+    my $code = eval { decode_json($raw)->{code} } // '';
+    $awaiting_operator = $status == 403 && $code eq 'owner_required';
+    last unless $awaiting_operator && time < $deadline;
+    print STDERR "  provisioning refused (owner_required); waiting for Admin's bootstrap operator grant\n";
     sleep 5;
 }
 fail("provisioning still refused after 60 s: 403 " . substr($raw, 0, 300)
      . "; is HIGHFLAME_BOOTSTRAP_SUPER_ADMIN the evaluator's subject? docker compose logs highflame-admin")
-    if $status == 403;
+    if $awaiting_operator;
 fail("provisioning failed: $status " . substr($raw, 0, 300))
     unless $status == 200 || $status == 201;
 

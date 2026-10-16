@@ -479,13 +479,15 @@ services:
       HIGHFLAME_OIDC_AUDIENCE: highflame-studio
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       HIGHFLAME_OBSERVATORY_URL: http://highflame-observatory:8090
-      # Platform super-admin, by IdP subject. This is the uuid pinned for the
-      # evaluator in the imported realm — the same one the seed job uses.
+      # Platform operator, by IdP subject: the evaluator. A literal, not an
+      # override, because it must equal the user id pinned in
+      # config/keycloak/highflame-realm.json and EVALUATOR_SUB in
+      # bootstrap/seed-tenant.sh. Provisioning from an OIDC session requires
+      # the operator, so a different value makes the seed fail with 403.
       #
-      # It grants a global_roles row, NOT an account_members row, so it does
-      # not by itself make login work: Admin's oidc_session grant authorizes
-      # against account_members. The seed job handles that half.
-      HIGHFLAME_BOOTSTRAP_SUPER_ADMIN: ${HIGHFLAME_EVALUATOR_SUB:-0f5d0c7e-26bd-437e-93d2-6ea988f1292e}
+      # It grants a global_roles row, NOT an account_members row; the
+      # evaluator's membership is written when the seed provisions the org.
+      HIGHFLAME_BOOTSTRAP_SUPER_ADMIN: 0f5d0c7e-26bd-437e-93d2-6ea988f1292e
     volumes:
       - ./config/admin/config.yaml:/app/config.yaml.template:ro
     depends_on:

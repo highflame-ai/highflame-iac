@@ -143,8 +143,9 @@ tenancy:
   # Worth knowing what this does and does not do: it grants a row in
   # global_roles, NOT a row in account_members. Admin's oidc_session grant
   # authorizes the caller's account against account_members, so this alone does
-  # not let anyone log in on a fresh install. The seed job creates
-  # the first membership; this only confers platform super-admin on top.
+  # not let anyone log in. What it does is make the evaluator a platform
+  # operator, which is what lets the seed job provision the organization with
+  # the evaluator as its owner; provisioning writes that first membership.
   bootstrap_super_admins:
     - "${HIGHFLAME_BOOTSTRAP_SUPER_ADMIN}"
 
