@@ -124,12 +124,9 @@ points an agent at this stack's gateway, and walks through the
 tenancy authorisation gate, gateway inspection, PII detection and the resulting
 telemetry — all against this stack, with no internet.
 
-The notebook is the intended interface for this evaluation, not a convenience
-wrapper around the UI. See the Studio limitation under "Known limitations": the
-dashboard does not render on an OIDC build yet, so the API and gateway are what
-there is to evaluate. For a technical assessment of how the platform deploys,
-authorises and enforces, that is arguably the more useful surface anyway — but it
-is a limitation, not a design preference, and it is stated as one.
+The notebook exercises the API and gateway directly, which is the most useful surface for a technical assessment of how the platform deploys, authorises and enforces.
+Studio also runs on this stack: sign in at `http://<HIGHFLAME_HOST_IP>` with the same Keycloak user.
+On an OIDC build the Members page is a read-only list with no invites.
 
 ---
 
@@ -151,8 +148,6 @@ and an unset value is the one mistake here that fails with a confusing
 authentication error rather than a connection error.
 
 Mint the key with `POST /v1/admin/service-keys`, the way the notebook does.
-Studio's API key screen is part of the dashboard that does not render on an OIDC
-build.
 
 ### One limit, stated up front
 

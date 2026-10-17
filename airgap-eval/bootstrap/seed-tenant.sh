@@ -24,16 +24,17 @@
 # 403 access_denied and there is no in-product way to grant themselves one.
 #
 # In SaaS this never surfaces because creating a Clerk organization drives
-# provisioning. With a generic OIDC provider nothing does.
+# provisioning. With a generic OIDC provider nothing does, so this job does.
 #
-# Admin's `bootstrap_super_admins` config does NOT close this: it grants a row in
-# `user_global_roles`, whereas the grant checks `account_members`. So the first
-# membership has to be created out of band, which is what this does.
+# Admin's `bootstrap_super_admins` config does not close this by itself: it
+# grants a row in `global_roles`, whereas the grant checks `account_members`.
+# What it does is make the evaluator a platform operator, and an operator may
+# provision an organization naming its owner (ADR 0044 D3). Provisioning then
+# writes the evaluator's `owner` membership in the same transaction as the org,
+# which is the first membership.
 #
-# Upstream fix worth making (not done here — changing an authorization gate is
-# not an evaluation-harness decision): either have the oidc_session grant accept
-# a global super-admin as an alternative to account membership, or give Admin a
-# first-run provisioning path for OIDC deployments.
+# The seed's own membership insert, further down, only does anything against
+# an Admin that predates owner-at-provisioning.
 #
 # Idempotent: it runs on every `up`, against a fresh or an already-seeded stack.
 set -euo pipefail
@@ -122,6 +123,7 @@ echo "provisioning the organization and its default project..."
 PROVISION_OUT=$(
   HIGHFLAME_ACCOUNT_ID="$ACCOUNT_ID" \
   HIGHFLAME_AUTH_ORG_ID="$AUTH_ORG_ID" \
+  HIGHFLAME_OWNER_USER_ID="$EVALUATOR_SUB" \
   perl - <<'PERL'
 use strict;
 use warnings;
@@ -187,16 +189,41 @@ fail('no id_token in the keycloak response') unless $token;
 # account_id is pinned so the docs and the notebook can name it. The org and
 # project UUIDs are the product's to choose. auth_provider says who actually
 # authenticated the caller, rather than letting it default to Clerk.
-($status, $raw) = call(
-    'POST', '/v1/admin/tenancy/provision',
-    token => $token,
-    json  => {
-        auth_org_id   => $ENV{HIGHFLAME_AUTH_ORG_ID},
-        auth_provider => 'oidc',
-        account_id    => $ENV{HIGHFLAME_ACCOUNT_ID},
-        org_name      => 'Evaluation',
-    },
-);
+#
+# owner_user_id names the evaluator as the organization's owner, written by
+# provisioning in the same transaction as the org (ADR 0044 D3). Admin allows
+# an OIDC caller to provision only as a platform operator, which the evaluator
+# is through bootstrap_super_admins.
+#
+# Admin grants that bootstrap role in the background after it starts serving,
+# so a provision that races it gets 403 even though /health answered. Retry a
+# 403 every 5 s for up to 60 s; any other failure is real and fails at once.
+my $provision = {
+    auth_org_id   => $ENV{HIGHFLAME_AUTH_ORG_ID},
+    auth_provider => 'oidc',
+    account_id    => $ENV{HIGHFLAME_ACCOUNT_ID},
+    org_name      => 'Evaluation',
+    owner_user_id => $ENV{HIGHFLAME_OWNER_USER_ID},
+};
+# Only Admin's owner_required refusal is the race; any other 403 (an issuer
+# or organization mismatch) is a real misconfiguration and fails at once.
+my $deadline = time + 60;
+my $awaiting_operator;
+while (1) {
+    ($status, $raw) = call(
+        'POST', '/v1/admin/tenancy/provision',
+        token => $token,
+        json  => $provision,
+    );
+    my $code = eval { decode_json($raw)->{code} } // '';
+    $awaiting_operator = $status == 403 && $code eq 'owner_required';
+    last unless $awaiting_operator && time < $deadline;
+    print STDERR "  provisioning refused (owner_required); waiting for Admin's bootstrap operator grant\n";
+    sleep 5;
+}
+fail("provisioning still refused after 60 s: 403 " . substr($raw, 0, 300)
+     . "; is HIGHFLAME_BOOTSTRAP_SUPER_ADMIN the evaluator's subject? docker compose logs highflame-admin")
+    if $awaiting_operator;
 fail("provisioning failed: $status " . substr($raw, 0, 300))
     unless $status == 200 || $status == 201;
 
@@ -224,9 +251,10 @@ fi
 echo "  organization    ${ORG_UUID}"
 echo "  default project ${PROJECT_UUID}"
 
-# The membership that makes login possible. source='oidc' records provenance
-# distinctly from clerk/scim/manual/mapping, so reconciliation can tell where
-# the row came from.
+# The membership that makes login possible. On a fresh install provisioning
+# has already written it (owner, source=manual), so this insert is a no-op. It
+# stays for a stack whose Admin predates owner-at-provisioning; on an upgraded
+# install the role backfill promotes the admin/oidc row it wrote to the owner.
 #
 # DO NOTHING on conflict, because this now runs on every `up`. Re-asserting the
 # row each time would quietly re-activate an evaluator an operator had
