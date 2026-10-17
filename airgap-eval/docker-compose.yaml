@@ -479,6 +479,10 @@ services:
       HIGHFLAME_OIDC_AUDIENCE: highflame-studio
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       HIGHFLAME_OBSERVATORY_URL: http://highflame-observatory:8090
+      # The image's Deploy-Dockerfile ENV sets this to "free", which overrides config.yaml's enterprise tier.
+      HIGHFLAME_TENANCY_DEFAULT_ORG_TIER: enterprise
+      # The image ENV points this at highflame-discovery, which this stack does not run; empty leaves the proxy routes unregistered.
+      HIGHFLAME_DISCOVERY_URL: ""
       # Platform operator, by IdP subject: the evaluator. A literal, not an
       # override, because it must equal the user id pinned in
       # config/keycloak/highflame-realm.json and EVALUATOR_SUB in
