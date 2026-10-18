@@ -75,6 +75,8 @@ secrets:
   enabled: true
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+    # SCIM endpoint shown in Registry > Connections > Provision; keep equal to Admin's HIGHFLAME_SCIM_EXTERNAL_BASE_URL.
+    NEXT_PUBLIC_SCIM_BASE_URL: "https://studio.example.com/scim/v2"
 
 volumes:
   - name: oauth-keys
