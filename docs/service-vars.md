@@ -37,6 +37,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | HS256 secret Admin uses to verify the `x-javelin-token` JWT (the older CLI/API token path), from which it reads the account, gateway and namespace. If it is wrong or unset, requests using `x-javelin-token` get 401. Keep it identical to AuthN's and Studio's `HIGHFLAME_AUTH_JWT_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_DEPLOYMENT_MODEL` | Highflame platform deployment model type | `self_managed` | `self_managed` or `saas`
 `HIGHFLAME_TENANCY_DOMAIN_JOIN_ENABLED` | Users get auto-assigned by email domain to org when they sign-up | `false` | `true` or `false`
+`HIGHFLAME_TRUSTED_ISSUERS_VERIFICATION_REDIRECT_ORIGINS` | comma-separated list of domains for trusted verification redirect origins | nil | example : `https://<<studio_domain_name>>`
 
 ### highflame-authn
 
