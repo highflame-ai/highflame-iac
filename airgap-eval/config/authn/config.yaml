@@ -25,13 +25,26 @@ keys:
 
 # Token issuance settings
 token:
-  # MUST match Shield's HIGHFLAME_AUTH_JWT_ISSUER in docker-compose.yaml. This is
-  # the issuer stamped into every RS256 token AuthN mints, and Shield pins it.
-  # The upstream default is http://localhost:8051, which is correct for a laptop
-  # and wrong here: Shield resolves AuthN by service name, so a localhost issuer
-  # means Shield rejects every token it is handed. Same failure mode as the
-  # Keycloak issuer mismatch, one layer further in.
-  issuer: http://highflame-authn:8051
+  # No `issuer` here: docker-compose.yaml sets it as HIGHFLAME_ISSUER, built
+  # from HIGHFLAME_HOST_IP the same way as every other browser-facing URL —
+  # ${CONN_PROTOCOL}://${HIGHFLAME_HOST_IP}, the single origin nginx serves.
+  #
+  # The issuer is more than the `iss` claim. AuthN is the OAuth authorization
+  # server, and its discovery document builds every endpoint from the issuer
+  # ({issuer}/oauth2/authorize, /oauth2/token, /oauth2/device_authorization,
+  # /oauth2/public/register). A browser, a CLI on someone's laptop or an MCP
+  # client has to be able to open those URLs, so the issuer must be the address
+  # OTHER machines reach this host by. It used to be http://highflame-authn:8051,
+  # a name that resolves only inside the compose network: tokens verified, but
+  # every interactive login and MCP OAuth discovery pointed clients at a host
+  # they could not reach, and Firehog refused to mirror the metadata because
+  # its configured authorization server (http://localhost:8051) did not match.
+  #
+  # The containers that pin it — Shield (HIGHFLAME_AUTH_JWT_ISSUER) and Firehog
+  # (oauth.jwt_issuer, oauth.authorization_server) — get the same value. They
+  # still fetch AuthN's JWKS by container name; only Firehog's metadata mirror
+  # and AuthN's own management-token verifier fetch through the issuer URL,
+  # reaching nginx via the host address the way Admin already reaches Keycloak.
   base_url: http://localhost:8051
   default_ttl: 3600
   max_ttl: 7776000  # 90 days — CLI authorization_code tokens need long TTL
@@ -46,12 +59,15 @@ auth:
   # takes account_id/project_id/sub verbatim from the assertion), and the JWKS URL
   # is plaintext http, which is only safe inside the compose network.
   #
-  # RFC 7523 JWT-bearer principal resolver. Without trusted_issuers the resolver
-  # is not registered and /oauth2/authorize accepts only the api_key principal,
-  # so Studio's CLI-auth assertion is rejected and every `overwatch login`
-  # against the local stack dies at the token exchange with "invalid
-  # authorization code". Studio stamps iss=highflame-studio (packages/auth
-  # cli-auth assertion.ts) and serves its public JWK at /.well-known/jwks.json.
+  # RFC 7523 JWT-bearer principal resolver. AuthN is the only authorization
+  # server and has no login screen: /oauth2/authorize sends the browser to
+  # Studio's /cli-auth page, and Studio returns a signed assertion naming the
+  # user. Without trusted_issuers the resolver is not registered, so AuthN
+  # never redirects to Studio, does not serve or advertise its public client
+  # registration endpoint, and every interactive login (`overwatch login`,
+  # device login, MCP clients) fails. Studio stamps iss=highflame-studio
+  # (packages/auth cli-auth assertion.ts) and serves its public JWK at
+  # /.well-known/jwks.json.
   assertion_resolver:
     audience: highflame-authn
     jwks_refresh_interval: 1m
@@ -75,7 +91,8 @@ backchannel:
     cacertpath: ""  # Env var REDIS_CACERT overrides
 
 # OAuth clients to seed on startup (idempotent).
-# Public PKCE clients used by Studio's authorization_code flow.
+# Public PKCE clients that sign in through AuthN's authorization_code flow
+# (Studio only hosts the sign-in page).
 oauth_clients:
   # Shield's CIBA client_id — AuthN's /oauth2/bc-authorize hard-fails
   # on unknown client_id (zeroid invalid_client). Mirror of the
@@ -192,8 +209,9 @@ oauth_clients:
 #   - issuer: https://highflame-demo.okta.com/oauth2/default            # TODO: your Okta org issuer
 #     jwks_uri: https://highflame-demo.okta.com/oauth2/default/v1/keys  # TODO: <issuer>/v1/keys
 #     # aud the Okta XAA resource app stamps on the ID-JAG for ZeroID-the-AS.
-#     # Must equal this deployment's token.issuer (http://localhost:8051 locally).
-#     audience: http://localhost:8051
+#     # Must equal this deployment's issuer: ${CONN_PROTOCOL}://${HIGHFLAME_HOST_IP}
+#     # (HIGHFLAME_ISSUER in docker-compose.yaml), written out literally here.
+#     audience: http://<HIGHFLAME_HOST_IP>
 #     algorithms: [RS256]
 #     # Okta clamps refresh; 1h keeps placeholder JWKS-fetch noise low pre-activation.
 #     jwks_cache_ttl: 1h

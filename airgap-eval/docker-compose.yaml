@@ -361,6 +361,13 @@ services:
       HIGHFLAME_SECRETS_BACKEND: file
       HIGHFLAME_SECRETS_FILE_PATH: /var/lib/highflame-authn/secrets
       HIGHFLAME_DOWNSTREAM_ALLOW_PRIVATE_NETWORKS: 'true'
+      # AuthN's issuer: the `iss` on every token AND the base of every OAuth
+      # endpoint it advertises (authorize, token, device, registration). Clients
+      # on other machines open those URLs, so it is this host's external origin,
+      # served by nginx — the same origin as Studio, never a container name.
+      # Shield's HIGHFLAME_AUTH_JWT_ISSUER below and Firehog's rendered config
+      # carry the identical value; see config/authn/config.yaml.
+      HIGHFLAME_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
       # Studio's origin, REQUIRED by AuthN (highflame-authn#218): it derives the
       # device-login consent page (/device) and the MCP OAuth callback from it.
       # Kept identical to Studio's NEXT_PUBLIC_APP_URL below. Over plain http
@@ -472,13 +479,19 @@ services:
       HIGHFLAME_OIDC_AUDIENCE: highflame-studio
       HIGHFLAME_AUTHN_URL: http://highflame-authn:8051
       HIGHFLAME_OBSERVATORY_URL: http://highflame-observatory:8090
-      # Platform super-admin, by IdP subject. This is the uuid pinned for the
-      # evaluator in the imported realm — the same one the seed job uses.
+      # The image's Deploy-Dockerfile ENV sets this to "free", which overrides config.yaml's enterprise tier.
+      HIGHFLAME_TENANCY_DEFAULT_ORG_TIER: enterprise
+      # The image ENV points this at highflame-discovery, which this stack does not run; empty leaves the proxy routes unregistered.
+      HIGHFLAME_DISCOVERY_URL: ""
+      # Platform operator, by IdP subject: the evaluator. A literal, not an
+      # override, because it must equal the user id pinned in
+      # config/keycloak/highflame-realm.json and EVALUATOR_SUB in
+      # bootstrap/seed-tenant.sh. Provisioning from an OIDC session requires
+      # the operator, so a different value makes the seed fail with 403.
       #
-      # It grants a user_global_roles row, NOT an account_members row, so it does
-      # not by itself make login work: Admin's oidc_session grant authorizes
-      # against account_members. The seed job handles that half.
-      HIGHFLAME_BOOTSTRAP_SUPER_ADMIN: ${HIGHFLAME_EVALUATOR_SUB:-0f5d0c7e-26bd-437e-93d2-6ea988f1292e}
+      # It grants a global_roles row, NOT an account_members row; the
+      # evaluator's membership is written when the seed provisions the org.
+      HIGHFLAME_BOOTSTRAP_SUPER_ADMIN: 0f5d0c7e-26bd-437e-93d2-6ea988f1292e
     volumes:
       - ./config/admin/config.yaml:/app/config.yaml.template:ro
     depends_on:
@@ -510,11 +523,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
       REDIS_HOST: highflame-redis
       HIGHFLAME_INTERNAL_SERVICE_SECRET: ${HIGHFLAME_INTERNAL_SERVICE_SECRET:?HIGHFLAME_INTERNAL_SERVICE_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
-      # Issuer Shield expects on the RS256 tokens Admin mints. Must match what
-      # AuthN actually stamps, or every authenticated request to Shield fails
-      # issuer validation — the same class of mismatch as the Keycloak `iss`
-      # problem, one layer in.
-      HIGHFLAME_AUTH_JWT_ISSUER: ${HIGHFLAME_AUTH_JWT_ISSUER:-http://highflame-authn:8051}
+      # Issuer Shield expects on the RS256 tokens AuthN mints. Must match what
+      # AuthN actually stamps (its HIGHFLAME_ISSUER above), or every
+      # authenticated request to Shield fails issuer validation — the same class
+      # of mismatch as the Keycloak `iss` problem, one layer in. Built from the
+      # same expression rather than read from .env, so the two cannot drift.
+      HIGHFLAME_AUTH_JWT_ISSUER: ${CONN_PROTOCOL:-http}://${HIGHFLAME_HOST_IP:?set HIGHFLAME_HOST_IP in .env, then run docker compose -f bootstrap.yaml run --rm bootstrap}
       # Shared secret for the Shield -> detector-model calls. Local-only here,
       # since the models run in this stack.
       HIGHFLAME_MODELS_SECRET: ${HIGHFLAME_MODELS_SECRET:?HIGHFLAME_MODELS_SECRET is empty - run docker compose -f bootstrap.yaml run --rm bootstrap}
@@ -725,6 +739,10 @@ services:
       AZURE_OPENAI_ENDPOINT: ${HIGHFLAME_AZURE_OPENAI_ENDPOINT:-http://azure.disabled.invalid}
       BEDROCK_ENDPOINT: ${HIGHFLAME_BEDROCK_ENDPOINT:-http://bedrock.disabled.invalid}
       HIGHFLAME_LLM_API_KEY: ${HIGHFLAME_LLM_API_KEY:-}
+      # firehog fetches its LLM price list from raw.githubusercontent.com every
+      # 24h, and also at start from highflame-firehog #679 on. 0 turns the fetch
+      # off and uses the list built into the image; no-egress.sh check 7 requires it.
+      LLM_PRICE_REFRESH_HOURS: ${HIGHFLAME_LLM_PRICE_REFRESH_HOURS:-0}
     volumes:
       # The RENDERED config, from secrets/. Firehog does NOT expand ${VAR} in its
       # config file — the release build takes the literal string and panics with

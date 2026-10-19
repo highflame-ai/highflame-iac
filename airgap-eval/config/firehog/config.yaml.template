@@ -43,21 +43,27 @@ shield:
 oauth:
   enabled: true
   resource_url: "http://localhost:8090"
-  # EMA / ID-JAG (ADR 0010): the Authorization Server is ZeroID (AuthN) — that
-  # is where the client redeems an Okta ID-JAG for a Highflame token, and where
-  # the id-jag grant profile is advertised. Was http://localhost:3013 (Studio).
-  authorization_server: "http://localhost:8051"
+  # AuthN is the only OAuth authorization server. This is advertised to MCP
+  # clients as `authorization_servers` and ALSO fetched by Firehog, which
+  # mirrors {this}/.well-known/oauth-authorization-server and refuses a
+  # document whose `issuer` differs. So it must be exactly AuthN's issuer
+  # (HIGHFLAME_ISSUER in docker-compose.yaml) and reachable both from client
+  # machines and from this container: the host's external origin, which
+  # bootstrap renders here from CONN_PROTOCOL and HIGHFLAME_HOST_IP. It was
+  # http://localhost:8051, which matched neither: inside this container
+  # localhost is Firehog, and AuthN's issuer was a container name, so the
+  # mirror answered 502 and MCP OAuth discovery failed.
+  authorization_server: "${HIGHFLAME_AUTHN_ISSUER}"
   jwks_url: "http://highflame-authn:8051/.well-known/jwks.json"
   jwks_refresh_seconds: 300
   # AuthN is the only token issuer (studio#1425 retired Studio's MCP mint).
-  # MUST match `issuer` in config/authn/config.yaml, which is the value AuthN
-  # stamps into every token it mints. Shield pins the same value through
-  # HIGHFLAME_AUTH_JWT_ISSUER in docker-compose.yaml. It was http://localhost:8051
-  # here, which is the upstream laptop default and wrong inside the compose
-  # network: every Highflame JWT presented to the gateway as a bearer failed
-  # issuer validation and was refused as "no Highflame credential", so a
-  # delegated agent credential could not be used through the gateway at all.
-  jwt_issuer: "http://highflame-authn:8051"
+  # MUST match AuthN's HIGHFLAME_ISSUER in docker-compose.yaml, which is the
+  # value AuthN stamps into every token it mints; Shield pins the same value
+  # through HIGHFLAME_AUTH_JWT_ISSUER. Rendered by bootstrap from the same
+  # origin as authorization_server above. A mismatch refuses every Highflame
+  # JWT presented to the gateway as "no Highflame credential", so a delegated
+  # agent credential cannot be used through the gateway at all.
+  jwt_issuer: "${HIGHFLAME_AUTHN_ISSUER}"
   # Check that the identity behind a JWT is still active, not only that the
   # signature and expiry are good. firehog defaults this to FALSE, so a
   # specialist agent deactivated in Studio kept calling the model through the

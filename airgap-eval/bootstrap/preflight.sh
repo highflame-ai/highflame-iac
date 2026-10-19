@@ -71,6 +71,16 @@ if [ -f "$FIREHOG" ] && [ -n "$INTERNAL_SECRET" ] &&
   problems+=("$FIREHOG holds a different internal service secret from .env — run bootstrap again")
 fi
 
+# Firehog's config embeds AuthN's issuer (oauth.authorization_server and
+# oauth.jwt_issuer), rendered from the host address. A config rendered for a
+# different address, or by a bundle from before the issuer became the external
+# origin (it held http://localhost:8051), starts fine and then refuses every
+# Highflame JWT at the gateway and answers 502 to MCP OAuth discovery.
+if [ -f "$FIREHOG" ] && [ -n "$HOST_IP" ] &&
+   ! grep -qF "authorization_server: \"${CONN_PROTOCOL:-http}://${HOST_IP}\"" "$FIREHOG"; then
+  problems+=("$FIREHOG names a different AuthN issuer from ${CONN_PROTOCOL:-http}://${HOST_IP} — run bootstrap again")
+fi
+
 if [ ${#problems[@]} -gt 0 ]; then
   echo "Bootstrap output is missing or does not match .env, so the stack was not started:"
   printf '  - %s\n' "${problems[@]}"

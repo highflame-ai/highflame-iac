@@ -104,7 +104,7 @@ evidence for, each of:
 6. The one intended egress points at _your_ LLM, and it prints the value so you
    can confirm it
 7. Every LLM provider endpoint is explicitly pinned, none left to a public
-   default
+   default, and firehog's LLM price list fetch from GitHub is off
 
 A check it cannot complete is reported as **WARN / unproven**, never as a pass.
 The report is plain text, meant to be attached to your own review.
@@ -124,12 +124,9 @@ points an agent at this stack's gateway, and walks through the
 tenancy authorisation gate, gateway inspection, PII detection and the resulting
 telemetry — all against this stack, with no internet.
 
-The notebook is the intended interface for this evaluation, not a convenience
-wrapper around the UI. See the Studio limitation under "Known limitations": the
-dashboard does not render on an OIDC build yet, so the API and gateway are what
-there is to evaluate. For a technical assessment of how the platform deploys,
-authorises and enforces, that is arguably the more useful surface anyway — but it
-is a limitation, not a design preference, and it is stated as one.
+The notebook exercises the API and gateway directly, which is the most useful surface for a technical assessment of how the platform deploys, authorises and enforces.
+Studio also runs on this stack: sign in at `http://<HIGHFLAME_HOST_IP>` with the same Keycloak user.
+On an OIDC build the Members page is a read-only list with no invites.
 
 ---
 
@@ -151,19 +148,41 @@ and an unset value is the one mistake here that fails with a confusing
 authentication error rather than a connection error.
 
 Mint the key with `POST /v1/admin/service-keys`, the way the notebook does.
-Studio's API key screen is part of the dashboard that does not render on an OIDC
-build.
 
 ### One limit, stated up front
 
-**The ingress publishes AuthN's token endpoint, its agent-registry routes and
-its key set, and nothing else.** Those are the only identity routes an SDK
-caller needs and the only ones that accept a bearer token, which is all it
-holds. AuthN's remaining admin routes are gated on a secret that the services
+**The ingress publishes AuthN's token endpoint, its agent-registry routes,
+its key set and the OAuth sign-in routes described below, and nothing else.**
+Those are the only identity routes an SDK caller needs and the only ones that
+accept a bearer token, which is all it holds. AuthN's remaining admin routes are gated on a secret that the services
 share over the internal network, so publishing them would add attack surface
 that no SDK caller could use. Agent registration, delegation, token
 verification and the guard path all work. The identity admin namespaces answer
 404 through this ingress.
+
+### Signing in a CLI or MCP client
+
+AuthN is the OAuth authorization server, and its address is the same one you
+sign in to Studio at: `http://<HIGHFLAME_HOST_IP>` (`https://` if you set
+`CONN_PROTOCOL=https`). Give that to anything that asks for an OAuth or
+authorization server URL — overwatch's `highflame.oauthUrl`, forge's auth URL,
+an MCP client discovering the gateway. Clients read the rest from
+`http://<HIGHFLAME_HOST_IP>/.well-known/oauth-authorization-server`: the
+authorize, token, device-login and client-registration endpoints, all on that
+origin. Signing in opens Studio's consent page on the same origin.
+
+It is not `http://<HIGHFLAME_HOST_IP>:8051`. That port answers too, but the
+issuer AuthN stamps into tokens, advertises in its metadata and that Shield and
+the gateway check is the address without a port, and clients refuse metadata
+whose issuer differs from the URL they asked. Changing `HIGHFLAME_HOST_IP` or
+`CONN_PROTOCOL` changes the issuer, so re-run bootstrap afterwards; preflight
+refuses to start the stack until you do.
+
+Two containers fetch the issuer URL itself, through nginx and the host address,
+the same way Admin already reaches Keycloak: the gateway, which mirrors AuthN's
+metadata for MCP clients, and AuthN, which loads its own key set to check
+agent-registration tokens. With `CONN_PROTOCOL=https` and a certificate those
+containers do not trust, both fetches fail, exactly as Admin's does.
 
 ### The gateway
 
