@@ -25,9 +25,10 @@ The `highflame-collector` image is built `FROM otel/opentelemetry-collector-cont
 
 The Collector merges the second file onto the first. `siem.yaml` only adds an exporter, a few processors and a new `traces/siem` pipeline, so it never copies the base config and can't drift from it.
 
-The new pipeline has its own queue:
-- If the SIEM is down, its exporter retries and then drops. Studio's data keeps flowing.
+The new pipeline has its own exporter queue:
+- If the SIEM is down, its exporter retries and then drops. Studio's data keeps flowing while the Collector stays under its memory limit.
 - The queue is in memory, so a Collector restart loses whatever is still waiting for the SIEM.
+- `traces/siem` reuses the base config's `memory_limiter`, and one `memory_limiter` instance serves every pipeline that names it. Its limit applies to the whole process. During a long SIEM outage, the batches waiting in the SIEM queue count toward that limit. Past it, the Collector refuses new spans for **every** pipeline, ClickHouse included, until memory drops. Keep the SIEM `queue_size` small enough for your Collector's memory limit; see step 1.
 
 ## 1. Write `siem.yaml`
 
@@ -55,6 +56,8 @@ exporters:
     source: highflame
     sourcetype: highflame:otel
     index: ${env:SPLUNK_HEC_INDEX}
+    # Batches held while the SIEM is unreachable count toward the shared
+    # memory_limiter (see "How it works"). Lower this on small Collectors.
     sending_queue: { enabled: true, queue_size: 5000 }
     retry_on_failure: { enabled: true, max_elapsed_time: 300s }
 
@@ -70,7 +73,7 @@ What each processor does:
 
 | Processor | Effect | Change it when |
 |---|---|---|
-| `resource/siem` | Removes the Collector host's name and OS, so your SIEM doesn't see Highflame's infrastructure. | Never needed. |
+| `resource/siem` | Removes `host.name` and `os.type` that the sending Highflame services report about themselves. The Collector's own host attributes never reach this pipeline: `resourcedetection` runs only in the base `traces` pipeline. Other resource attributes the senders set pass through. | Your SIEM must not see other resource attributes either. Add a `delete` action per key. |
 | `attributes/siem` | Removes `hf.payload`: prompt and tool content, already redacted when a secret or PII was found. | Your SOC needs the content. Delete this processor from the pipeline. |
 | `filter/siem` | Drops spans with no `hf.decision`, keeping enforcement decisions and leaving out plumbing spans. | You want every span. Delete this processor from the pipeline. |
 
@@ -172,16 +175,19 @@ Then `helm upgrade` the release.
 
    ```bash
    docker run --rm -v "$PWD:/cfg" \
-     -e CLICKHOUSE_ENDPOINT=tcp://x:9000 -e SPLUNK_HEC_ENDPOINT=https://x -e SPLUNK_HEC_TOKEN=t -e SPLUNK_HEC_INDEX=i \
+     -e CLICKHOUSE_ENDPOINT=tcp://x:9000 -e CLICKHOUSE_USER=u -e CLICKHOUSE_PASSWORD=p -e CLICKHOUSE_DATABASE=d \
+     -e SPLUNK_HEC_ENDPOINT=https://x -e SPLUNK_HEC_TOKEN=t -e SPLUNK_HEC_INDEX=i \
      otel/opentelemetry-collector-contrib:0.146.1 validate \
      --config=/cfg/config.yaml --config=/cfg/siem.yaml
    ```
+
+   The list above matches `airgap-eval/config/collector/config.yaml`. If your base `config.yaml` references other variables, set those too.
 
 2. **Check the Collector started.** In its logs, `Everything is ready` means it did. Repeated `Exporting failed. Will retry` lines from `splunk_hec` mean the endpoint, token or network is wrong. Studio data is unaffected either way.
 3. **Check Splunk.** After a request that Shield allows or denies, search `index=highflame sourcetype="highflame:otel"`. Each event's `name` is the span name, its attributes carry `hf.*`, and `service.name` arrives as an indexed field.
 
 Tested 2026-10-22 with contrib 0.146.1 (`highflame-collector` 0.0.9 base), the `airgap-eval` Collector config, ClickHouse 25.3 and a stub HEC endpoint:
-- Splunk received only the decision span, with `hf.payload` and the host name removed, the `Authorization: Splunk <token>` header, and the configured index and sourcetype.
+- Splunk received only the decision span, with `hf.payload` and the sender's `host.name` removed, the `Authorization: Splunk <token>` header, and the configured index and sourcetype.
 - ClickHouse received every span unchanged.
 - With the HEC endpoint down, `splunk_hec` retried while ClickHouse kept receiving.
 - The OTLP and Datadog variants passed `validate`, but haven't been run against a live endpoint.
