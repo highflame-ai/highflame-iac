@@ -182,7 +182,8 @@ Then `helm upgrade` the release.
 
    ```bash
    docker run --rm -v "$PWD:/cfg" \
-     -e CLICKHOUSE_ENDPOINT=tcp://x:9000 -e SPLUNK_HEC_ENDPOINT=https://x -e SPLUNK_HEC_TOKEN=t -e SPLUNK_HEC_INDEX=i \
+     -e CLICKHOUSE_ENDPOINT=tcp://x:9000 -e CLICKHOUSE_USER=u -e CLICKHOUSE_PASSWORD=p -e CLICKHOUSE_DATABASE=d \
+     -e SPLUNK_HEC_ENDPOINT=https://x -e SPLUNK_HEC_TOKEN=t -e SPLUNK_HEC_INDEX=i \
      otel/opentelemetry-collector-contrib:0.146.1 validate \
      --config=/cfg/config.yaml --config=/cfg/siem.yaml
    ```
