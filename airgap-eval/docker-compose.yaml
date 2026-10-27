@@ -343,7 +343,7 @@ services:
 
   highflame-authn:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-authn:1.4.3
+    image: ghcr.io/highflame-ai/highflame-authn:1.5.1
     container_name: highflame-authn
     ports:
       - "8051:8051"
@@ -408,7 +408,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-authz:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-authz:0.3.0
+    image: ghcr.io/highflame-ai/highflame-authz:0.3.2
     container_name: highflame-authz
     ports:
       - "8050:8050"
@@ -441,7 +441,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-admin:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-admin:1.12.6
+    image: ghcr.io/highflame-ai/highflame-admin:1.13.3
     container_name: highflame-admin
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -504,7 +504,7 @@ services:
 
   highflame-shield:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-shield:0.6.0
+    image: ghcr.io/highflame-ai/highflame-shield:0.6.2
     container_name: highflame-shield
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -597,7 +597,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-cerberus:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-cerberus:0.1.5
+    image: ghcr.io/highflame-ai/highflame-cerberus:0.1.6
     container_name: highflame-cerberus
     ports:
       - "8082:8082"
@@ -633,7 +633,7 @@ services:
 
   highflame-observatory:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-observatory:0.3.0
+    image: ghcr.io/highflame-ai/highflame-observatory:0.4.0
     container_name: highflame-observatory
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -667,7 +667,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-firehog:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-firehog:0.2.0
+    image: ghcr.io/highflame-ai/highflame-firehog:0.3.2
     container_name: highflame-firehog
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
@@ -781,7 +781,7 @@ services:
   # --------------------------------------------------------------------------
   highflame-studio:
     <<: *svc
-    image: ghcr.io/highflame-ai/highflame-studio:1.15.0
+    image: ghcr.io/highflame-ai/highflame-studio:1.25.0
     container_name: highflame-studio
     # 127.0.0.1, not localhost: several of these images resolve localhost
     # to ::1 first while the server binds IPv4 only, which reports a
