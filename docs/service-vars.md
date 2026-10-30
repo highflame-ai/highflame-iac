@@ -321,15 +321,6 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | Server-only HS256 secret that older Studio releases used to mint CLI authorization codes themselves. Studio no longer issues codes or tokens (studio#1721; AuthN is the only authorization server), so once that release is deployed Studio does not need it. Keep it set, identical to AuthN's value, until then. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Server-only shared secret for internal service-to-service calls, sent as `X-Internal-Service-Secret`; it must equal the value configured on the other Highflame services. Studio uses it for best-effort MCP allowlist reloads to Firehog (skipped unless `HIGHFLAME_FIREHOG_URL` is also set) and as a fallback for AuthN management calls when token exchange fails. Normal AuthN traffic uses exchanged JWTs instead. | nil | _Will be shared by a Highflame representative_
 
-### highflame-sandbox
-
-Variable Name | Variable Value | Default Value | Acceptable Value
---------------|--------------|--------------|--------------
-`NEXT_PUBLIC_CLERK_IS_SATELLITE` | Runs the Sandbox app as a Clerk satellite of Studio. Studio is the Clerk primary; a satellite on its own domain shares Studio's Clerk instance, so a user signed in to Studio is signed in to Sandbox too, and sign-in and sign-up send them to Studio. Takes effect only together with `NEXT_PUBLIC_CLERK_DOMAIN`; `true` without it logs a warning and runs Sandbox as a standalone primary. Studio must also list the Sandbox origin in its `NEXT_PUBLIC_CLERK_ALLOWED_REDIRECT_ORIGINS`, or users are left on Studio after signing in. | `false` | `true` or `false`
-`NEXT_PUBLIC_CLERK_DOMAIN` | The Sandbox app's own host, which Clerk needs for satellite mode. Required when `NEXT_PUBLIC_CLERK_IS_SATELLITE` is `true`. | nil | example : `<<sandbox_domain_name>>`
-`NEXT_PUBLIC_STUDIO_URL` | Studio's public origin. Sandbox derives the absolute sign-in and sign-up URLs from it (`<<studio>>/sign-in`, `/sign-up`), which a Clerk satellite needs, unless `NEXT_PUBLIC_CLERK_SIGN_IN_URL` and `NEXT_PUBLIC_CLERK_SIGN_UP_URL` are set. Sandbox also links to Studio when a user has no organization selected, since organizations are chosen and created in Studio. | nil | `https://<<studio_domain_name>>`
-`NEXT_PUBLIC_HIGHFLAME_ENV_LABEL` | **Unused by Sandbox.** Sandbox's code never reads it, so setting it has no effect. The docs app uses the same variable to label its live API playground. | nil | -
-
 ### highflame-ramparts-server
 
 Variable Name | Variable Value | Default Value | Acceptable Value
