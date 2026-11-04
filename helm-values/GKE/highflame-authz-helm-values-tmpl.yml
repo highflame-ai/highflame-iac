@@ -31,9 +31,29 @@ autoscaling:
   targetMemoryUtilizationPercentage: 80
 
 service:
-  type: ClusterIP
+  annotations:
+    cloud.google.com/backend-config: '{ "default" : "highflame-authz-default" }'
+  type: NodePort
   protocol: TCP
   port: 8050
+
+gceIngress:
+  backendConfigs:
+    enabled: true
+    items:
+    - name: default
+      timeoutSec: 300
+      healthCheck:
+        checkIntervalSec: 15
+        timeoutSec: 5
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        type: HTTP
+        requestPath: "/healthz"
+        port: 8051
+      securityPolicy:
+        enabled: true
+        name: "highflame-cloud-security-policy"
 
 image:
   repository: "ghcr.io/highflame-ai/highflame-authz"
