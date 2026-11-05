@@ -15,6 +15,10 @@ This is the single-tenant case of [ADR 0047](https://github.com/highflame-ai/hig
 
 Events arrive in OpenTelemetry shape: span name, `service.name`, and `hf.*` attributes such as `hf.decision`, `hf.event_type`, `hf.highest_severity` and `hf.determining_policies`. They are not OCSF, so map fields in the SIEM.
 
+**Searching in the SIEM:**
+- **Alert and monitor mode.** When a policy runs in alert or monitor mode, Shield sends `hf.decision=allow` even when Cedar denied. The real outcome is in `hf.actual_decision`, and `hf.alerted="true"` marks an alert. Search on `hf.actual_decision` (falling back to `hf.decision`) or on `hf.alerted`, not on `hf.decision` alone, or you will miss exactly the events alert mode exists for.
+- **Multi-value attributes.** `hf.determining_policies` and `hf.signal_vulns` are comma-separated strings, not arrays. Split them in the SIEM.
+
 ## How it works
 
 The `highflame-collector` image is built `FROM otel/opentelemetry-collector-contrib:0.146.1` and bakes its own `config.yaml`. You add a second file, `siem.yaml`, and start the Collector with both:
@@ -25,9 +29,13 @@ The `highflame-collector` image is built `FROM otel/opentelemetry-collector-cont
 
 The Collector merges the second file onto the first. `siem.yaml` only adds an exporter, a few processors and a new `traces/siem` pipeline, so it never copies the base config and can't drift from it.
 
-The new pipeline has its own queue:
-- If the SIEM is down, its exporter retries and then drops. Studio's data keeps flowing.
-- The queue is in memory, so a Collector restart loses whatever is still waiting for the SIEM.
+The new pipeline has its own queue, but it shares the Collector's memory and its `memory_limiter` with the ClickHouse pipeline. Once process memory passes the limit, the Collector refuses incoming spans for **both** pipelines.
+
+That is why the queue below is capped in bytes (`sizer: bytes`) at a small fraction of the limit:
+- **If the SIEM is down,** its exporter retries, its queue fills up to the cap, and it drops further SIEM events (the log says `queue is full`). Studio's data keeps flowing.
+- **Without the cap,** a long SIEM outage fills memory and the Collector starts refusing data for ClickHouse too. In testing, Studio lost 63% of events.
+- **Keep `queue_size` well under the `memory_limiter`'s `limit_mib`.** 32 MiB suits the air-gapped config's 256 MiB limit. Raise it only if you also raise the limit and the pod's memory.
+- **The queue is in memory,** so a Collector restart loses whatever is still waiting for the SIEM.
 
 ## 1. Write `siem.yaml`
 
@@ -55,7 +63,8 @@ exporters:
     source: highflame
     sourcetype: highflame:otel
     index: ${env:SPLUNK_HEC_INDEX}
-    sending_queue: { enabled: true, queue_size: 5000 }
+    # 32 MiB cap: a stalled SIEM drops its own events instead of starving ClickHouse
+    sending_queue: { enabled: true, sizer: bytes, queue_size: 33554432 }
     retry_on_failure: { enabled: true, max_elapsed_time: 300s }
 
 service:
@@ -70,7 +79,7 @@ What each processor does:
 
 | Processor | Effect | Change it when |
 |---|---|---|
-| `resource/siem` | Removes the Collector host's name and OS, so your SIEM doesn't see Highflame's infrastructure. | Never needed. |
+| `resource/siem` | Removes `host.name` and `os.type` that a sending service set on its own resource, so your SIEM doesn't see the hosts Highflame runs on. The Collector doesn't add its own host here, because `resourcedetection` runs only in the base pipeline. | You want the sending host in the SIEM. Delete this processor from the pipeline. |
 | `attributes/siem` | Removes `hf.payload`: prompt and tool content, already redacted when a secret or PII was found. | Your SOC needs the content. Delete this processor from the pipeline. |
 | `filter/siem` | Drops spans with no `hf.decision`, keeping enforcement decisions and leaving out plumbing spans. | You want every span. Delete this processor from the pipeline. |
 
@@ -82,7 +91,7 @@ exporters:
   otlphttp/siem:
     endpoint: ${env:SIEM_OTLP_ENDPOINT}
     headers: { Authorization: "Bearer ${env:SIEM_OTLP_TOKEN}" }
-    sending_queue: { enabled: true, queue_size: 5000 }
+    sending_queue: { enabled: true, sizer: bytes, queue_size: 33554432 }
     retry_on_failure: { enabled: true, max_elapsed_time: 300s }
 # pipeline: exporters: [otlphttp/siem]
 
@@ -90,6 +99,7 @@ exporters:
 exporters:
   datadog:
     api: { key: "${env:DD_API_KEY}", site: "${env:DD_SITE}" }
+    sending_queue: { enabled: true, sizer: bytes, queue_size: 33554432 }
 # pipeline: exporters: [datadog]
 ```
 
@@ -172,16 +182,21 @@ Then `helm upgrade` the release.
 
    ```bash
    docker run --rm -v "$PWD:/cfg" \
-     -e CLICKHOUSE_ENDPOINT=tcp://x:9000 -e SPLUNK_HEC_ENDPOINT=https://x -e SPLUNK_HEC_TOKEN=t -e SPLUNK_HEC_INDEX=i \
+     -e CLICKHOUSE_ENDPOINT=tcp://x:9000 -e CLICKHOUSE_USER=u -e CLICKHOUSE_PASSWORD=p -e CLICKHOUSE_DATABASE=d \
+     -e SPLUNK_HEC_ENDPOINT=https://x -e SPLUNK_HEC_TOKEN=t -e SPLUNK_HEC_INDEX=i \
      otel/opentelemetry-collector-contrib:0.146.1 validate \
      --config=/cfg/config.yaml --config=/cfg/siem.yaml
    ```
 
-2. **Check the Collector started.** In its logs, `Everything is ready` means it did. Repeated `Exporting failed. Will retry` lines from `splunk_hec` mean the endpoint, token or network is wrong. Studio data is unaffected either way.
+2. **Check the Collector started.** In its logs, `Everything is ready` means it did.
+   - Repeated `Exporting failed. Will retry` lines from `splunk_hec` mean the endpoint, token or network is wrong.
+   - `queue is full` means the SIEM queue hit its cap and SIEM events are being dropped. Studio's data is unaffected.
+   - `memory usage is above` from `memory_limiter` means the Collector is refusing data for every pipeline, ClickHouse included. Lower the SIEM `queue_size` or raise the memory limit.
 3. **Check Splunk.** After a request that Shield allows or denies, search `index=highflame sourcetype="highflame:otel"`. Each event's `name` is the span name, its attributes carry `hf.*`, and `service.name` arrives as an indexed field.
 
-Tested 2026-10-22 with contrib 0.146.1 (`highflame-collector` 0.0.9 base), the `airgap-eval` Collector config, ClickHouse 25.3 and a stub HEC endpoint:
-- Splunk received only the decision span, with `hf.payload` and the host name removed, the `Authorization: Splunk <token>` header, and the configured index and sourcetype.
-- ClickHouse received every span unchanged.
-- With the HEC endpoint down, `splunk_hec` retried while ClickHouse kept receiving.
+Tested with contrib 0.146.1 (`highflame-collector` 0.0.9 base), the `airgap-eval` Collector config (256 MiB `memory_limiter`), ClickHouse 25.3 and a stub HEC endpoint:
+- **2026-10-22.** Splunk received only the decision span, with `hf.payload` removed, the `Authorization: Splunk <token>` header, and the configured index and sourcetype. (The test span carried no `host.name`, so that deletion wasn't exercised.) ClickHouse received every span unchanged.
+- **2026-10-24, SIEM outage.** 150,000 decision spans were sent while the HEC endpoint was down:
+  - With the earlier `queue_size: 5000` (counted in batches), the `memory_limiter` refused 95 of 150 requests and ClickHouse got 55,000 rows.
+  - With the 32 MiB byte cap, nothing was refused and ClickHouse got all 150,000. Only the SIEM queue dropped events.
 - The OTLP and Datadog variants passed `validate`, but haven't been run against a live endpoint.
