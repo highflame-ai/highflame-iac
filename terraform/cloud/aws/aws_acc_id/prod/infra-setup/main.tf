@@ -160,7 +160,7 @@ module "alb_sg" {
 }
 
 module "s3" {
-  source                                  = "../../../../../../modules/aws/s3"
+  source                                  = "../../../../../modules/aws/s3"
   project_name                            = var.project_name
   project_env                             = var.project_env
   create_bucket_list                      = var.create_bucket_list
