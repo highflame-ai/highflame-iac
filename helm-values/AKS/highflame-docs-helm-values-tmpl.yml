@@ -1,0 +1,86 @@
+fullnameOverride: "highflame-docs"
+
+livenessProbe:
+  httpGet:
+    path: /livez
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 4
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 4
+
+nodeSelector:
+  kube/nodegroup: "general"
+
+service:
+  type: ClusterIP
+  protocol: TCP
+  port: 3000
+
+image:
+  repository: "ghcr.io/highflame-ai/highflame-docs"
+  pullPolicy: Always
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets:
+  - name: highflame-registry-secret
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 200m
+  limits:
+    memory: 1024Mi
+    cpu: 500m
+
+secrets:
+  enabled: true
+  secretData:
+    # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
+    # Public docs, no login. Do not set Clerk keys. Origins have no trailing slash.
+    # Both docs URLs must be this install's own host. docs.highflame.ai and
+    # docs-dev.highflame.dev refuse to boot when the model is self_managed.
+    # Admin is served on the studio host.
+    HIGHFLAME_DEPLOYMENT_MODEL: "self_managed"
+    NEXT_PUBLIC_APP_URL: "https://docs.example.com"
+    HIGHFLAME_DOCS_URL: "https://docs.example.com"
+    HIGHFLAME_PUBLIC_STUDIO_URL: "https://studio.example.com"
+    HIGHFLAME_PUBLIC_CONTROL_URL: "https://studio.example.com"
+    HIGHFLAME_PUBLIC_AUTH_URL: "https://auth.example.com"
+    HIGHFLAME_PUBLIC_API_URL: "https://api.example.com"
+    HIGHFLAME_PUBLIC_GATEWAY_URL: "https://gateway.example.com"
+
+ingress:
+  enabled: true
+  className: "azure-application-gateway"
+  annotations:
+    appgw.ingress.kubernetes.io/use-private-ip: "false"
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    appgw.ingress.kubernetes.io/backend-protocol: "http"
+    appgw.ingress.kubernetes.io/request-timeout: "300"
+    appgw.ingress.kubernetes.io/health-probe-path: "/healthz"
+    appgw.ingress.kubernetes.io/health-probe-status-codes: "200"
+    appgw.ingress.kubernetes.io/health-probe-interval: "15"
+    appgw.ingress.kubernetes.io/health-probe-timeout: "5"
+    appgw.ingress.kubernetes.io/health-probe-unhealthy-threshold: "2"
+  tls:
+    - hosts:
+        - docs.example.com
+      secretName: highflame-docs-tls
+  hosts:
+    - host: docs.example.com
+      paths:
+        - path: /
+          pathType: Prefix
