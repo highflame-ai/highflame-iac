@@ -21,10 +21,12 @@ gceIngress:
         domain: discovery.example.com
       - certName: studio-cert
         domain: studio.example.com
+      - certName: docs-cert
+        domain: docs.example.com
 ingress:
   enabled: true
   annotations:
-    networking.gke.io/managed-certificates: "control-cert, data-cert, gateway-cert, auth-cert, authz-cert, discovery-cert, studio-cert"
+    networking.gke.io/managed-certificates: "control-cert, data-cert, gateway-cert, auth-cert, authz-cert, discovery-cert, studio-cert, docs-cert"
     kubernetes.io/ingress.global-static-ip-name: highflame-poc-ingress-ip
     networking.gke.io/v1beta1.FrontendConfig: highflame-ingress
     kubernetes.io/ingress.allow-http: "true"
@@ -107,4 +109,10 @@ ingress:
         - path: /
           pathType: Prefix
           serviceName: "highflame-studio"
+          servicePort: 3000
+    - host: docs.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: "highflame-docs"
           servicePort: 3000
