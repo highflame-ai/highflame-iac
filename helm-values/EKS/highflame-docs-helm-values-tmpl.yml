@@ -55,18 +55,6 @@ secrets:
   enabled: true
   secretData:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
-    # Public docs, no login. Do not set Clerk keys. Origins have no trailing slash.
-    # Both docs URLs must be this install's own host. docs.highflame.ai and
-    # docs-dev.highflame.dev refuse to boot when the model is self_managed.
-    # Admin is served on the studio host.
-    HIGHFLAME_DEPLOYMENT_MODEL: "self_managed"
-    NEXT_PUBLIC_APP_URL: "https://docs.example.com"
-    HIGHFLAME_DOCS_URL: "https://docs.example.com"
-    HIGHFLAME_PUBLIC_STUDIO_URL: "https://studio.example.com"
-    HIGHFLAME_PUBLIC_CONTROL_URL: "https://studio.example.com"
-    HIGHFLAME_PUBLIC_AUTH_URL: "https://auth.example.com"
-    HIGHFLAME_PUBLIC_API_URL: "https://api.example.com"
-    HIGHFLAME_PUBLIC_GATEWAY_URL: "https://gateway.example.com"
 
 ingress:
   enabled: true

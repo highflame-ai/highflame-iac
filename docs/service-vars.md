@@ -297,7 +297,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 
 Variable Name | Variable Value | Default Value | Acceptable Value
 --------------|--------------|--------------|--------------
-`HIGHFLAME_DEPLOYMENT_MODEL` | Who operates this docs site. `self_managed` serves every page with no login and no Clerk. These install templates set `self_managed`. Do not set Clerk keys or mount a Clerk secret on this service. `saas` is only for Highflame Cloud, where the docs stay behind a Studio login. | `self_managed` | `self_managed` or `saas`
+`HIGHFLAME_DEPLOYMENT_MODEL` | Who operates this docs site. Set `self_managed` on a customer install: every page is public, with no login and no Clerk keys. Do not mount a Clerk secret on this service. `saas` is only for Highflame Cloud, where the docs stay behind a Studio login. | `self_managed` | `self_managed` or `saas`
 `HIGHFLAME_DOCS_URL` | This install's own docs origin, with no path and no trailing slash. The process refuses to start when this is `https://docs.highflame.ai` or `https://docs-dev.highflame.dev` and the model is `self_managed`. Keep it equal to `NEXT_PUBLIC_APP_URL` and to Studio's `HIGHFLAME_DOCS_URL`. | nil | `https://docs.<<customer-domain>>`
 `NEXT_PUBLIC_APP_URL` | Same origin as `HIGHFLAME_DOCS_URL`. The boot check rejects `self_managed` when this names `docs.highflame.ai` or `docs-dev.highflame.dev`, even if `HIGHFLAME_DOCS_URL` is the customer's host. | nil | `https://docs.<<customer-domain>>`
 `HIGHFLAME_PUBLIC_STUDIO_URL` | Studio origin written into docs examples. An origin with no trailing slash. Unset shows a placeholder instead of a Highflame Cloud host. | nil | `https://studio.<<customer-domain>>`
