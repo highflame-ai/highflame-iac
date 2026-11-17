@@ -40,7 +40,8 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_TRUSTED_ISSUERS_VERIFICATION_REDIRECT_ORIGINS` | comma-separated list of domains for trusted verification redirect origins | nil | example : `https://<<studio_domain_name>>`
 `HIGHFLAME_FIREHOG_URL` | Firehog endpoint | `http://highflame-firehog:8080` | -
 `HIGHFLAME_OBSERVATORY_URL` | Server-only internal base URL of Observatory | `http://highflame-observatory:8090/v1/obs` | -
-`HIGHFLAME_TENANCY_OIDC_SELF_PROVISION` | OIDC self provision | `false` | `true` or `false`
+`HIGHFLAME_TENANCY_SELF_PROVISION` | Lets any signed-in user create an organization and become its owner. Off: on a customer-managed deployment only a platform operator creates organizations, whatever the sign-in provider (highflame-admin#1518). Turn on only if your users should create their own organizations. | `false` | `true` or `false`
+`HIGHFLAME_TENANCY_OIDC_SELF_PROVISION` | Former, OIDC-only name of `HIGHFLAME_TENANCY_SELF_PROVISION`. Still honoured: either one set to `true` turns self-provisioning on. | `false` | `true` or `false`
 
 ### highflame-authn
 
