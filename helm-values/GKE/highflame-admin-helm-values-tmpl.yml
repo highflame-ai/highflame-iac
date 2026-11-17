@@ -100,3 +100,8 @@ secrets:
     # Please refer https://github.com/highflame-ai/highflame-iac/blob/main/docs/service-vars.md
     # Public SCIM 2.0 base (studio host + /scim/v2); keep equal to Studio's NEXT_PUBLIC_SCIM_BASE_URL.
     HIGHFLAME_SCIM_EXTERNAL_BASE_URL: "https://studio.example.com/scim/v2"
+    # Platform operators: only they can create organizations on a customer-managed
+    # deployment. Comma-separated user ids (Clerk ids start with user_).
+    HIGHFLAME_TENANCY_BOOTSTRAP_SUPER_ADMINS: ""
+    # "true" lets anyone who signs in create an organization.
+    HIGHFLAME_TENANCY_SELF_PROVISION: "false"
