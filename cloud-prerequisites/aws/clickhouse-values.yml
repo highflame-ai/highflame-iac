@@ -1,3 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-custom-function
+  namespace: clickhouse
+data:
+  custom-function.xml: |
+    <functions>
+      <function>
+        <type>executable</type>
+        <name>histogramQuantile</name>
+        <return_type>Float64</return_type>
+        <argument>
+          <type>Array(Float64)</type>
+          <name>buckets</name>
+        </argument>
+        <argument>
+          <type>Array(Float64)</type>
+          <name>counts</name>
+        </argument>
+        <argument>
+          <type>Float64</type>
+          <name>quantile</name>
+        </argument>
+        <format>CSV</format>
+        <command>./histogramQuantile</command>
+      </function>
+    </functions>
+---
 apiVersion: 'clickhouse-keeper.altinity.com/v1'
 kind: 'ClickHouseKeeperInstallation'
 
@@ -148,6 +177,10 @@ spec:
               volumeMounts:
                 - name: clickhouse-data
                   mountPath: /var/lib/clickhouse
+                - name: clickhouse-custom-function
+                  mountPath: /etc/clickhouse-server/custom-function.xml
+                  subPath: custom-function.xml
+                  readOnly: true
                 # - name: clickhouse-log
                 #   mountPath: /var/log/clickhouse-server
             - name: clickhouse-backup
@@ -167,6 +200,10 @@ spec:
             - name: clickhouse-backup-config
               secret:
                 secretName: clickhouse-backup-config
+                optional: false
+            - name: clickhouse-custom-function
+              configMap:
+                name: clickhouse-custom-function
                 optional: false
           # nodeSelector:
           #   kube/nodegroup: "general"
