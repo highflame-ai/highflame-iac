@@ -5,6 +5,12 @@ region: us-east-1
 logRetention: 365
 k8sCluster: highflame-prod-eks
 
+serviceAccount:
+  create: true
+  name: fluent-bit
+  annotations:
+    eks.amazonaws.com/role-arn: ${HIGHFLAME_IAM_ROLE_ARN}
+
 ## Actual Helm chart Value file https://github.com/fluent/helm-charts/blob/main/charts/fluent-bit/values.yaml
 ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/configuration-file
 config:
