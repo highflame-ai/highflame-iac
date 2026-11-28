@@ -120,6 +120,11 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `CLICKHOUSE_USERNAME` | ClickHouse user the collector authenticates as when inserting traces. It needs INSERT on `otel_traces_raw` in `CLICKHOUSE_DATABASE`. If unset, the collector uses the `default` user, which only works when that user has no password. | nil | -
 `CLICKHOUSE_PASSWORD` | Password for `CLICKHOUSE_USERNAME`. If it is wrong or missing, every export fails authentication and no telemetry reaches Observatory. | nil | -
 `INGEST_FORWARD_ENDPOINT` | Highflame internal collector gRPC endpoint | `highflame-collector:4317` | Only used for ingest deployment
+`ALERTS_RECEIVER` | Input of the alerts pipeline | `nop` | Only used for `SaaS` deployment, `nop` (off) or `otlp` (on)
+`ALERTS_EXPORTER` | Output of the alerts pipeline | `nop` | Only used for `SaaS` deployment, `nop` (off) or `otlp_grpc/alerts` (on)
+`ALERTS_CONNECT_ENDPOINT` | `highflame-connect` gRPC endpoint for alert spans | `highflame-connect:4317` | Only used for `SaaS` deployment, 
+`ALERTS_QUEUE_BYTES` | Byte cap of the alert send queue; when full, new alert spans are dropped | `16777216` (16 MiB) | Only used for `SaaS` deployment, Positive integer, in bytes
+
 
 ### highflame-collector-ingest
 
@@ -156,6 +161,34 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Shared secret for service-to-service calls. AuthN requires it (header `X-Internal-Service-Secret`) from Admin, Shield, Discovery, Forge and other trusted services on its admin and internal routes, and sends it when reporting usage to Admin. It must be the same in every Highflame service; AuthN refuses to start in production without it. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_DISCOVERY_GOVERNANCE_ENABLED` | Turns on Discovery's governance writes (ADR 0042). After each connector sync, Discovery asks Admin to record which runtime identity belongs to each discovered agent, as a credential binding: an Okta AI agent's client id on the organization's Okta issuer, or an AWS AgentCore runtime's execution role ARN on the AWS account's STS issuer. Bindings are written switched off and switch on when an admin adopts the agent. A binding is written only when the organization already trusts that issuer (a Person trusted issuer for the Okta org; a Workload trusted issuer for the AWS account's outbound identity federation issuer); otherwise Admin answers `issuer_not_trusted`. For AgentCore, the connector's AWS credentials also need `bedrock-agentcore:GetAgentRuntime`, `iam:GetRole` and `iam:GetOutboundWebIdentityFederationInfo`; a runtime whose role is shared, trusts anything but AgentCore, or can't be read gets no binding. No sign-in path uses Workload issuers yet, so an AgentCore binding doesn't yet let the runtime sign in as its agent. Discovery also asks Admin to suspend adopted agents that are disabled upstream or, when the listing was complete, gone from it; a partial or empty listing suspends nothing, and a call that would suspend more than 5 agents and more than half of the connector's active agents suspends none. Needs `HIGHFLAME_ADMIN_BASE_URL`. When `false`, Discovery only lists agents, checks owners and prunes unadopted agents it no longer sees. | `false` | `true` or `false`
 `HIGHFLAME_DEPLOYMENT_TYPE` | Deployment type for the service | `prod` | `dev` or `prod`
+
+### highflame-docs
+
+Variable Name | Variable Value | Default Value | Acceptable Value
+--------------|--------------|--------------|--------------
+`NEXT_PUBLIC_APP_URL` | Endpoint for docs service | nil | `https://<<studio_domain_name>>`
+`NEXT_PUBLIC_STUDIO_URL` | Next studio url | nil | `https://<<studio_domain_name>>`
+`NEXT_PUBLIC_HIGHFLAME_ENV_LABEL` | Next deploy env label | nil | Deployed environment name like `dev`, `qa`, `prod` etc..
+`NODE_ENV` | Nodejs env | `production` | -
+`NEXT_TELEMETRY_DISABLED` | Telemetry disabled or enabled | `1` | `1` or `0`
+`HOSTNAME` | Service hostname | `0.0.0.0` | -
+`PORT` | Service port | `3000` | -
+`HIGHFLAME_ADMIN_URL` | Admin url | `http://highflame-admin:8040` | -
+`HIGHFLAME_TOKEN_EXCHANGE_URL` | Token exchange url | `http://highflame-admin:8040/v1/auth/token` | -
+`HIGHFLAME_SHIELD_URL` | shield url | `http://highflame-shield:8070/v1/shield` | -
+`HIGHFLAME_DEPLOYMENT_MODEL` | Highflame platform deployment model type | `self_managed` | `self_managed` or `saas`
+`NEXT_PUBLIC_CLERK_IS_SATELLITE` | Clerk satellite enabled | `false` | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=saas`, values can be `true` or `false`
+`NEXT_PUBLIC_CLERK_DOMAIN` | Registered clerk domain name | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=saas`, `https://<<docs_domain_name>>`
+`NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign in url | `/sign-in` | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=saas`
+`NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Clerk sign up url | `/sign-up` | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=saas`
+`CLERK_SECRET_KEY` | Clerk secret key | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=saas`, _Will be shared by a Highflame representative_
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=saas`, _Will be shared by a Highflame representative_
+`HIGHFLAME_DOCS_URL` | Highflame docs url | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=self_managed`
+`HIGHFLAME_PUBLIC_STUDIO_URL` | Highflame studio url | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=self_managed`
+`HIGHFLAME_PUBLIC_CONTROL_URL` | Highflame control plane url | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=self_managed`
+`HIGHFLAME_PUBLIC_AUTH_URL` | Highflame authn url | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=self_managed`
+`HIGHFLAME_PUBLIC_API_URL` | Highflame api url | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=self_managed`
+`HIGHFLAME_PUBLIC_GATEWAY_URL` | Highflame gateway / firehog url | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=self_managed`
 
 ### highflame-firehog
 
@@ -347,6 +380,7 @@ Variable Name | Variable Value | Default Value | Acceptable Value
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public Clerk key (`pk_...`) for Clerk's browser SDK, read on each request and sent to the browser at runtime. Required for the Clerk login to render when `HIGHFLAME_AUTH_PROVIDER=clerk`, and must belong to the same Clerk instance as `CLERK_SECRET_KEY`. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_AUTH_JWT_SECRET_KEY` | Server-only HS256 secret that older Studio releases used to mint CLI authorization codes themselves. Studio no longer issues codes or tokens (studio#1721; AuthN is the only authorization server), so once that release is deployed Studio does not need it. Keep it set, identical to AuthN's value, until then. | nil | _Will be shared by a Highflame representative_
 `HIGHFLAME_INTERNAL_SERVICE_SECRET` | Server-only shared secret for internal service-to-service calls, sent as `X-Internal-Service-Secret`; it must equal the value configured on the other Highflame services. Studio uses it for best-effort MCP allowlist reloads to Firehog (skipped unless `HIGHFLAME_FIREHOG_URL` is also set) and as a fallback for AuthN management calls when token exchange fails. Normal AuthN traffic uses exchanged JWTs instead. | nil | _Will be shared by a Highflame representative_
+`HIGHFLAME_DOCS_URL` | Highflame Docs url for accessing it from the studio | nil | `Optional`: If `HIGHFLAME_DEPLOYMENT_MODEL=self_managed` in the `highflame-docs` deployment
 
 ### highflame-ramparts-server
 
